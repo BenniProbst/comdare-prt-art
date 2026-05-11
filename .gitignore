@@ -1,0 +1,48 @@
+# Build-Artefakte
+build/
+build-*/
+out/
+cmake-build-*/
+
+# IDE/Editor
+.vs/
+.vscode/
+.idea/
+*.swp
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+*.cbp
+
+# C++
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.pdb
+*.idb
+*.ipdb
+*.iobj
+
+# Coverage
+*.gcno
+*.gcda
+*.gcov
+coverage/
+
+# external/comdare-cache-engine ist git submodule (User-Direktive 2026-05-12,
+# Ausnahme zu CLAUDE.md S2683 analog S2686b BuildSystem-Core-in-Consumer)
+# → wird via .gitmodules getrackt, nicht ignoriert
