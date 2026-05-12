@@ -49,3 +49,7 @@ comdare_prt_art_add_test(test_measurement
 comdare_prt_art_add_test(test_prt_art_identity
     SOURCES test_prt_art_identity.cpp
     LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_serialization_and_buffer
+    SOURCES test_serialization_and_buffer.cpp
+    LIBRARIES comdare::prt_art_core)
