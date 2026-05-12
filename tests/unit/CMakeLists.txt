@@ -21,3 +21,31 @@ comdare_prt_art_add_test(test_prt_art_nodes
 comdare_prt_art_add_test(test_internal_search
     SOURCES test_internal_search.cpp
     LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_value_handle
+    SOURCES test_value_handle.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_memory_layout
+    SOURCES test_memory_layout.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_allocator_pools
+    SOURCES test_allocator_pools.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_olc_with_reserved_blocks
+    SOURCES test_olc_with_reserved_blocks.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_prefetch_strategies
+    SOURCES test_prefetch_strategies.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_measurement
+    SOURCES test_measurement.cpp
+    LIBRARIES comdare::prt_art_core)
+
+comdare_prt_art_add_test(test_prt_art_identity
+    SOURCES test_prt_art_identity.cpp
+    LIBRARIES comdare::prt_art_core)
