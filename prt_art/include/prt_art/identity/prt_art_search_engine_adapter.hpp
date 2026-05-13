@@ -94,4 +94,94 @@ private:
 #endif
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// REV 7.6 V9.1 — Konkrete Adapter-Subklassen
+// Implementieren die abstract virtual lookup/insert/erase/size/empty per
+// Delegation an impl_->find/insert/erase/size/empty.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// Map-API Variante (2 Template-Parameter, K + V)
+template <typename Key, typename Value>
+class PrtArtSearchEngineAdapterMap final
+    : public PrtArtSearchEngineAdapter<Key, Value>
+{
+public:
+    using base_t  = PrtArtSearchEngineAdapter<Key, Value>;
+    using key_t   = typename base_t::base_t::key_t;
+    using value_t = typename base_t::base_t::value_t;
+    using base_t::base_t;
+
+    [[nodiscard]] std::optional<value_t> lookup(key_t const& k) override {
+        return this->impl().find(k);
+    }
+    void insert(key_t const& k, value_t const& v) override {
+        (void)this->impl().insert(k, v);  // status_t-Returncode ignoriert (search_engine API)
+    }
+    [[nodiscard]] bool erase(key_t const& k) override {
+        return this->impl().erase(k) == status_ok;
+    }
+    [[nodiscard]] std::size_t size() const noexcept override {
+        return this->impl().size();
+    }
+    [[nodiscard]] bool empty() const noexcept override {
+        return this->impl().empty();
+    }
+};
+
+// Vector-API Variante (1 Template-Parameter, nur V — Key implicit uint64 counter)
+template <typename Value>
+class PrtArtSearchEngineAdapterVector final
+    : public PrtArtSearchEngineAdapter<Value>
+{
+public:
+    using base_t  = PrtArtSearchEngineAdapter<Value>;
+    using key_t   = typename base_t::base_t::key_t;     // std::uint64_t (auto-counter)
+    using value_t = typename base_t::base_t::value_t;
+    using base_t::base_t;
+
+    [[nodiscard]] std::optional<value_t> lookup(key_t const& k) override {
+        return this->impl().at(static_cast<std::size_t>(k));
+    }
+    void insert([[maybe_unused]] key_t const& k, value_t const& v) override {
+        (void)this->impl().push_back(v);  // 1-Param-API: Key implicit
+    }
+    [[nodiscard]] bool erase([[maybe_unused]] key_t const& k) override {
+        return this->impl().pop_back() == status_ok;  // simplified: 1-Param erase
+    }
+    [[nodiscard]] std::size_t size() const noexcept override {
+        return this->impl().size();
+    }
+    [[nodiscard]] bool empty() const noexcept override {
+        return this->impl().empty();
+    }
+};
+
+// Tuple-API Variante (N>2 Template-Parameter, K + V1 + V2 + ...)
+template <typename Key, typename V1, typename V2, typename... Rest>
+class PrtArtSearchEngineAdapterTuple final
+    : public PrtArtSearchEngineAdapter<Key, V1, V2, Rest...>
+{
+public:
+    using base_t  = PrtArtSearchEngineAdapter<Key, V1, V2, Rest...>;
+    using key_t   = typename base_t::base_t::key_t;
+    using value_t = typename base_t::base_t::value_t;   // std::tuple<V1, V2, Rest...>
+    using base_t::base_t;
+
+    [[nodiscard]] std::optional<value_t> lookup(key_t const& k) override {
+        return this->impl().find(k);
+    }
+    void insert(key_t const& k, value_t const& v) override {
+        (void)this->impl().insert(k, v);
+    }
+    [[nodiscard]] bool erase(key_t const& k) override {
+        return this->impl().erase(k) == status_ok;
+    }
+    [[nodiscard]] std::size_t size() const noexcept override {
+        return this->impl().size();
+    }
+    [[nodiscard]] bool empty() const noexcept override {
+        return this->impl().empty();
+    }
+};
+
 }  // namespace comdare::prt_art::identity
