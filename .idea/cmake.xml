@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeSharedSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DCOMDARE_PRT_ART_BUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" />
+      <configuration PROFILE_NAME="Release" ENABLED="true" CONFIG_NAME="Release" GENERATION_OPTIONS="-DCOMDARE_PRT_ART_BUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" />
+      <configuration PROFILE_NAME="MSVC-Debug" ENABLED="true" CONFIG_NAME="Debug" GENERATION_DIR="build-msvc" GENERATION_OPTIONS="-DCOMDARE_PRT_ART_BUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" />
+    </configurations>
+  </component>
+</project>

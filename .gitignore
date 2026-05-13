@@ -7,7 +7,7 @@ cmake-build-*/
 # IDE/Editor
 .vs/
 .vscode/
-.idea/
+# .idea/ wird selektiv getrackt (siehe .idea/.gitignore)
 *.swp
 *.user
 
