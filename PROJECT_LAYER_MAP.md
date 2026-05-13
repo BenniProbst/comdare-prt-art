@@ -1,23 +1,47 @@
-# PROJECT_LAYER_MAP — comdare-prt-art (2026-05-13)
+# PROJECT_LAYER_MAP — comdare-prt-art (REV 7.6, 2026-05-13)
 
 Strategische Strukturübersicht für **manuelles Code-Review**.
 Reihenfolge entspricht der **empfohlenen Lese-Reihenfolge**.
 
+> **REV 7.6 Update:** Drei-Repo-Architektur klarer getrennt
+> (User-Direktive 2026-05-13). Prt-art bleibt der **Test-Algorithmus-
+> Pruefling** mit hybrider PrtArtSearchEngine. Wird jetzt zusaetzlich als
+> **paralleles Submodule** vom Diplomarbeit/Code/-Repo konsumiert
+> (nicht mehr nur via cache-engine).
+
 ---
 
-## 0. Repo-Rolle
+## 0. Repo-Rolle (REV 7.6 prazisiert)
 
-`comdare-prt-art` ist der **Prüfling** im Drei-Schichten-System (REV 7 §4.2(f)):
+`comdare-prt-art` ist der **Test-Algorithmus-Pruefling** im Drei-Repo-System:
 
 ```
-CacheEngine  →  ExecutionEngine  →  SearchEngine  ←  PRT-ART (this repo)
-   (tool)         (provider)         (algorithms)     (subject)
+Diplomarbeit/Code/  =  WAS getestet wird + AUSWERTUNG (Anwender)
+       │
+       ▼ Submodule (parallel)
+comdare-prt-art      =  Test-Algorithmus PRT-ART (this repo, Pruefling)
+       │
+       ▼ Submodule
+comdare-cache-engine =  WIE gemessen wird (Werkzeug-Bibliothek)
 ```
 
 PRT-ART konsumiert `comdare-cache-engine` als Werkzeug-Bibliothek
 (Git-Submodule unter `external/comdare-cache-engine`). REV 7 §6 erlaubt
 Compile-time-Fallback auf CacheEngine-Bausteine, wenn PRT-ART-Bausteine
 fehlen.
+
+**Konsum-Wege (REV 7.6):**
+
+1. **Direkt** (z. B. fuer Tests, Microbenchmarks):
+   ```cpp
+   #include <prt_art/identity/prt_art_search_engine.hpp>
+   comdare::prt_art::identity::PrtArtSearchEngine<int, std::string> e;
+   ```
+2. **Indirekt via cache-engine Codegen**: `xml_config_parser` enthaelt
+   `prt_art_v1` als `search_algorithm_perm`-Achse. Beim Codegen wird ein
+   `comdare_perm_<fp>.dll`-Modul gebaut, das die hybride API verwendet.
+3. **Indirekt via Diplomarbeit-messung_driver**: Loop ueber 3 Messreihen
+   (A/B/C) — prt-art ist eine von vielen Permutationen.
 
 ---
 
@@ -174,7 +198,31 @@ PRT-ART komplett selbständig.
 
 ---
 
-## 7. Build-Verifikation
+## 7. REV 7.6 — Diplomarbeit-Code-Schicht konsumiert prt-art parallel
+
+Die heutige Drei-Repo-Architektur-Korrektur fuehrt eine NEUE
+Anwender-Schicht ein: `Diplomarbeit/Code/` (separates Repo
+`probst-Diplomarbeit-cache-engine`).
+
+```
+Diplomarbeit/Code/external/comdare-prt-art       ← Submodule (parallel)
+Diplomarbeit/Code/external/comdare-cache-engine  ← Submodule (parallel)
+```
+
+**prt-art bleibt funktional unveraendert** — es ist weiterhin der
+Pruefling-Algorithmus mit der hybriden PrtArtSearchEngine. Die Submodule-
+Beziehung zu cache-engine bleibt (`external/comdare-cache-engine/`).
+
+**Wichtige Cross-References:**
+
+- Diplomarbeit-Repo `30_architektur_delta_REV7_6_drei_repo_layer_2026_05_13.md`
+- Diplomarbeit-Repo `FINDINGS_REV7_6_2026_05_13.md`
+- cache-engine `e2dc290` (gitignore-Fix) — Bumpen empfohlen
+- cache-engine `<heute REV 7.6 Diagnose-Restore>` — auch bumpen
+
+---
+
+## 8. Build-Verifikation
 
 ```bash
 cd comdare-prt-art
