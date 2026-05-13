@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PRT-ART Pruefling-Profil (REV 7.6 V8.10) — User-Direktive 2026-05-13/14
+     PRT-ART als Beitrittspruefling zum Stand der Technik (cache-engine SOTA).
+     Bei Beitritt: migriere nach cache-engine/algorithm_profiles/sota/prtart.profile.xml -->
+<comdare_algorithm_profile id="prtart" paper_ref="PRTART">
+  <metadata>
+    <name>PRT-ART (Probst Redirect Tree — ART hybrid)</name>
+    <authors>Probst, Habich</authors>
+    <year>2026</year>
+    <venue>Diplomarbeit TU Dresden (in Vorbereitung)</venue>
+    <pruefling_status>Beitrittspruefung-zum-Stand-der-Technik</pruefling_status>
+  </metadata>
+
+  <axes>
+    <!-- 8 PRT-ART-eigene Bausteine -->
+    <page>PRTART_DENSEBYTE</page>
+    <node>PRTART_REDIRECT</node>
+    <traversal>PRTART_HOT_PATH</traversal>
+    <value_handle>CHAINREF</value_handle>
+    <concurrency>PRTART_OLC_RESERVED</concurrency>
+    <allocator>PRTART_4_PLUS_2_POOL</allocator>
+    <prefetch>PRTART_REDIRECT_PREFETCH</prefetch>
+    <layout>PRTART_MULTI_LEVEL</layout>
+
+    <!-- 3 Achsen mit Fallback auf cache-engine SOTA -->
+    <telemetry>OFF</telemetry>
+    <isa>X86_AVX2</isa>
+    <reclamation>NONE</reclamation>
+  </axes>
+
+  <key_value_signature>
+    <key_types>std::uint64_t</key_types>
+    <value_types>std::string</value_types>
+  </key_value_signature>
+
+  <hybrid_api_modes>
+    <!-- REV 7.1 hybride API: 1/2/N>2 Parameter -->
+    <mode>vector_api_1_param</mode>
+    <mode>map_api_2_params</mode>
+    <mode>tuple_api_N_params</mode>
+  </hybrid_api_modes>
+
+  <pruefling_metrics>
+    <!-- 3 Hypothesen-Metriken (REV 6 §5.13) -->
+    <metric id="H1">Pruefung-Hochlauf-Schwelle</metric>
+    <metric id="H2">Pruefung-Density-Transition</metric>
+    <metric id="H3">Pruefung-Path-Prefetch-Effizienz</metric>
+  </pruefling_metrics>
+</comdare_algorithm_profile>

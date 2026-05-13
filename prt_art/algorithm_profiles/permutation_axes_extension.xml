@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PRT-ART-spezifische Achsen-Erweiterung (REV 7.6 V8.10)
+     Diese Werte ergaenzen cache-engine/algorithm_profiles/permutation_axes.xml
+     um PRT-ART-spezifische Konkretisierungen.
+     Wenn ein Wert hier fehlt, faellt der Compile-Time-Resolver auf den
+     cache-engine-Stack zurueck (resolve_baustein.hpp). -->
+<comdare_permutation_axes_extension version="1" extends="cache-engine permutation_axes.xml">
+
+  <axis id="page">
+    <values>
+      <value>PRTART_DENSEBYTE</value>
+      <value>PRTART_REDIRECT</value>
+    </values>
+  </axis>
+
+  <axis id="node">
+    <values>
+      <value>PRTART_REDIRECT</value>
+      <value>PRTART_BPLUS</value>
+    </values>
+  </axis>
+
+  <axis id="traversal">
+    <values>
+      <value>PRTART_HOT_PATH</value>
+    </values>
+  </axis>
+
+  <axis id="concurrency">
+    <values>
+      <value>PRTART_OLC_RESERVED</value>
+    </values>
+  </axis>
+
+  <axis id="allocator">
+    <values>
+      <value>PRTART_4_PLUS_2_POOL</value>
+    </values>
+  </axis>
+
+  <axis id="prefetch">
+    <values>
+      <value>PRTART_REDIRECT_PREFETCH</value>
+      <value>PRTART_PATH_ORIENTED</value>
+      <value>PRTART_DISTANCE_ESTIMATOR</value>
+    </values>
+  </axis>
+
+  <axis id="layout">
+    <values>
+      <value>PRTART_MULTI_LEVEL</value>
+    </values>
+  </axis>
+
+</comdare_permutation_axes_extension>
