@@ -518,3 +518,169 @@ TEST(Status, ConstantsAreDistinct) {
     EXPECT_TRUE(status_is_ok(status_ok));
     EXPECT_TRUE(status_is_error(status_key_not_found));
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// REV 7.6 V14.1 — Tests fuer V12.1 Vector-API Erweiterungen
+// ═════════════════════════════════════════════════════════════════════════════
+
+TEST(VectorApi_V12, OperatorBracketReturnsValueAtIndex) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int> v;
+    EXPECT_EQ(v.push_back(10), status_ok);
+    EXPECT_EQ(v.push_back(20), status_ok);
+    EXPECT_EQ(v[0], 10);
+    EXPECT_EQ(v[1], 20);
+}
+
+TEST(VectorApi_V12, EmplaceBackWithArgs) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<std::string> v;
+    EXPECT_EQ(v.emplace_back(5, 'a'), status_ok);
+    auto front = v.front();
+    ASSERT_TRUE(front.has_value());
+    EXPECT_EQ(*front, "aaaaa");
+}
+
+TEST(VectorApi_V12, SwapTwoEngines) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int> a;
+    PrtArtSearchEngine<int> b;
+    EXPECT_EQ(a.push_back(1), status_ok);
+    EXPECT_EQ(a.push_back(2), status_ok);
+    EXPECT_EQ(b.push_back(99), status_ok);
+    a.swap(b);
+    EXPECT_EQ(a.size(), 1u);
+    EXPECT_EQ(b.size(), 2u);
+    EXPECT_EQ(a[0], 99);
+    EXPECT_EQ(b[0], 1);
+}
+
+TEST(VectorApi_V12, ReverseIteratorsTraverseInReverseOrder) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int> v;
+    EXPECT_EQ(v.push_back(1), status_ok);
+    EXPECT_EQ(v.push_back(2), status_ok);
+    EXPECT_EQ(v.push_back(3), status_ok);
+    std::vector<int> reversed;
+    for (auto it = v.rbegin(); it != v.rend(); ++it) reversed.push_back(*it);
+    EXPECT_EQ(reversed.size(), 3u);
+    EXPECT_EQ(reversed[0], 3);
+    EXPECT_EQ(reversed[2], 1);
+}
+
+TEST(VectorApi_V12, AssignFromRange) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int> v;
+    std::vector<int> source{10, 20, 30, 40};
+    EXPECT_EQ(v.assign(source.begin(), source.end()), status_ok);
+    EXPECT_EQ(v.size(), 4u);
+    EXPECT_EQ(v[3], 40);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// REV 7.6 V14.1 — Tests fuer V12.2 Map-API Erweiterungen
+// ═════════════════════════════════════════════════════════════════════════════
+
+TEST(MapApi_V12, OperatorBracketLookup) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    EXPECT_EQ(m.insert(1, "one"), status_ok);
+    auto v = m[1];
+    ASSERT_TRUE(v.has_value());
+    EXPECT_EQ(*v, "one");
+    auto missing = m[42];
+    EXPECT_FALSE(missing.has_value());
+}
+
+TEST(MapApi_V12, EmplaceWithArgs) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    EXPECT_EQ(m.emplace(7, 3, 'x'), status_ok);  // string(3, 'x') = "xxx"
+    auto v = m.find(7);
+    ASSERT_TRUE(v.has_value());
+    EXPECT_EQ(*v, "xxx");
+}
+
+TEST(MapApi_V12, TryEmplaceFailsOnExistingKey) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    EXPECT_EQ(m.try_emplace(1, std::string("first")),  status_ok);
+    EXPECT_EQ(m.try_emplace(1, std::string("second")), status_key_already_exists);
+}
+
+TEST(MapApi_V12, InsertOrAssignOverwrites) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    EXPECT_EQ(m.insert(1, "first"), status_ok);
+    EXPECT_EQ(m.insert_or_assign(1, "second"), status_ok);
+    auto v = m.find(1);
+    ASSERT_TRUE(v.has_value());
+    EXPECT_EQ(*v, "second");
+}
+
+TEST(MapApi_V12, SwapTwoMaps) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> a;
+    PrtArtSearchEngine<int, std::string> b;
+    EXPECT_EQ(a.insert(1, "a1"), status_ok);
+    EXPECT_EQ(b.insert(2, "b2"), status_ok);
+    a.swap(b);
+    EXPECT_EQ(a.size(), 1u);
+    EXPECT_EQ(b.size(), 1u);
+    EXPECT_TRUE(a.contains(2));
+    EXPECT_TRUE(b.contains(1));
+}
+
+TEST(MapApi_V12, MaxSizeIsPositive) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, int> m;
+    EXPECT_GT(m.max_size(), 0u);
+}
+
+TEST(MapApi_V12, KeyCompAndValueCompCallable) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, int> m;
+    auto kc = m.key_comp();
+    auto vc = m.value_comp();
+    (void)kc; (void)vc;  // verifiziert nur dass sie compile-bar sind
+    SUCCEED();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// REV 7.6 V14.1 — Tests fuer V13.5 merge + extract
+// ═════════════════════════════════════════════════════════════════════════════
+
+TEST(MapApi_V13, MergeTakesOnlyUniqueKeys) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> a;
+    PrtArtSearchEngine<int, std::string> b;
+    EXPECT_EQ(a.insert(1, "a1"), status_ok);
+    EXPECT_EQ(a.insert(2, "a2"), status_ok);
+    EXPECT_EQ(b.insert(2, "b2"), status_ok);  // Duplikat -> wird NICHT gemerged
+    EXPECT_EQ(b.insert(3, "b3"), status_ok);  // unique -> wird gemerged
+    EXPECT_EQ(b.insert(4, "b4"), status_ok);  // unique -> wird gemerged
+    auto merged = a.merge(b);
+    EXPECT_EQ(merged, 2u);  // 3+4 gemerged, 2 nicht
+    EXPECT_EQ(a.size(), 4u);
+    EXPECT_EQ(b.size(), 1u);  // nur key=2 bleibt
+    EXPECT_TRUE(b.contains(2));
+}
+
+TEST(MapApi_V13, ExtractReturnsValueAndRemoves) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    EXPECT_EQ(m.insert(42, "hello"), status_ok);
+    EXPECT_EQ(m.size(), 1u);
+    auto extracted = m.extract(42);
+    ASSERT_TRUE(extracted.has_value());
+    EXPECT_EQ(*extracted, "hello");
+    EXPECT_EQ(m.size(), 0u);
+    EXPECT_FALSE(m.contains(42));
+}
+
+TEST(MapApi_V13, ExtractMissingKeyReturnsNullopt) {
+    using namespace comdare::prt_art::identity;
+    PrtArtSearchEngine<int, std::string> m;
+    auto extracted = m.extract(999);
+    EXPECT_FALSE(extracted.has_value());
+}

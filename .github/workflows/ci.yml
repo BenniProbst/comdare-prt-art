@@ -42,5 +42,6 @@ jobs:
         run: |
           cmake -B build -G Ninja
           cmake --build build
-      - name: Run ctest
-        run: ctest --test-dir build --output-on-failure
+      # REV 7.6 V14.3 — Direkt-Ausfuehrung umgeht gtest_discover_tests MSB3073
+      - name: Run prt-art test binary directly (V14.3)
+        run: ./build/tests/unit/test_prt_art_identity

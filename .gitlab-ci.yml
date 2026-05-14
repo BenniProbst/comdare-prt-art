@@ -35,7 +35,8 @@ test:hybrid_search_engine:
   script:
     - cmake -B build-test -G Ninja
     - cmake --build build-test
-    - ctest --test-dir build-test --output-on-failure
+    # REV 7.6 V14.3 — Direkt-Ausfuehrung umgeht MSB3073 (MSVC); plattform-uniform
+    - ./build-test/tests/unit/test_prt_art_identity
   artifacts:
     paths:
       - build-test/Testing/

@@ -499,7 +499,7 @@ public:
     [[nodiscard]] size_type max_size() const noexcept { return storage_.max_size(); }
 
     // Reverse-Iteratoren (read-only, std::map-konform)
-    using const_reverse_iterator = typename storage_t::const_reverse_iterator;
+    using const_reverse_iterator = typename storage_map_t::const_reverse_iterator;
     [[nodiscard]] const_reverse_iterator rbegin()  const noexcept { return storage_.crbegin(); }
     [[nodiscard]] const_reverse_iterator rend()    const noexcept { return storage_.crend(); }
     [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return storage_.crbegin(); }
