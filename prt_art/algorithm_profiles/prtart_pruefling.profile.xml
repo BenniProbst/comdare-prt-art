@@ -33,6 +33,10 @@
     <value_types>std::string</value_types>
   </key_value_signature>
 
+  <!-- REV 7.6 V19.1: PRT-ART profitiert von YCSB-F (Read-Modify-Write)
+       fuer Density-Tracker-Updates -->
+  <expected_workload>YCSB_F</expected_workload>
+
   <hybrid_api_modes>
     <!-- REV 7.1 hybride API: 1/2/N>2 Parameter -->
     <mode>vector_api_1_param</mode>
