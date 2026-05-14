@@ -43,6 +43,7 @@ namespace comdare::prt_art::identity {
 // ─────────────────────────────────────────────────────────────────────────────
 // Komponenten-Bundle: alle PRT-ART-Bausteine, gemeinsam von beiden
 // Spezialisierungen verwendet (DRY)
+// REV 7.6 V11.1 — alle Member sind public exposed fuer Adapter-Verdrahtung
 // ─────────────────────────────────────────────────────────────────────────────
 struct PrtArtComponents {
     ::comdare::prt_art::allocator::PoolSet                       pools{};

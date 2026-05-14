@@ -235,3 +235,32 @@ cd build-msvc && ctest -C Debug --output-on-failure
 CLion: `Open Project` auf Repo-Root → CMake-Profile **Debug** / **MSVC-Debug**
 automatisch erkannt. RunConfigurations: 4 vorkonfigurierte (Identity, Nodes,
 ValueHandle, all-ctest).
+
+---
+
+## 10. V8-V11 Delta (REV 7.6 Vollimplementierung, 2026-05-13/14)
+
+### 10.1 Neue Header (prt_art/include/prt_art/identity/)
+- `prt_art_search_engine_adapter.hpp` (V8.9) — Komposition statt Inheritance fuer ABI-Konformitaet
+  - V9.1: 3 konkrete Subklassen Map/Vector/Tuple
+  - V10.3: notify_*-Methoden Skelett mit TODO
+  - V11.1: notify_*-Methoden vollstaendig verdrahtet (density_tracker/path_prefetch/hypothesis_metrics)
+
+### 10.2 Erweiterte Komponenten (V11.1 Komponenten-API)
+- `density_tracker.hpp` — `note_observation(double)` + `last_external_sample()`
+- `path_oriented_prefetch.hpp` — `note_hot_path_bytes(byte*, size_t)` + `total_hot_path_hints()`
+- `hypothesis_metrics.hpp` — `adapt_locality(double)` + `total_locality_adapts()`
+
+### 10.3 Neue Verzeichnisse
+- `prt_art/algorithm_profiles/` (V8.10) — Pruefling-Profile + permutation_axes_extension
+- `prt_art/legacy_reimpl/` (V9.4) — 14 Pruefling-Re-Implementations P11-P27 (verschoben aus cache-engine)
+
+### 10.4 CI
+- `.gitlab-ci.yml` (V11.7) — primaer
+- `.github/workflows/ci.yml` (V11.7) — synchron
+
+### 10.5 CMake-Optionen
+- `COMDARE_PRT_ART_BUILD_LEGACY_REIMPL` (V9.4, default OFF)
+
+### Querverweis
+- comdare-prt-art/docs/sessions/20260514-0900-v8-prt-art-abi-inheritance.md

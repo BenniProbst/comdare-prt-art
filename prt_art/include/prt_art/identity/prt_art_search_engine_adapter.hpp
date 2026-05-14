@@ -127,17 +127,19 @@ public:
         return this->impl().empty();
     }
 
-    // REV 7.6 V10.3 — Such-Heuristik-Hooks (Skelett, dokumentiert die Verdrahtung)
-    // Folge-Phase: PrtArtSearchEngine.components_ als public exposen + echte
-    // Methoden (note_observation/note_hot_path_bytes/adapt_locality) hinzufuegen.
-    void notify_density_threshold([[maybe_unused]] std::size_t bucket_density_pct) override {
-        // TODO V10.3-followup: this->impl().components_.density_tracker.note_observation(pct/100.0)
+    // REV 7.6 V11.1 — Such-Heuristik-Hooks vollstaendig verdrahtet
+    // Nutzt die public-Accessoren density_tracker()/path_prefetch()/
+    // hypothesis_metrics() der hybriden PrtArtSearchEngine.
+    void notify_density_threshold(std::size_t bucket_density_pct) override {
+        this->impl().density_tracker().note_observation(
+            static_cast<double>(bucket_density_pct) / 100.0);
     }
-    void notify_hot_path_detected([[maybe_unused]] typename base_t::binary_key_t const& path) override {
-        // TODO V10.3-followup: this->impl().components_.path_prefetch.note_hot_path_bytes(path.data(), path.size())
+    void notify_hot_path_detected(typename base_t::binary_key_t const& path) override {
+        this->impl().path_prefetch().note_hot_path_bytes(
+            path.data(), path.size());
     }
-    void notify_workload_change([[maybe_unused]] double estimated_locality) override {
-        // TODO V10.3-followup: this->impl().components_.hypothesis_metrics.adapt_locality(locality)
+    void notify_workload_change(double estimated_locality) override {
+        this->impl().hypothesis_metrics().adapt_locality(estimated_locality);
     }
 };
 

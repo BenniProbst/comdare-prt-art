@@ -4,7 +4,9 @@
 
 #include <prt_art/prefetch/distance_estimator.hpp>
 
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 namespace comdare::prt_art::prefetch {
@@ -43,10 +45,23 @@ public:
         total_enqueued_ = 0;
     }
 
+    // REV 7.6 V11.1 — Hot-Path-Hint via rohe Bytes (z.B. binary_key_t aus search_engine ABI)
+    // Erste 8 Byte werden als uint64 interpretiert + via enqueue() integriert.
+    void note_hot_path_bytes(std::byte const* data, std::size_t bytes) noexcept {
+        if (data == nullptr || bytes == 0) return;
+        std::uint64_t addr = 0;
+        std::size_t copy = bytes < sizeof(addr) ? bytes : sizeof(addr);
+        std::memcpy(&addr, data, copy);
+        enqueue(addr);
+        ++total_hot_path_hints_;
+    }
+    [[nodiscard]] std::uint64_t total_hot_path_hints() const noexcept { return total_hot_path_hints_; }
+
 private:
     static constexpr std::size_t kMaxTrackedSlots = 16;
     std::vector<std::uint64_t>   recent_path_{};
-    std::uint64_t                total_enqueued_ = 0;
+    std::uint64_t                total_enqueued_       = 0;
+    std::uint64_t                total_hot_path_hints_ = 0;  // V11.1
 };
 
 }  // namespace comdare::prt_art::prefetch

@@ -25,6 +25,14 @@ public:
         ++total_observations_;
     }
 
+    // REV 7.6 V11.1 — Externe Beobachtung ohne Node-ID (z.B. ueber notify-Hook)
+    void note_observation(double sample_pct_normalized) noexcept {
+        // sample_pct_normalized ist 0.0..1.0; Skalierung auf 0..100 fuer Bucket-Konsistenz
+        last_external_sample_ = sample_pct_normalized * 100.0;
+        ++total_observations_;
+    }
+    [[nodiscard]] double last_external_sample() const noexcept { return last_external_sample_; }
+
     [[nodiscard]] double density_for(std::uint64_t node_id) const noexcept {
         auto it = per_node_.find(node_id);
         return it == per_node_.end() ? 0.0 : it->second;
@@ -56,6 +64,7 @@ public:
 private:
     std::unordered_map<std::uint64_t, double> per_node_{};
     std::uint64_t                              total_observations_ = 0;
+    double                                     last_external_sample_ = 0.0;  // V11.1
 };
 
 }  // namespace comdare::prt_art::measurement

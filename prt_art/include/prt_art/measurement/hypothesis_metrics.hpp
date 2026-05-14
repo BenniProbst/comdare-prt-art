@@ -68,6 +68,19 @@ struct PrtArtHypothesisMetrics {
     H1PageTypeCost                  h1{};
     H2CodeQuality                   h2{};
     H3InlineVsExternalDistribution  h3{};
+
+    // REV 7.6 V11.1 — Adaptive Locality fuer notify_workload_change
+    // estimated_locality 0.0..1.0 — beeinflusst H1/H2-Schwellen-Empfindlichkeit
+    void adapt_locality(double estimated_locality) noexcept {
+        last_locality_estimate_ = estimated_locality;
+        ++total_locality_adapts_;
+    }
+    [[nodiscard]] double         last_locality_estimate() const noexcept { return last_locality_estimate_; }
+    [[nodiscard]] std::uint64_t  total_locality_adapts() const noexcept  { return total_locality_adapts_; }
+
+private:
+    double         last_locality_estimate_ = 0.0;  // V11.1
+    std::uint64_t  total_locality_adapts_  = 0;    // V11.1
 };
 
 }  // namespace comdare::prt_art::measurement
