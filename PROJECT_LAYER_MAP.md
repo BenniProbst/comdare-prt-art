@@ -264,3 +264,36 @@ ValueHandle, all-ctest).
 
 ### Querverweis
 - comdare-prt-art/docs/sessions/20260514-0900-v8-prt-art-abi-inheritance.md
+
+---
+
+## 11. V12-V14 Delta (REV 7.6 weitere Iterationen, 2026-05-14)
+
+### 11.1 PrtArtSearchEngine API-Vervollstaendigung (V12.1 + V12.2 + V13.5)
+- **Vector-API +5 Methoden (V12.1):** operator[], emplace_back, swap, rbegin/rend (+ crbegin/crend), assign(InputIt, InputIt)
+- **Map-API +8 Methoden (V12.2):** operator[], emplace, try_emplace, insert_or_assign, swap, max_size, rbegin/rend, key_comp/value_comp
+- **Map-API +2 Methoden (V13.5):** merge(other) mit cross-engine std::scoped_lock, extract(key) mit optional-Return
+
+### 11.2 PrtArtSearchEngineAdapter ABI-Vertraege (V12.4 + V11.1)
+- 3 konkrete Subklassen Map/Vector/Tuple ueberschreiben contains/count/find/clear (V12.4) + notify_density_threshold/hot_path_detected/workload_change (V11.1 vollstaendig verdrahtet, kein TODO)
+
+### 11.3 Komponenten-API-Erweiterungen (V11.1)
+- `density_tracker.hpp` — `note_observation(double)` + `last_external_sample()`
+- `path_oriented_prefetch.hpp` — `note_hot_path_bytes(byte*, size_t)` + `total_hot_path_hints()`
+- `hypothesis_metrics.hpp` — `adapt_locality(double)` + `total_locality_adapts()`
+
+### 11.4 Bug-Fix (V14.1)
+- `storage_t` → `storage_map_t` in V12.2 const_reverse_iterator (typedef-Verweis war falsch, von V14.1-Tests aufgedeckt)
+
+### 11.5 Tests (V14.1)
+- `tests/unit/test_prt_art_identity.cpp` erweitert um 15 neue Tests:
+  - Vector-API V12.1: 5 Tests (operator[], emplace_back, swap, rbegin/rend, assign)
+  - Map-API V12.2: 7 Tests (operator[], emplace, try_emplace, insert_or_assign, swap, max_size, key/value_comp)
+  - Map-API V13.5: 3 Tests (merge unique-only, extract returns+removes, extract missing nullopt)
+- Test-Lauf: 66/66 passed (17 ms)
+
+### 11.6 CI Test-Discovery-Workaround (V14.3)
+- Direkte Test-Binary-Ausfuehrung in beiden CI-Configs
+
+### Querverweis
+- comdare-prt-art HEAD: e6b79a3 (V14)
