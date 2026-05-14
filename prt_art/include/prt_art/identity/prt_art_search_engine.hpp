@@ -520,6 +520,45 @@ public:
     [[nodiscard]] auto key_comp() const noexcept { return storage_.key_comp(); }
     [[nodiscard]] auto value_comp() const noexcept { return storage_.value_comp(); }
 
+    // REV 7.6 V13.5 — std::map merge / extract
+
+    // merge: alle Eintraege aus other rueberverschieben, wenn der Key in *this NICHT existiert.
+    // Liefert die Anzahl der erfolgreich uebernommenen Eintraege (analog std::map::merge zaehlt
+    // diese implizit ueber die Knoten-Verluste in other).
+    [[nodiscard]] std::size_t merge(PrtArtSearchEngine& other) {
+        if (this == &other) return 0;
+        // Cross-Engine-Lock-Strategy: deadlock-vermeidend via std::scoped_lock
+        std::scoped_lock both{rw_lock_, other.rw_lock_};
+        std::size_t merged = 0;
+        for (auto it = other.storage_.begin(); it != other.storage_.end();) {
+            if (storage_.find(it->first) == storage_.end()) {
+                // Key in *this nicht vorhanden -> Knoten ruebergeben
+                auto handle = other.storage_.extract(it++);
+                storage_.insert(std::move(handle));
+                ++inserts_;
+                ++merged;
+                ++(other.erases_);
+            } else {
+                ++it;  // Key existiert -> Eintrag bleibt in other
+            }
+        }
+        return merged;
+    }
+
+    // extract: liefert den Wert + entfernt den Eintrag (analog std::map::extract by key).
+    // Returnt std::nullopt wenn Key nicht existiert.
+    [[nodiscard]] std::optional<mapped_type> extract(Key const& k) {
+        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
+        std::unique_lock lock{rw_lock_};
+        auto it = storage_.find(bk);
+        if (it == storage_.end()) return std::nullopt;
+        mapped_type extracted = std::move(it->second.second);
+        storage_.erase(it);
+        ++erases_;
+        return extracted;
+    }
+
     // ─── Counters / Stats (read-only) ────────────────────────────────────────
     [[nodiscard]] std::uint64_t total_inserts() const noexcept { return inserts_; }
     [[nodiscard]] std::uint64_t total_erases()  const noexcept { return erases_; }
