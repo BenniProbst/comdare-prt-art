@@ -127,6 +127,21 @@ public:
         return this->impl().empty();
     }
 
+    // REV 7.6 V12.4 — V12.3 ABI-Container-Vertraege ueberschreiben mit
+    // direkter Delegation an die hybride PrtArtSearchEngine-API.
+    [[nodiscard]] bool contains(key_t const& k) override {
+        return this->impl().contains(k);
+    }
+    [[nodiscard]] std::size_t count(key_t const& k) override {
+        return this->impl().count(k);
+    }
+    [[nodiscard]] std::optional<value_t> find(key_t const& k) override {
+        return this->impl().find(k);
+    }
+    [[nodiscard]] bool clear() override {
+        return this->impl().clear() == status_ok;
+    }
+
     // REV 7.6 V11.1 — Such-Heuristik-Hooks vollstaendig verdrahtet
     // Nutzt die public-Accessoren density_tracker()/path_prefetch()/
     // hypothesis_metrics() der hybriden PrtArtSearchEngine.
@@ -169,6 +184,20 @@ public:
     [[nodiscard]] bool empty() const noexcept override {
         return this->impl().empty();
     }
+
+    // REV 7.6 V12.4 — Vector-Variante: contains/count/find via at-Bounds-Check.
+    [[nodiscard]] bool contains(key_t const& k) override {
+        return static_cast<std::size_t>(k) < this->impl().size();
+    }
+    [[nodiscard]] std::size_t count(key_t const& k) override {
+        return contains(k) ? 1u : 0u;
+    }
+    [[nodiscard]] std::optional<value_t> find(key_t const& k) override {
+        return this->impl().at(static_cast<std::size_t>(k));
+    }
+    [[nodiscard]] bool clear() override {
+        return this->impl().clear() == status_ok;
+    }
 };
 
 // Tuple-API Variante (N>2 Template-Parameter, K + V1 + V2 + ...)
@@ -196,6 +225,20 @@ public:
     }
     [[nodiscard]] bool empty() const noexcept override {
         return this->impl().empty();
+    }
+
+    // REV 7.6 V12.4 — Tuple-Variante: gleiche Semantik wie Map (Key->Tuple-Value)
+    [[nodiscard]] bool contains(key_t const& k) override {
+        return this->impl().contains(k);
+    }
+    [[nodiscard]] std::size_t count(key_t const& k) override {
+        return this->impl().count(k);
+    }
+    [[nodiscard]] std::optional<value_t> find(key_t const& k) override {
+        return this->impl().find(k);
+    }
+    [[nodiscard]] bool clear() override {
+        return this->impl().clear() == status_ok;
     }
 };
 

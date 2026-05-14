@@ -238,6 +238,55 @@ public:
         }
     }
 
+    // REV 7.6 V12.1 — Range-Assign aus Iteratoren
+    template <typename InputIt>
+    status_t assign(InputIt first, InputIt last) {
+        ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
+        std::unique_lock lock{rw_lock_};
+        try {
+            data_.assign(first, last);
+            return status_ok;
+        } catch (std::bad_alloc const&) {
+            return status_out_of_memory;
+        }
+    }
+
+    // REV 7.6 V12.1 — operator[] nicht-throwing Random-Access
+    // (Lese: undefined wenn out-of-range; Schreiben via set_at)
+    [[nodiscard]] const_reference operator[](size_type index) const noexcept {
+        return data_[index];
+    }
+
+    // REV 7.6 V12.1 — Reverse-Iteratoren (read-only)
+    using const_reverse_iterator = typename std::vector<Value>::const_reverse_iterator;
+    [[nodiscard]] const_reverse_iterator rbegin()  const noexcept { return data_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator rend()    const noexcept { return data_.crend(); }
+    [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return data_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator crend()   const noexcept { return data_.crend(); }
+
+    // REV 7.6 V12.1 — emplace_back via perfect forwarding (analog std::vector)
+    template <typename... Args>
+    status_t emplace_back(Args&&... args) {
+        ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
+        std::unique_lock lock{rw_lock_};
+        try {
+            data_.emplace_back(std::forward<Args>(args)...);
+            update_density();
+            return status_ok;
+        } catch (std::bad_alloc const&) {
+            return status_out_of_memory;
+        }
+    }
+
+    // REV 7.6 V12.1 — Member-Swap (noexcept-Garantie der std::vector + std::shared_mutex)
+    void swap(PrtArtSearchEngine& other) noexcept {
+        // Beide Locks in deterministischer Reihenfolge (deadlock-vermeidend)
+        if (this == &other) return;
+        std::scoped_lock both{rw_lock_, other.rw_lock_};
+        data_.swap(other.data_);
+        // components_ bleiben jeweils beim Owner (kein deep-swap)
+    }
+
     // ─── Identity API ─────────────────────────────────────────────────────────
     [[nodiscard]] static ::comdare::cache_engine::PermutationFlags identity_flags() noexcept {
         return prt_art_permutation_flags();
@@ -419,6 +468,57 @@ public:
         }
         return status_ok;
     }
+
+    // REV 7.6 V12.2 — std::map-konforme Schreib-Ops
+
+    // insert_or_assign: liefert (inserted, status) — wie std::map::insert_or_assign
+    status_t insert_or_assign(Key const& k, mapped_type const& v) {
+        // semantisch identisch zu set(); rein API-Parallele zu std::map
+        return set(k, v);
+    }
+
+    // emplace via perfect forwarding (analog std::map::emplace)
+    template <typename... Args>
+    status_t emplace(Key const& k, Args&&... args) {
+        return insert_internal(k, mapped_type(std::forward<Args>(args)...));
+    }
+
+    // try_emplace: nur einfuegen wenn Key fehlt (analog std::map::try_emplace)
+    template <typename... Args>
+    status_t try_emplace(Key const& k, Args&&... args) {
+        return insert_internal(k, mapped_type(std::forward<Args>(args)...));
+    }
+
+    // operator[]: Lazy-Insert-Default + return reference (Lese-Variante: by-value optional)
+    // Schreib-API bewusst nicht als reference — Concurrency-Korrektheit (use set() / insert_or_assign)
+    [[nodiscard]] std::optional<mapped_type> operator[](Key const& k) const {
+        return lookup(k);
+    }
+
+    // max_size — analog std::map
+    [[nodiscard]] size_type max_size() const noexcept { return storage_.max_size(); }
+
+    // Reverse-Iteratoren (read-only, std::map-konform)
+    using const_reverse_iterator = typename storage_t::const_reverse_iterator;
+    [[nodiscard]] const_reverse_iterator rbegin()  const noexcept { return storage_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator rend()    const noexcept { return storage_.crend(); }
+    [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return storage_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator crend()   const noexcept { return storage_.crend(); }
+
+    // Member-Swap (deadlock-vermeidend via std::scoped_lock)
+    void swap(PrtArtSearchEngine& other) noexcept {
+        if (this == &other) return;
+        std::scoped_lock both{rw_lock_, other.rw_lock_};
+        storage_.swap(other.storage_);
+        std::swap(inserts_,      other.inserts_);
+        std::swap(erases_,       other.erases_);
+        std::swap(const_hits_,   other.const_hits_);
+        std::swap(const_misses_, other.const_misses_);
+    }
+
+    // Comparators — analog std::map (key_compare ist die Default less-Order der binary_key)
+    [[nodiscard]] auto key_comp() const noexcept { return storage_.key_comp(); }
+    [[nodiscard]] auto value_comp() const noexcept { return storage_.value_comp(); }
 
     // ─── Counters / Stats (read-only) ────────────────────────────────────────
     [[nodiscard]] std::uint64_t total_inserts() const noexcept { return inserts_; }
