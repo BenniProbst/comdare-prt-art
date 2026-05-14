@@ -297,3 +297,39 @@ ValueHandle, all-ctest).
 
 ### Querverweis
 - comdare-prt-art HEAD: e6b79a3 (V14)
+
+---
+
+## 12. REV 7.7 V19-V27 (2026-05-14): Pipeline + Layout + Konsistenz
+
+### 12.1 V19.1 expected_workload-Tag im prtart-Profile
+`prt_art/algorithm_profiles/prtart_pruefling.profile.xml`:
+```xml
+<expected_workload>YCSB_F</expected_workload>
+```
+Read-modify-write fuer Density-Tracker-Updates.
+
+### 12.2 V18.2 prtart_body.hpp.template (Codegen)
+NEU `prt_art/codegen/templates/prtart_body.hpp.template`:
+- 3 atomic counters (ops_executed_, hot_path_hits_, density_observations_)
+- Konsumiert von cache-engine codegen Multi-Path-Lookup (V18.1)
+
+### 12.3 V24.A Cleanup + CMakePresets
+- 5 obsolete `build-msvc-vXX/`-Verzeichnisse entfernt
+- `CMakePresets.json` (V6) mit `binaryDir=${sourceDir}/build/${presetName}`
+- 4 Presets (msvc-release, msvc-debug, gcc-release, clang-release)
+
+### 12.4 V25.A Audit-Cleanup
+2 leere Dirs (`cmake/`, `prt_art/src/`) bekommen README.md statt Loeschung
+(Memory-Direktive "niemals Doku loeschen" — V24).
+
+### 12.5 cache-engine V25-V26 Konsumption (via Submodule)
+- 30/30 SOTA-Profile (V25.B) — fuer Algorithmus-Vergleich
+- 10 Allokator-Profile (V26.A) — fuer Allokator-Vergleich
+- 21 Adapter-Skelette (V25.C + V26.B) — `comdare::adapter::*` ALIAS-Targets
+
+### Querverweis V19-V27
+- Diplomarbeit/docs/sessions/20260514-3300-v25-anker.md (V25)
+- Diplomarbeit/docs/sessions/20260514-3500-v26-anker.md (V26)
+- comdare-prt-art HEAD V25.A: afbdd75
+- comdare-cache-engine HEAD V27.A: 11ab988
