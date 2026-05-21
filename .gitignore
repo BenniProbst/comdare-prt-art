@@ -3,6 +3,8 @@ build/
 build-*/
 out/
 cmake-build-*/
+# V34.D.1: Doxygen HTML-Output (Doxyfile bleibt)
+docs/doxygen_prt_art/
 
 # IDE/Editor
 .vs/

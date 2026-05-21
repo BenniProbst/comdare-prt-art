@@ -1,0 +1,45 @@
+# V34.D.1 (2026-05-21) - Doxyfile fuer prt-art Header
+#
+# Erzeugt HTML-Doku unter docs/doxygen_prt_art/ mit Custom-Tag-Aliassen
+# (analog cache-engine V33.E.1 Doxyfile).
+#
+# Aufruf: cd prt_art/include && doxygen prt_art/Doxyfile
+
+PROJECT_NAME           = "comdare-prt-art"
+PROJECT_NUMBER         = "V33.B.1 + V34.A.2"
+OUTPUT_DIRECTORY       = ../../docs/doxygen_prt_art
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = YES
+OUTPUT_LANGUAGE        = German
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+ALWAYS_DETAILED_SEC    = NO
+JAVADOC_AUTOBRIEF      = YES
+FULL_PATH_NAMES        = NO
+
+# BB.1 Custom-Tags (Doxygen-Mapping-Konvention)
+ALIASES                = "achse=\par Achse:\n" \
+                         "subsystem=\par Subsystem:\n" \
+                         "reuse_status=\par Reuse-Status:\n" \
+                         "command_pattern=\par Command-Pattern:\n" \
+                         "phase_owner=\par Phase-Owner:\n" \
+                         "kuehn_variant=\par Kuehn-Variant:\n" \
+                         "default_lookup_provided_by=\par Default-Lookup-Provider:\n" \
+                         "anti_pattern=\par ANTI-PATTERN:\n"
+
+INPUT                  = .
+FILE_PATTERNS          = *.hpp *.cpp *.md
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+WARN_NO_PARAMDOC       = NO
+QUIET                  = NO
