@@ -61,3 +61,11 @@ target_include_directories(test_default_lookup_registry PRIVATE
     ${CMAKE_SOURCE_DIR}/prt_art/include)
 target_compile_features(test_default_lookup_registry PRIVATE cxx_std_23)
 gtest_discover_tests(test_default_lookup_registry DISCOVERY_TIMEOUT 30)
+
+# V34.E.2 (2026-05-21) - LeafOnlyCounter (Kuehn 11.X1) Tests
+add_executable(test_leaf_only_counter test_leaf_only_counter.cpp)
+target_link_libraries(test_leaf_only_counter PRIVATE gtest gtest_main)
+target_include_directories(test_leaf_only_counter PRIVATE
+    ${CMAKE_SOURCE_DIR}/prt_art/include)
+target_compile_features(test_leaf_only_counter PRIVATE cxx_std_23)
+gtest_discover_tests(test_leaf_only_counter DISCOVERY_TIMEOUT 30)
