@@ -28,6 +28,16 @@ endif()
 option(COMDARE_PRT_ART_BUILD_TESTS "Build Google-Tests" ON)
 option(COMDARE_PRT_ART_USE_CACHE_ENGINE "CacheEngine als add_subdirectory einbinden" OFF)
 
+# V36.C (2026-05-23): Pre-Build Pruefling-Permutations
+option(COMDARE_PRT_ART_BUILD_PERMUTATIONS "Pre-Build PRT-ART Pruefling-Algorithmus-Rekombinationen" OFF)
+
+if(COMDARE_PRT_ART_BUILD_PERMUTATIONS)
+    include(cmake/permutations.cmake OPTIONAL)
+    if(EXISTS "${CMAKE_BINARY_DIR}/generated/prt_art_permutations.cmake")
+        include("${CMAKE_BINARY_DIR}/generated/prt_art_permutations.cmake")
+    endif()
+endif()
+
 if(COMDARE_PRT_ART_USE_CACHE_ENGINE)
     add_subdirectory(${COMDARE_CACHE_ENGINE_DIR}
                      ${CMAKE_BINARY_DIR}/cache_engine_external
