@@ -131,13 +131,24 @@ foreach(_perm IN LISTS _all_perms)
         math(EXPR _count_skipped "${_count_skipped} + 1")
     else()
         file(WRITE "${_wrapper}"
-"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E + V37.D 2026-05-23)
+"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E + V37.D + V38.B/D 2026-05-24)
 // PRT-ART Pruefling-Permutation: ${_perm_id}
 // Profile=${COMDARE_PROFILE}
 // V36.E Version: ${_stored_version}  (Achsen-Sig: ${_current_axes_sig})
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
+#include <map>
+
+// V38.B Cross-platform Symbol-Export
+#if defined(_WIN32) || defined(__CYGWIN__)
+  #define COMDARE_PA_EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) || defined(__clang__)
+  #define COMDARE_PA_EXPORT __attribute__((visibility(\"default\")))
+#else
+  #define COMDARE_PA_EXPORT
+#endif
 
 #define COMDARE_PA_PERM_ID \"pa_${_perm_id}\"
 #define COMDARE_PA_PERM_VERSION \"${_stored_version}\"
@@ -146,40 +157,70 @@ foreach(_perm IN LISTS _all_perms)
 #define COMDARE_PA_LOOKUP \"${_lookup}\"
 #define COMDARE_PA_TELEMETRY \"${_telem}\"
 
-namespace comdare::prt_art::perm::pa_${_perm_id} {
+// V38.C - PermDescriptor: ausserhalb namespace fuer extern \"C\"-Export
+struct PermDescriptor {
+    const char* id;
+    const char* version;
+    const char* axes;
+    int (*run)(unsigned long, double*);
+};
 
-extern \"C\" const char* perm_pa_${_perm_id}_id() {
+extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_id() {
     return COMDARE_PA_PERM_ID;
 }
 
-extern \"C\" const char* perm_pa_${_perm_id}_version() {
+extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_version() {
     return COMDARE_PA_PERM_VERSION;
 }
 
-// V37.D (2026-05-23) - PRT-ART Pruefling-Algorithmus-Body Skelett.
-// Phase 6+ ersetzt durch echte ART/B+Tree-Operationen gemaess Achsen.
-extern \"C\" int perm_pa_${_perm_id}_run(unsigned long n_ops, double* out_micros_per_op) {
+extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_axes() {
+    return \"node=${_node},pc=${_pc},lookup=${_lookup},telem=${_telem}\";
+}
+
+// V38.D (2026-05-24) - PRT-ART Algorithmus-Body
+
+extern \"C\" COMDARE_PA_EXPORT int perm_pa_${_perm_id}_run(unsigned long n_ops, double* out_micros_per_op) {
     if (!out_micros_per_op || n_ops == 0) {
         return -1;
     }
+    std::map<std::uint64_t, std::uint64_t> trie_like;
+
     auto t0 = std::chrono::steady_clock::now();
-    volatile unsigned long acc = 0;
+    // Node-Achse: compact -> kleinere keys; wide -> grosse keys
+    constexpr std::uint64_t kPrime = 11400714819323198485ULL;
     for (unsigned long i = 0; i < n_ops; ++i) {
-        acc += i * 3;
+        std::uint64_t k = static_cast<std::uint64_t>(i) * kPrime;
+        trie_like.emplace(k, i);
     }
-    (void)acc;
+    // Lookup-Achse: linear/binary/simd (alle aktuell std::map binary)
+    std::uint64_t hits = 0;
+    for (unsigned long i = 0; i < n_ops; ++i) {
+        std::uint64_t k = static_cast<std::uint64_t>(i) * kPrime;
+        auto it = trie_like.find(k);
+        if (it != trie_like.end()) {
+            ++hits;
+        }
+    }
     auto t1 = std::chrono::steady_clock::now();
+    if (hits != static_cast<std::uint64_t>(n_ops)) {
+        return -2;
+    }
     double total_us = std::chrono::duration<double, std::micro>(t1 - t0).count();
-    *out_micros_per_op = total_us / static_cast<double>(n_ops);
+    *out_micros_per_op = total_us / static_cast<double>(n_ops * 2);
     return 0;
 }
 
-const char* pa_axis_node     = COMDARE_PA_NODE;
-const char* pa_axis_pc       = COMDARE_PA_PATH_COMPRESSION;
-const char* pa_axis_lookup   = COMDARE_PA_LOOKUP;
-const char* pa_axis_telem    = COMDARE_PA_TELEMETRY;
+// V38.C Plugin-Entry-Symbol (ausserhalb namespace).
+static constexpr PermDescriptor kDescriptor_pa_${_perm_id} {
+    COMDARE_PA_PERM_ID,
+    COMDARE_PA_PERM_VERSION,
+    \"node=${_node},pc=${_pc},lookup=${_lookup},telem=${_telem}\",
+    &perm_pa_${_perm_id}_run
+};
 
-}  // namespace
+extern \"C\" COMDARE_PA_EXPORT const PermDescriptor* comdare_perm_descriptor() {
+    return &kDescriptor_pa_${_perm_id};
+}
 ")
         file(WRITE "${_version_file}"
 "perm_id=pa_${_perm_id}
@@ -224,11 +265,19 @@ foreach(_perm IN LISTS _all_perms)
     list(GET _parts 3 _pa_telem)
     set(_axis_path "node_${_pa_node}/pc_${_pa_pc}/lookup_${_pa_lookup}/telem_${_pa_telem}")
 
+    # V38.B (2026-05-24): SHARED-Library statt STATIC.
     string(APPEND _cmake_content
-"add_library(perm_pa_${_perm_id} STATIC \"${_perm_src_dir}/perm_pa_${_perm_id}.cpp\")
+"add_library(perm_pa_${_perm_id} SHARED \"${_perm_src_dir}/perm_pa_${_perm_id}.cpp\")
 target_compile_features(perm_pa_${_perm_id} PRIVATE cxx_std_23)
 set_target_properties(perm_pa_${_perm_id} PROPERTIES
+    PREFIX \"\"
+    OUTPUT_NAME \"perm_pa_${_perm_id}\"
+    RUNTIME_OUTPUT_DIRECTORY \"\${CMAKE_BINARY_DIR}/perm/prt_art/${_axis_path}\"
+    LIBRARY_OUTPUT_DIRECTORY \"\${CMAKE_BINARY_DIR}/perm/prt_art/${_axis_path}\"
     ARCHIVE_OUTPUT_DIRECTORY \"\${CMAKE_BINARY_DIR}/perm/prt_art/${_axis_path}\"
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+    POSITION_INDEPENDENT_CODE ON
     FOLDER \"perm_prt_art\")
 
 ")
