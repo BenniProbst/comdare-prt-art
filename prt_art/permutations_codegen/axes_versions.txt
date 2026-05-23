@@ -1,0 +1,26 @@
+# PRT-ART Achsen-Algorithmus-Versionen (V36.E)
+#
+# Format: axis_<axis>_<variant>=<version_tag>
+# Bei algorithmischer Aenderung: bump (v1 -> v2)
+# Codegen detektiert Differenz + triggert MINOR-Bump nur bei BETROFFENEN Perms.
+
+# PA-1 Node-Typ
+axis_pa1_node_compact=v1
+axis_pa1_node_wide=v1
+axis_pa1_node_leaf_only=v1
+axis_pa1_node_internal=v1
+
+# PA-2 Path-Compression
+axis_pa2_pc_none=v1
+axis_pa2_pc_lazy=v1
+axis_pa2_pc_eager=v1
+
+# PA-3 Lookup-Algorithmus
+axis_pa3_lookup_linear=v1
+axis_pa3_lookup_binary=v1
+axis_pa3_lookup_simd=v1
+
+# PA-4 Telemetry-Mode (Kuehn 11.X1)
+axis_pa4_telem_leaf_only=v1
+axis_pa4_telem_sampling=v1
+axis_pa4_telem_offline=v1

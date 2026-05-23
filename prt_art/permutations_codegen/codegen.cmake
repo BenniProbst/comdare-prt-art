@@ -53,25 +53,91 @@ endforeach()
 list(LENGTH _all_perms _n_perms)
 message(STATUS "PRT-ART Permutations-Codegen: ${_n_perms} gueltige Permutationen (Profile=${COMDARE_PROFILE})")
 
+# V36.E: Achsen-Versionen + per-Perm Versionierung + selective Rebuild
+set(_axes_versions_file "${CMAKE_CURRENT_LIST_DIR}/axes_versions.txt")
+set(_axes_versions_content "")
+if(EXISTS "${_axes_versions_file}")
+    file(READ "${_axes_versions_file}" _axes_versions_content)
+endif()
+
+function(_pa_axis_version axis_key out_var)
+    string(REGEX MATCH "axis_${axis_key}=([^\n\r]+)" _m "${_axes_versions_content}")
+    if(_m)
+        set(${out_var} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+    else()
+        set(${out_var} "v0" PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(_pa_bump_minor in_version out_var)
+    if(in_version MATCHES "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
+        math(EXPR _new_minor "${CMAKE_MATCH_2} + 1")
+        set(${out_var} "${CMAKE_MATCH_1}.${_new_minor}.0" PARENT_SCOPE)
+    else()
+        set(${out_var} "0.1.0" PARENT_SCOPE)
+    endif()
+endfunction()
+
+set(_perm_versions_dir "${_out_dir}/perm_versions_prt_art")
+file(MAKE_DIRECTORY "${_perm_versions_dir}")
+
 set(_count_written 0)
 set(_count_skipped 0)
+set(_count_bumped 0)
+
 foreach(_perm IN LISTS _all_perms)
     string(REPLACE "|" "_" _perm_id "${_perm}")
     set(_wrapper "${_perm_src_dir}/perm_pa_${_perm_id}.cpp")
-    if(EXISTS "${_wrapper}" AND NOT COMDARE_MODE STREQUAL "on_rebuild")
+    set(_version_file "${_perm_versions_dir}/perm_pa_${_perm_id}.version")
+
+    string(REPLACE "|" ";" _parts "${_perm}")
+    list(GET _parts 0 _node)
+    list(GET _parts 1 _pc)
+    list(GET _parts 2 _lookup)
+    list(GET _parts 3 _telem)
+
+    _pa_axis_version("pa1_node_${_node}" _av_node)
+    _pa_axis_version("pa2_pc_${_pc}" _av_pc)
+    _pa_axis_version("pa3_lookup_${_lookup}" _av_lookup)
+    _pa_axis_version("pa4_telem_${_telem}" _av_telem)
+    set(_current_axes_sig "node=${_av_node};pc=${_av_pc};lookup=${_av_lookup};telem=${_av_telem}")
+
+    set(_stored_version "0.1.0")
+    set(_stored_axes_sig "")
+    if(EXISTS "${_version_file}")
+        file(READ "${_version_file}" _vf_content)
+        string(REGEX MATCH "version=([^\n\r]+)" _m "${_vf_content}")
+        if(_m)
+            set(_stored_version "${CMAKE_MATCH_1}")
+        endif()
+        string(REGEX MATCH "axes=([^\n\r]+)" _m "${_vf_content}")
+        if(_m)
+            set(_stored_axes_sig "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+
+    set(_needs_rebuild FALSE)
+    if(NOT EXISTS "${_wrapper}")
+        set(_needs_rebuild TRUE)
+    elseif(COMDARE_MODE STREQUAL "on_rebuild")
+        set(_needs_rebuild TRUE)
+    elseif(NOT "${_stored_axes_sig}" STREQUAL "${_current_axes_sig}")
+        set(_needs_rebuild TRUE)
+        _pa_bump_minor("${_stored_version}" _stored_version)
+        math(EXPR _count_bumped "${_count_bumped} + 1")
+    endif()
+
+    if(NOT _needs_rebuild)
         math(EXPR _count_skipped "${_count_skipped} + 1")
     else()
-        string(REPLACE "|" ";" _parts "${_perm}")
-        list(GET _parts 0 _node)
-        list(GET _parts 1 _pc)
-        list(GET _parts 2 _lookup)
-        list(GET _parts 3 _telem)
         file(WRITE "${_wrapper}"
-"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C 2026-05-23)
+"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E 2026-05-23)
 // PRT-ART Pruefling-Permutation: ${_perm_id}
 // Profile=${COMDARE_PROFILE}
+// V36.E Version: ${_stored_version}  (Achsen-Sig: ${_current_axes_sig})
 
 #define COMDARE_PA_PERM_ID \"pa_${_perm_id}\"
+#define COMDARE_PA_PERM_VERSION \"${_stored_version}\"
 #define COMDARE_PA_NODE \"${_node}\"
 #define COMDARE_PA_PATH_COMPRESSION \"${_pc}\"
 #define COMDARE_PA_LOOKUP \"${_lookup}\"
@@ -83,6 +149,10 @@ extern \"C\" const char* perm_pa_${_perm_id}_id() {
     return COMDARE_PA_PERM_ID;
 }
 
+extern \"C\" const char* perm_pa_${_perm_id}_version() {
+    return COMDARE_PA_PERM_VERSION;
+}
+
 const char* pa_axis_node     = COMDARE_PA_NODE;
 const char* pa_axis_pc       = COMDARE_PA_PATH_COMPRESSION;
 const char* pa_axis_lookup   = COMDARE_PA_LOOKUP;
@@ -90,11 +160,17 @@ const char* pa_axis_telem    = COMDARE_PA_TELEMETRY;
 
 }  // namespace
 ")
+        file(WRITE "${_version_file}"
+"perm_id=pa_${_perm_id}
+version=${_stored_version}
+axes=${_current_axes_sig}
+last_codegen=${CMAKE_CURRENT_LIST_FILE}
+")
         math(EXPR _count_written "${_count_written} + 1")
     endif()
 endforeach()
 
-message(STATUS "PRT-ART Permutations-Codegen: ${_count_written} Wrapper geschrieben, ${_count_skipped} on-demand uebersprungen")
+message(STATUS "PRT-ART Permutations-Codegen: ${_count_written} geschrieben, ${_count_skipped} skipped, ${_count_bumped} minor-bumped (V36.E)")
 
 # Manifest
 set(_manifest_content "# prt_art_permutations_manifest.txt (V36.C)\n# Profile=${COMDARE_PROFILE} Mode=${COMDARE_MODE} count=${_n_perms}\n")
