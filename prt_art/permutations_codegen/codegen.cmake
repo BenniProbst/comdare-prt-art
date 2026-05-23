@@ -131,10 +131,13 @@ foreach(_perm IN LISTS _all_perms)
         math(EXPR _count_skipped "${_count_skipped} + 1")
     else()
         file(WRITE "${_wrapper}"
-"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E 2026-05-23)
+"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E + V37.D 2026-05-23)
 // PRT-ART Pruefling-Permutation: ${_perm_id}
 // Profile=${COMDARE_PROFILE}
 // V36.E Version: ${_stored_version}  (Achsen-Sig: ${_current_axes_sig})
+
+#include <chrono>
+#include <cstddef>
 
 #define COMDARE_PA_PERM_ID \"pa_${_perm_id}\"
 #define COMDARE_PA_PERM_VERSION \"${_stored_version}\"
@@ -151,6 +154,24 @@ extern \"C\" const char* perm_pa_${_perm_id}_id() {
 
 extern \"C\" const char* perm_pa_${_perm_id}_version() {
     return COMDARE_PA_PERM_VERSION;
+}
+
+// V37.D (2026-05-23) - PRT-ART Pruefling-Algorithmus-Body Skelett.
+// Phase 6+ ersetzt durch echte ART/B+Tree-Operationen gemaess Achsen.
+extern \"C\" int perm_pa_${_perm_id}_run(unsigned long n_ops, double* out_micros_per_op) {
+    if (!out_micros_per_op || n_ops == 0) {
+        return -1;
+    }
+    auto t0 = std::chrono::steady_clock::now();
+    volatile unsigned long acc = 0;
+    for (unsigned long i = 0; i < n_ops; ++i) {
+        acc += i * 3;
+    }
+    (void)acc;
+    auto t1 = std::chrono::steady_clock::now();
+    double total_us = std::chrono::duration<double, std::micro>(t1 - t0).count();
+    *out_micros_per_op = total_us / static_cast<double>(n_ops);
+    return 0;
 }
 
 const char* pa_axis_node     = COMDARE_PA_NODE;
@@ -190,13 +211,24 @@ message(STATUS \"PRT-ART Permutations: registriere ${_n_perms} Pruefling-Targets
 
 ")
 
+# V37.G (2026-05-23): Hierarchischer Achsen-Ordnerbaum analog cache-engine.
+# Wurzel: ${BINARY_DIR}/perm/prt_art/
+# Achsen-Reihenfolge: Node -> PathCompression -> Lookup -> Telemetry
+# Voller Pfad: perm/prt_art/node_<v>/pc_<v>/lookup_<v>/telem_<v>/perm_pa_<id>.lib
 foreach(_perm IN LISTS _all_perms)
     string(REPLACE "|" "_" _perm_id "${_perm}")
+    string(REPLACE "|" ";" _parts "${_perm}")
+    list(GET _parts 0 _pa_node)
+    list(GET _parts 1 _pa_pc)
+    list(GET _parts 2 _pa_lookup)
+    list(GET _parts 3 _pa_telem)
+    set(_axis_path "node_${_pa_node}/pc_${_pa_pc}/lookup_${_pa_lookup}/telem_${_pa_telem}")
+
     string(APPEND _cmake_content
 "add_library(perm_pa_${_perm_id} STATIC \"${_perm_src_dir}/perm_pa_${_perm_id}.cpp\")
 target_compile_features(perm_pa_${_perm_id} PRIVATE cxx_std_23)
 set_target_properties(perm_pa_${_perm_id} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY \"\${CMAKE_BINARY_DIR}/perm/prt_art/${_perm_id}\"
+    ARCHIVE_OUTPUT_DIRECTORY \"\${CMAKE_BINARY_DIR}/perm/prt_art/${_axis_path}\"
     FOLDER \"perm_prt_art\")
 
 ")
