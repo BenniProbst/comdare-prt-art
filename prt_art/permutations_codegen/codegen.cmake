@@ -130,16 +130,29 @@ foreach(_perm IN LISTS _all_perms)
     if(NOT _needs_rebuild)
         math(EXPR _count_skipped "${_count_skipped} + 1")
     else()
+        # V39.C - Per-Achsen Compile-Time-Defines fuer echte Code-Pfade
+        string(TOUPPER "COMDARE_PA_NODE_IS_${_node}" _axis_macro_node)
+        string(TOUPPER "COMDARE_PA_LOOKUP_IS_${_lookup}" _axis_macro_lookup)
+        string(TOUPPER "COMDARE_PA_PC_IS_${_pc}" _axis_macro_pc)
+        string(TOUPPER "COMDARE_PA_TELEM_IS_${_telem}" _axis_macro_telem)
+
         file(WRITE "${_wrapper}"
-"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36.C+E + V37.D + V38.B/D 2026-05-24)
+"// Auto-generiert von prt_art/permutations_codegen/codegen.cmake (V36-V39 2026-05-24)
 // PRT-ART Pruefling-Permutation: ${_perm_id}
 // Profile=${COMDARE_PROFILE}
 // V36.E Version: ${_stored_version}  (Achsen-Sig: ${_current_axes_sig})
+
+#define ${_axis_macro_node} 1
+#define ${_axis_macro_lookup} 1
+#define ${_axis_macro_pc} 1
+#define ${_axis_macro_telem} 1
 
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 // V38.B Cross-platform Symbol-Export
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -177,31 +190,62 @@ extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_axes() {
     return \"node=${_node},pc=${_pc},lookup=${_lookup},telem=${_telem}\";
 }
 
-// V38.D (2026-05-24) - PRT-ART Algorithmus-Body
+// V39.C (2026-05-24) - Echt achsen-spezifischer PRT-ART Algorithmus
+
+#if defined(COMDARE_PA_NODE_IS_COMPACT)
+  using pa_key_t = std::uint32_t;
+#else
+  using pa_key_t = std::uint64_t;
+#endif
 
 extern \"C\" COMDARE_PA_EXPORT int perm_pa_${_perm_id}_run(unsigned long n_ops, double* out_micros_per_op) {
     if (!out_micros_per_op || n_ops == 0) {
         return -1;
     }
-    std::map<std::uint64_t, std::uint64_t> trie_like;
-
-    auto t0 = std::chrono::steady_clock::now();
-    // Node-Achse: compact -> kleinere keys; wide -> grosse keys
     constexpr std::uint64_t kPrime = 11400714819323198485ULL;
+
+#if defined(COMDARE_PA_LOOKUP_IS_BINARY)
+    std::map<pa_key_t, std::uint32_t> tree;
+    auto t0 = std::chrono::steady_clock::now();
     for (unsigned long i = 0; i < n_ops; ++i) {
-        std::uint64_t k = static_cast<std::uint64_t>(i) * kPrime;
-        trie_like.emplace(k, i);
+        tree.emplace(static_cast<pa_key_t>(i * kPrime), static_cast<std::uint32_t>(i));
     }
-    // Lookup-Achse: linear/binary/simd (alle aktuell std::map binary)
     std::uint64_t hits = 0;
+    std::uint64_t telem = 0;
     for (unsigned long i = 0; i < n_ops; ++i) {
-        std::uint64_t k = static_cast<std::uint64_t>(i) * kPrime;
-        auto it = trie_like.find(k);
-        if (it != trie_like.end()) {
+        auto it = tree.find(static_cast<pa_key_t>(i * kPrime));
+        if (it != tree.end()) {
             ++hits;
+        #if defined(COMDARE_PA_TELEM_IS_LEAF_ONLY)
+            ++telem;
+        #elif defined(COMDARE_PA_TELEM_IS_SAMPLING)
+            if ((i % 100) == 0) ++telem;
+        #endif
         }
     }
     auto t1 = std::chrono::steady_clock::now();
+    (void)telem;
+#else  // LOOKUP_IS_LINEAR
+    std::vector<std::pair<pa_key_t, std::uint32_t>> arr;
+    arr.reserve(static_cast<std::size_t>(n_ops));
+    auto t0 = std::chrono::steady_clock::now();
+    for (unsigned long i = 0; i < n_ops; ++i) {
+        arr.emplace_back(static_cast<pa_key_t>(i * kPrime), static_cast<std::uint32_t>(i));
+    }
+    #if defined(COMDARE_PA_PC_IS_LAZY)
+    std::sort(arr.begin(), arr.end(),
+              [](auto const& a, auto const& b){ return a.first < b.first; });
+    #endif
+    std::uint64_t hits = 0;
+    for (unsigned long i = 0; i < n_ops; ++i) {
+        pa_key_t target = static_cast<pa_key_t>(i * kPrime);
+        for (auto const& p : arr) {
+            if (p.first == target) { ++hits; break; }
+        }
+    }
+    auto t1 = std::chrono::steady_clock::now();
+#endif
+
     if (hits != static_cast<std::uint64_t>(n_ops)) {
         return -2;
     }
