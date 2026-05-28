@@ -12,17 +12,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CacheEngine als Werkzeug (Git-Submodule unter external/comdare-cache-engine,
-# User-Direktive 2026-05-12, Ausnahme zu CLAUDE.md S2683 analog S2686b)
+# CacheEngine als Werkzeug — V41.E6 (2026-05-29): KEIN nested Submodule mehr.
+# Plugin-Controller-Modell (Doku 20): die cache-engine LÄDT prt-art als Plugin
+# (cache-engine -DCOMDARE_CE_PRUEFLINGE=<prt-art>) und stellt dabei ihre Includes
+# selbst bereit — prt-arts CMakeLists ist dann NICHT der Build-Treiber. Für den
+# prt-art-STANDALONE-Build zeigt COMDARE_CACHE_ENGINE_DIR auf die Geschwister-
+# cache-engine (Default) bzw. einen vom Aufrufer via -D gesetzten Pfad.
+# (Hebt die nested-Submodule-Direktive 2026-05-12 auf; E6/#22.)
 # ─────────────────────────────────────────────────────────────────────────────
-set(COMDARE_CACHE_ENGINE_DIR "${CMAKE_SOURCE_DIR}/external/comdare-cache-engine"
-    CACHE PATH "Pfad zur als Submodule eingebundenen comdare-cache-engine")
+set(COMDARE_CACHE_ENGINE_DIR "${CMAKE_SOURCE_DIR}/../comdare-cache-engine"
+    CACHE PATH "Pfad zur comdare-cache-engine (Geschwister-Checkout; nur Standalone-Build)")
 
-if(NOT EXISTS "${COMDARE_CACHE_ENGINE_DIR}/CMakeLists.txt")
-    message(FATAL_ERROR
-        "comdare-cache-engine Submodule nicht initialisiert.\n"
-        "Bitte ausfuehren: git submodule update --init --recursive\n"
-        "Erwarteter Pfad: ${COMDARE_CACHE_ENGINE_DIR}")
+# Aktuelle cache-engine-Include-Struktur (V41.F.x): libs/cache_engine/include
+set(COMDARE_CE_INCLUDE_DIR "${COMDARE_CACHE_ENGINE_DIR}/libs/cache_engine/include")
+if(NOT EXISTS "${COMDARE_CE_INCLUDE_DIR}/cache_engine/concepts/permutation_flags.hpp")
+    message(WARNING
+        "comdare-cache-engine nicht unter COMDARE_CACHE_ENGINE_DIR gefunden.\n"
+        "prt-art-STANDALONE-Build benoetigt die cache-engine-Header unter:\n"
+        "  ${COMDARE_CE_INCLUDE_DIR}\n"
+        "Setze -DCOMDARE_CACHE_ENGINE_DIR=<pfad>, ODER baue prt-art als Plugin via\n"
+        "  cache-engine -DCOMDARE_CE_PRUEFLINGE=<prt-art>  (dann liefert der Controller die Includes).")
 endif()
 
 option(COMDARE_PRT_ART_BUILD_TESTS "Build Google-Tests" ON)
@@ -51,9 +60,7 @@ add_library(comdare_prt_art_core INTERFACE)
 add_library(comdare::prt_art_core ALIAS comdare_prt_art_core)
 target_include_directories(comdare_prt_art_core INTERFACE
     "${CMAKE_SOURCE_DIR}/prt_art/include"
-    "${COMDARE_CACHE_ENGINE_DIR}/cache_engine/include"
-    "${COMDARE_CACHE_ENGINE_DIR}/cache_engine/subsystems"
-    "${COMDARE_CACHE_ENGINE_DIR}/prt_art/include")
+    "${COMDARE_CE_INCLUDE_DIR}")   # V41.E6: aktuelle cache-engine-Struktur (libs/cache_engine/include)
 target_compile_features(comdare_prt_art_core INTERFACE cxx_std_23)
 
 # ─────────────────────────────────────────────────────────────────────────────
