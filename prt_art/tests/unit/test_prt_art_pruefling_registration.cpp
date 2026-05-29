@@ -12,9 +12,11 @@
 #include <prt_art/slots/axis_07_prefetch_slot.hpp>
 #include <prt_art/slots/axis_01_page_type_slot.hpp>
 #include <prt_art/slots/axis_14_value_handle_slot.hpp>
+#include <prt_art/slots/axis_11_telemetry_slot.hpp>
 #include <topics/prefetch/axis_07_prefetch/axis_07_prefetch_registry.hpp>
 #include <topics/nodes/axis_01_page_type/axis_01_page_type_registry.hpp>
 #include <topics/value_handle/axis_14_value_handle/axis_14_value_handle_registry.hpp>
+#include <topics/telemetry/axis_11_telemetry/axis_11_telemetry_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
 #include <boost/mp11.hpp>
 
@@ -211,4 +213,47 @@ TEST(PhaseB_Axis14Slot, LinkedListManagementForwarded) {
     h.clear();
     EXPECT_TRUE(h.is_empty());
     EXPECT_EQ(h.chain_length(), 0u);
+}
+
+// =================================================================
+// V41.F.6.1 Phase B — 4. Slot-Füllung (axis_11 TELEMETRY, F15-Anti-Pattern)
+// =================================================================
+
+namespace slot11 = ::comdare::prt_art::slots::axis_11;
+namespace ce11   = ::comdare::cache_engine::telemetry::axis_11_telemetry;
+
+TEST(PhaseB_Axis11Slot, WrapperConformsToCeConcepts) {
+    static_assert(ce11::concepts::TelemetryStrategy<slot11::PrtArtPerNodeCounter>);
+    static_assert(ce11::concepts::CacheEnginePermutationStrategy<slot11::PrtArtPerNodeCounter>);
+    static_assert(!slot11::PrtArtPerNodeCounter::is_leaf_only());  // zählt ALLE Knoten (Anti-Pattern)
+    SUCCEED();
+}
+
+// F15-KERN: Stufe-3 full-join stellt LeafOnly (CE-Hauptvariante) + PerNode (prt-art-Anti-Pattern)
+// im SELBEN Permutations-Sweep gegenüber → der Mess-Treiber kann beide vergleichen (Welch-Test).
+TEST(PhaseB_Axis11Slot, StufeThreeUnionsLeafOnlyAndPerNodeForF15) {
+    using Joined = pf07::StufeThreeAxis<ce11::AllTelemetries, slot11::Slot>;
+    static_assert(mp11::mp_contains<Joined, slot11::PrtArtPerNodeCounter>::value);  // Anti-Pattern
+    static_assert(mp11::mp_contains<Joined, ce11::LeafOnlyCounter>::value);          // CE-Hauptvariante
+    static_assert(mp11::mp_size<Joined>::value
+                  == mp11::mp_size<ce11::AllTelemetries>::value + 1);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis11Slot, StufeTwoReplacesCeDefaults) {
+    using Merged = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>;
+    static_assert(std::is_same_v<Merged, mp11::mp_list<slot11::PrtArtPerNodeCounter>>);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis11Slot, PerNodeCountsAllNodesIncludingInner) {
+    // Anti-Pattern-Verhalten: zählt auch Inner-Nodes (is_leaf=false) — im Gegensatz zu LeafOnly.
+    slot11::PrtArtPerNodeCounter c{};
+    c.record_access(0x10, /*is_leaf=*/true);
+    c.record_access(0x20, /*is_leaf=*/false);   // Inner-Node — PerNode zählt trotzdem
+    c.record_access(0x20, /*is_leaf=*/false);
+    EXPECT_EQ(c.access_count(0x10), 1u);
+    EXPECT_EQ(c.access_count(0x20), 2u);         // Inner-Node mitgezählt (Ping-Pong-Risiko)
+    EXPECT_EQ(c.tracked_nodes(), 2u);
+    EXPECT_EQ(c.total_accesses(), 3u);
 }
