@@ -19,6 +19,9 @@
 #include <topics/telemetry/axis_11_telemetry/axis_11_telemetry_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
 #include <src/permutations/permutation_engine.hpp>   // F.5: 3-Stufen-Permutations-Count
+#include <prt_art/slots/prt_art_composition_demo.hpp>  // F.5: codegen-fähige prt-art-Composition
+#include <anatomy/composition_concept.hpp>
+#include <anatomy/search_algorithm_anatomy.hpp>
 #include <boost/mp11.hpp>
 
 #include <cstdint>
@@ -306,5 +309,44 @@ TEST(F5_DreigliedrigkeitPermutationSpace, ThreeStufenProduceDistinctBinarySetSiz
     // Die 3 Stufen spannen drei verschieden große Binary-Set-Räume auf.
     static_assert(EngineS3::count() > EngineS1::count());
     static_assert(EngineS1::count() > EngineS2::count());
+    SUCCEED();
+}
+
+// =================================================================
+// V41.F.6.1 F.5-Schritt — prt-art-Slots komponieren in codegen-fähige volle Anatomie
+//
+// Brücke: die gemergten Slots bilden eine vollständige 17-Achsen-Composition, die das
+// anatomy_codegen_tool in eine DLL materialisieren kann (IsComposition + HasCompositionLocation).
+// =================================================================
+
+namespace cea = ::comdare::cache_engine::anatomy;
+
+TEST(F5_PrtArtComposition, IsCodegenEligibleComposition) {
+    using C = ::comdare::prt_art::slots::PrtArtCompositionDemo;
+    // 17-Achsen-Vollständigkeit (das prüft das Codegen-Tool via descriptor_from_composition).
+    static_assert(cea::IsComposition<C>);
+    static_assert(cea::HasCompositionLocation<C>);
+    static_assert(cea::composition_organ_count<C>::value == 17);
+    // Codegen-Lokalisierung korrekt gesetzt.
+    EXPECT_EQ(C::name, std::string_view{"PrtArtCompositionDemo"});
+    EXPECT_EQ(C::cpp_type_name, std::string_view{"::comdare::prt_art::slots::PrtArtCompositionDemo"});
+    EXPECT_FALSE(std::string_view{C::header_include}.empty());
+}
+
+TEST(F5_PrtArtComposition, PrtArtSlotsAreTheOverriddenAxes) {
+    using C = ::comdare::prt_art::slots::PrtArtCompositionDemo;
+    // prefetch + value_handle sind prt-art-Slot-Wrapper; der Rest CE-Default (ArtComposition).
+    static_assert(std::is_same_v<C::prefetch,     ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch>);
+    static_assert(std::is_same_v<C::value_handle, ::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle>);
+    static_assert(std::is_same_v<C::search_algo,  C::Base::search_algo>);   // CE-Default unverändert
+    static_assert(std::is_same_v<C::telemetry,    C::Base::telemetry>);     // CE LeafOnly (nicht PerNode-Anti-Pattern)
+    SUCCEED();
+}
+
+TEST(F5_PrtArtComposition, FullAnatomyInstantiatesFromPrtArtSlots) {
+    // Die volle SearchAlgorithmAnatomy baut aus der prt-art-Slot-Composition — die Codegen-Einheit.
+    using Anatomy = cea::SearchAlgorithmAnatomy<::comdare::prt_art::slots::PrtArtCompositionDemo>;
+    Anatomy anatomy{};   // default-konstruierbar → instanziierbar als Codegen-Ziel
+    (void)anatomy;
     SUCCEED();
 }
