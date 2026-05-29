@@ -18,6 +18,7 @@
 #include <topics/value_handle/axis_14_value_handle/axis_14_value_handle_registry.hpp>
 #include <topics/telemetry/axis_11_telemetry/axis_11_telemetry_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
+#include <src/permutations/permutation_engine.hpp>   // F.5: 3-Stufen-Permutations-Count
 #include <boost/mp11.hpp>
 
 #include <cstdint>
@@ -256,4 +257,54 @@ TEST(PhaseB_Axis11Slot, PerNodeCountsAllNodesIncludingInner) {
     EXPECT_EQ(c.access_count(0x20), 2u);         // Inner-Node mitgezählt (Ping-Pong-Risiko)
     EXPECT_EQ(c.tracked_nodes(), 2u);
     EXPECT_EQ(c.total_accesses(), 3u);
+}
+
+// =================================================================
+// V41.F.6.1 F.5-Kern — 3-Stufen-PERMUTATIONS-RAUM über 4 echte Achsen (Compile-Time)
+//
+// Verdrahtet die bewiesene Slot-Füllung (4 Achsen) in die PermutationEngine: der kartesische
+// Produkt-Raum jeder Stufe = die Binary-Set-Größe, die comdare_perms_ce/pa/full_join codegen würde.
+// Vollständig ZUR COMPILE-TIME (count() ist constexpr) → genau der "Binaries aus Rekombinationen"-Kern.
+// =================================================================
+
+namespace pe = ::comdare::cache_engine::permutations;
+
+// Stufe 1 — comdare_perms_ce (CE-only, KEINE Pruefling-Beteiligung)
+struct TC07_S1 { using StaticAxisVariants = ce07::AllPrefetchers;  };
+struct TC01_S1 { using StaticAxisVariants = ce01::AllPageTypes;    };
+struct TC14_S1 { using StaticAxisVariants = ce14::AllHandles;      };
+struct TC11_S1 { using StaticAxisVariants = ce11::AllTelemetries;  };
+
+// Stufe 2 — comdare_perms_pa (Pruefling ERSETZT pro Achse → je 1 Variante → 1 Komposition)
+struct TC07_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>; };
+struct TC01_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes,   slot01::Slot>; };
+struct TC14_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles,     slot14::Slot>; };
+struct TC11_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>; };
+
+// Stufe 3 — comdare_perms_full_join (CE + Pruefling unioniert pro Achse)
+struct TC07_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce07::AllPrefetchers, slot07::Slot>; };
+struct TC01_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce01::AllPageTypes,   slot01::Slot>; };
+struct TC14_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce14::AllHandles,     slot14::Slot>; };
+struct TC11_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce11::AllTelemetries, slot11::Slot>; };
+
+TEST(F5_DreigliedrigkeitPermutationSpace, ThreeStufenProduceDistinctBinarySetSizes) {
+    using EngineS1 = pe::PermutationEngine<TC07_S1, TC01_S1, TC14_S1, TC11_S1>;
+    using EngineS2 = pe::PermutationEngine<TC07_S2, TC01_S2, TC14_S2, TC11_S2>;
+    using EngineS3 = pe::PermutationEngine<TC07_S3, TC01_S3, TC14_S3, TC11_S3>;
+
+    constexpr std::size_t n07 = mp11::mp_size<ce07::AllPrefetchers>::value;
+    constexpr std::size_t n01 = mp11::mp_size<ce01::AllPageTypes>::value;
+    constexpr std::size_t n14 = mp11::mp_size<ce14::AllHandles>::value;
+    constexpr std::size_t n11 = mp11::mp_size<ce11::AllTelemetries>::value;
+
+    // Stufe 1: kartesisches Produkt der CE-Defaults (4 Achsen).
+    static_assert(EngineS1::count() == n07 * n01 * n14 * n11);
+    // Stufe 2: jede Achse vom Pruefling ersetzt (je 1 Variante) → genau 1 Komposition (prt-art-Identität).
+    static_assert(EngineS2::count() == 1);
+    // Stufe 3: jede Achse = CE + prt-art-Variante (distinkt, kein Dedup) → Produkt der (n+1).
+    static_assert(EngineS3::count() == (n07 + 1) * (n01 + 1) * (n14 + 1) * (n11 + 1));
+    // Die 3 Stufen spannen drei verschieden große Binary-Set-Räume auf.
+    static_assert(EngineS3::count() > EngineS1::count());
+    static_assert(EngineS1::count() > EngineS2::count());
+    SUCCEED();
 }
