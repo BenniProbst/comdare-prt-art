@@ -11,8 +11,10 @@
 // V41.F.6.1 Phase B — Slot-Füllung-Demonstration (compile-time merge)
 #include <prt_art/slots/axis_07_prefetch_slot.hpp>
 #include <prt_art/slots/axis_01_page_type_slot.hpp>
+#include <prt_art/slots/axis_14_value_handle_slot.hpp>
 #include <topics/prefetch/axis_07_prefetch/axis_07_prefetch_registry.hpp>
 #include <topics/nodes/axis_01_page_type/axis_01_page_type_registry.hpp>
+#include <topics/value_handle/axis_14_value_handle/axis_14_value_handle_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
 #include <boost/mp11.hpp>
 
@@ -166,4 +168,47 @@ TEST(PhaseB_Axis01Slot, DensityDrivenDispatchIsDiplomaCore) {
     EXPECT_EQ(page.key_count(), 200u);
     EXPECT_GT(page.density_percent(), 75.0);
     EXPECT_EQ(page.recommended_kind(), K::VectorU16U16);
+}
+
+// =================================================================
+// V41.F.6.1 Phase B — 3. Slot-Füllung (axis_14 VALUE-HANDLE, Pattern-Replikation)
+// =================================================================
+
+namespace slot14 = ::comdare::prt_art::slots::axis_14;
+namespace ce14   = ::comdare::cache_engine::value_handle::axis_14_value_handle;
+
+TEST(PhaseB_Axis14Slot, WrapperConformsToCeConcepts) {
+    static_assert(ce14::concepts::ValueHandleStrategy<slot14::PrtArtChainRefHandle>);
+    static_assert(ce14::concepts::CacheEnginePermutationStrategy<slot14::PrtArtChainRefHandle>);
+    static_assert(!slot14::PrtArtChainRefHandle::is_inline());  // chained external
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis14Slot, StufeTwoReplacesCeDefaults) {
+    using Merged = pf07::StufeTwoAxis<ce14::AllHandles, slot14::Slot>;
+    static_assert(std::is_same_v<Merged, mp11::mp_list<slot14::PrtArtChainRefHandle>>);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis14Slot, StufeThreeFullJoinUnionsBoth) {
+    using Joined = pf07::StufeThreeAxis<ce14::AllHandles, slot14::Slot>;
+    static_assert(mp11::mp_contains<Joined, slot14::PrtArtChainRefHandle>::value);
+    static_assert(mp11::mp_contains<Joined, ce14::ChainRefValueHandle>::value);  // CE VH5 bleibt
+    static_assert(mp11::mp_size<Joined>::value
+                  == mp11::mp_size<ce14::AllHandles>::value + 1);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis14Slot, LinkedListManagementForwarded) {
+    // prt-arts Linked-List-Verwaltung (Multi-Value-Chain) im CE-Wrapper.
+    slot14::PrtArtChainRefHandle h{};
+    EXPECT_TRUE(h.is_empty());
+    h.prepend_node(0x2000);
+    h.prepend_node(0x3000);
+    EXPECT_FALSE(h.is_empty());
+    EXPECT_EQ(h.chain_head_offset(), 0x3000u);  // letztes prepend ist Head
+    EXPECT_EQ(h.chain_length(), 2u);
+    h.clear();
+    EXPECT_TRUE(h.is_empty());
+    EXPECT_EQ(h.chain_length(), 0u);
 }
