@@ -10,7 +10,9 @@
 
 // V41.F.6.1 Phase B — Slot-Füllung-Demonstration (compile-time merge)
 #include <prt_art/slots/axis_07_prefetch_slot.hpp>
+#include <prt_art/slots/axis_01_page_type_slot.hpp>
 #include <topics/prefetch/axis_07_prefetch/axis_07_prefetch_registry.hpp>
+#include <topics/nodes/axis_01_page_type/axis_01_page_type_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
 #include <boost/mp11.hpp>
 
@@ -118,4 +120,50 @@ TEST(PhaseB_Axis07Slot, PrtArtAlgorithmLogicForwarded) {
     EXPECT_EQ(p.slot(2), 0x1000u - 64u);    // -1 Cache-Line
     EXPECT_EQ(p.total_scheduled(), 1u);
     EXPECT_EQ(slot07::PrtArtRedirectPrefetch::kFanOut, 3);
+}
+
+// =================================================================
+// V41.F.6.1 Phase B — 2. Slot-Füllung (axis_01 PAGE-TYPE, Pattern-Replikation)
+// =================================================================
+
+namespace slot01 = ::comdare::prt_art::slots::axis_01;
+namespace ce01   = ::comdare::cache_engine::nodes::axis_01_page_type;
+
+TEST(PhaseB_Axis01Slot, WrapperConformsToCeConcepts) {
+    static_assert(ce01::concepts::PageTypeStrategy<slot01::PrtArtBPlusPageType>);
+    static_assert(ce01::concepts::CacheEnginePermutationStrategy<slot01::PrtArtBPlusPageType>);
+    // Seitentyp-Klassifikation: BPlus-Verzweigungsseite.
+    static_assert(slot01::PrtArtBPlusPageType::page_kind() == ce01::concepts::PageKind::BPlus);
+    static_assert(slot01::PrtArtBPlusPageType::is_branch());
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis01Slot, StufeTwoReplacesCeDefaults) {
+    using Merged = pf07::StufeTwoAxis<ce01::AllPageTypes, slot01::Slot>;
+    static_assert(std::is_same_v<Merged, mp11::mp_list<slot01::PrtArtBPlusPageType>>);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis01Slot, StufeThreeFullJoinUnionsBoth) {
+    using Joined = pf07::StufeThreeAxis<ce01::AllPageTypes, slot01::Slot>;
+    static_assert(mp11::mp_contains<Joined, slot01::PrtArtBPlusPageType>::value);
+    static_assert(mp11::mp_contains<Joined, ce01::BPlusPageType>::value);       // CE-Default bleibt
+    static_assert(mp11::mp_contains<Joined, ce01::RedirectPageType>::value);
+    static_assert(mp11::mp_size<Joined>::value
+                  == mp11::mp_size<ce01::AllPageTypes>::value + 1);
+    SUCCEED();
+}
+
+TEST(PhaseB_Axis01Slot, DensityDrivenDispatchIsDiplomaCore) {
+    // prt-arts Density-Dispatch (25/50/75%-Schwellen) im CE-Wrapper.
+    using K = slot01::PrtArtBPlusPageType::InternalSearchKind;
+    slot01::PrtArtBPlusPageType page{};
+    EXPECT_EQ(page.key_count(), 0u);
+    EXPECT_EQ(page.recommended_kind(), K::Array256);   // leer → Array256 (Density 0%)
+    // 200/256 ≈ 78% → VectorU16U16 (>=75%).
+    for (std::uint64_t i = 0; i < 200; ++i)
+        page.insert_slot(static_cast<std::uint8_t>(i & 0xFF), i);
+    EXPECT_EQ(page.key_count(), 200u);
+    EXPECT_GT(page.density_percent(), 75.0);
+    EXPECT_EQ(page.recommended_kind(), K::VectorU16U16);
 }
