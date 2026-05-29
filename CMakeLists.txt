@@ -60,7 +60,8 @@ add_library(comdare_prt_art_core INTERFACE)
 add_library(comdare::prt_art_core ALIAS comdare_prt_art_core)
 target_include_directories(comdare_prt_art_core INTERFACE
     "${CMAKE_SOURCE_DIR}/prt_art/include"
-    "${COMDARE_CE_INCLUDE_DIR}")   # V41.E6: aktuelle cache-engine-Struktur (libs/cache_engine/include)
+    "${COMDARE_CE_INCLUDE_DIR}"                  # V41.E6: <cache_engine/...> (libs/cache_engine/include)
+    "${COMDARE_CACHE_ENGINE_DIR}/libs/cache_engine")  # V41.F.6 Phase B: <topics/...> + <anatomy/...> für Slot-Header
 target_compile_features(comdare_prt_art_core INTERFACE cxx_std_23)
 
 # ─────────────────────────────────────────────────────────────────────────────
