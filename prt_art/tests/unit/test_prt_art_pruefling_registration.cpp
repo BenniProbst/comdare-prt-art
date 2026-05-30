@@ -302,13 +302,52 @@ TEST(F5_DreigliedrigkeitPermutationSpace, ThreeStufenProduceDistinctBinarySetSiz
 
     // Stufe 1: kartesisches Produkt der CE-Defaults (4 Achsen).
     static_assert(EngineS1::count() == n07 * n01 * n14 * n11);
-    // Stufe 2: jede Achse vom Pruefling ersetzt (je 1 Variante) → genau 1 Komposition (prt-art-Identität).
+    // Stufe 2 (TEILSICHT: NUR die 4 belegten Achsen): jede vom Pruefling ersetzt (je 1 Variante) → 1 Komposition.
+    // ACHTUNG: das ist NICHT der volle Stufe-2-Raum! Ueber die volle Anatomie expandieren die ABSTRAKT-LEEREN
+    // Achsen auf die volle CE-Liste (User 2026-05-30) — siehe StufeTwoEmptyAxesReuseAllCeAlgorithms unten.
     static_assert(EngineS2::count() == 1);
     // Stufe 3: jede Achse = CE + prt-art-Variante (distinkt, kein Dedup) → Produkt der (n+1).
     static_assert(EngineS3::count() == (n07 + 1) * (n01 + 1) * (n14 + 1) * (n11 + 1));
     // Die 3 Stufen spannen drei verschieden große Binary-Set-Räume auf.
     static_assert(EngineS3::count() > EngineS1::count());
     static_assert(EngineS1::count() > EngineS2::count());
+    SUCCEED();
+}
+
+// =================================================================
+// V41.F.6.1 F.5-Schärfung (User 2026-05-30) — Stufe-2 VOLL-ANATOMIE: die Regel der ABSTRAKT-LEEREN Achse.
+//
+// Eine Prüfling-Tier-Klassifizierung (z.B. prt-art) pinnt NUR ihre belegten Achsen. Jede Achse, deren Slot
+// abstrakt leer ist (EmptyPrueflingSlot, has_pruefling=false), reust AUTOMATISCH ALLE CE-Algorithmen als
+// Default und der Generator permutiert sie VOLL aus. → Der Stufe-2-Raum des "Tierklassen-Prototyps" ist das
+// kartesische Produkt ÜBER DIE LEEREN ACHSEN (≠ 1), das das Prüf-Dock ausmisst, um die schnellste
+// Rekombination zu finden. (Mengenlehre: B = ∏_belegt {prüfling_i} × ∏_leer A_j.)  Doku 24 §8.9.1.
+// =================================================================
+
+using ES = pf07::EmptyPrueflingSlot;
+
+// Belegt → 1 Prüfling-Variante.  Leer (ES) → volle CE-DefaultList.
+struct TC07_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>; };  // BELEGT
+struct TC01_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes,   ES>;           };  // LEER
+struct TC14_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles,     ES>;           };  // LEER
+struct TC11_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>; };  // BELEGT
+
+TEST(F5_DreigliedrigkeitPermutationSpace, StufeTwoEmptyAxesReuseAllCeAlgorithms) {
+    // (a) Type-Beleg der Regel: leere Achse ⇒ StufeTwoAxis == VOLLE CE-DefaultList.
+    static_assert(std::is_same_v<TC01_S2mix::StaticAxisVariants, ce01::AllPageTypes>);
+    static_assert(std::is_same_v<TC14_S2mix::StaticAxisVariants, ce14::AllHandles>);
+    // (b) belegte Achsen bleiben auf je 1 Prüfling-Variante reduziert.
+    static_assert(mp11::mp_size<TC07_S2mix::StaticAxisVariants>::value == 1);
+    static_assert(mp11::mp_size<TC11_S2mix::StaticAxisVariants>::value == 1);
+
+    using EngineS2mix = pe::PermutationEngine<TC07_S2mix, TC01_S2mix, TC14_S2mix, TC11_S2mix>;
+    constexpr std::size_t n01 = mp11::mp_size<ce01::AllPageTypes>::value;
+    constexpr std::size_t n14 = mp11::mp_size<ce14::AllHandles>::value;
+
+    // (c) Stufe-2-Raum des Prototyps = Produkt NUR über die leeren Achsen (01,14) — NICHT die "1" der Teilsicht.
+    static_assert(EngineS2mix::count() == n01 * n14);
+    static_assert(EngineS2mix::count() > 1);  // ⇒ die leeren Achsen expandieren echt aus
+    static_assert(n01 >= 2 && n14 >= 2);      // beide CE-Achsen haben mehrere Default-Algorithmen
     SUCCEED();
 }
 
