@@ -1,5 +1,7 @@
 # PROJECT_LAYER_MAP — comdare-prt-art (REV 7.6, 2026-05-13)
 
+> ⚠️ **SUPERSEDED (2026-05-31):** Beschreibt überholtes REV-7.6-Submodul-/Hybrid-Engine-Modell. IST = reines Plugin (`comdare_pruefling.cmake` + `COMDARE_CE_PRUEFLINGE`). IST-treue Quelle: `comdare-cache-engine/docs/sessions/architektur-ziele-offene-punkte-ledger.md` (s. README). Niemals löschen.
+
 Strategische Strukturübersicht für **manuelles Code-Review**.
 Reihenfolge entspricht der **empfohlenen Lese-Reihenfolge**.
 

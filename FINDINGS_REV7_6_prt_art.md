@@ -1,5 +1,7 @@
 # FINDINGS REV 7.6 — comdare-prt-art (2026-05-13)
 
+> ⚠️ **SUPERSEDED (2026-05-31):** Beschreibt überholtes REV-7.6-Submodul-/Hybrid-Engine-Modell. IST = reines Plugin (`comdare_pruefling.cmake` + `COMDARE_CE_PRUEFLINGE`). IST-treue Quelle: `comdare-cache-engine/docs/sessions/architektur-ziele-offene-punkte-ledger.md` (s. README). Niemals löschen.
+
 **Repo-Perspektive:** prt-art-spezifische Findings + Korrekturen aus der
 heutigen Drei-Repo-Architektur-Klaerung. Dieses Dokument enthaelt den
 **vollstaendigen inhaltlichen Stand** aus prt-art-Sicht (NICHT nur eine
