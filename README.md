@@ -1,5 +1,13 @@
 # comdare-prt-art
 
+> ⚠️ **SUPERSEDED-Hinweis (2026-05-31):** Teile dieser Doku (sowie `PROJECT_LAYER_MAP.md`,
+> `STRUCTURAL_CORRECTION_prt_art.md`, `FINDINGS_REV7_6_prt_art.md`) beschreiben das überholte
+> **REV-7.6-Submodul-/Hybrid-Engine-Modell**. IST-Stand (code-verifiziert): prt-art ist ein reines
+> **Plugin** (`comdare_pruefling.cmake` + `COMDARE_CE_PRUEFLINGE` + `IPrueflingFactory`), KEIN nested
+> cache-engine-Submodul; der Mess-Beitrag kommt aus dem compile-time Slot-Merge → DLL-Codegen.
+> **IST-treue Single-Source-of-Truth:** `comdare-cache-engine/docs/sessions/architektur-ziele-offene-punkte-ledger.md`
+> + `…/20260531-e2e-abnahme-audit-und-entscheidungen.md`.
+
 **PRT-ART** — Permutations-Trie-ART: Hybrid-Suchalgorithmus als experimenteller Pruefling
 gegen den Stand der Technik (`comdare-cache-engine`).
 
