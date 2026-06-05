@@ -365,7 +365,7 @@ TEST(F5_PrtArtComposition, IsCodegenEligibleComposition) {
     // 17-Achsen-Vollständigkeit (das prüft das Codegen-Tool via descriptor_from_composition).
     static_assert(cea::IsComposition<C>);
     static_assert(cea::HasCompositionLocation<C>);
-    static_assert(cea::composition_organ_count<C>::value == 17);
+    static_assert(cea::composition_organ_count<C>::value == 19);   // 17 SA-Achsen + queuing q1/q2 (Doc 30 §8.0)
     // Codegen-Lokalisierung korrekt gesetzt.
     EXPECT_EQ(C::name, std::string_view{"PrtArtCompositionDemo"});
     EXPECT_EQ(C::cpp_type_name, std::string_view{"::comdare::prt_art::slots::PrtArtCompositionDemo"});

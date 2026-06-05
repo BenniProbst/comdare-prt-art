@@ -43,6 +43,8 @@ struct PrtArtCompositionDemo {
     using io_dispatch        = Base::io_dispatch;
     using migration_policy   = Base::migration_policy;
     using filter             = Base::filter;
+    using queuing_q1         = Base::queuing_q1;   // T17 (Doc 30 §8.0: mandatorische SA-Achse, 19-Slot-Composition)
+    using queuing_q2         = Base::queuing_q2;   // T18
 
     // 2 Achsen durch prt-art-Slot-Wrapper ersetzt (optional_prt_art_impl)
     using prefetch           = ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch;
