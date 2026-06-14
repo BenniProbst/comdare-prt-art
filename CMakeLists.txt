@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(comdare-prt-art
         VERSION 0.1.0
-        DESCRIPTION "PRT-ART: Permutations-Trie-ART (experimenteller Suchalgorithmus-Pruefling)"
+        DESCRIPTION "PRT-ART: Probst Redirect Tree / ART hybrid (experimenteller Suchalgorithmus-Pruefling)"
         LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)

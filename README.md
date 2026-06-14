@@ -8,7 +8,7 @@
 > **IST-treue Single-Source-of-Truth:** `comdare-cache-engine/docs/sessions/architektur-ziele-offene-punkte-ledger.md`
 > + `…/20260531-e2e-abnahme-audit-und-entscheidungen.md`.
 
-**PRT-ART** — Permutations-Trie-ART: Hybrid-Suchalgorithmus als experimenteller Pruefling
+**PRT-ART** — Probst Redirect Tree / ART hybrid: Hybrid-Suchalgorithmus als experimenteller Pruefling
 gegen den Stand der Technik (`comdare-cache-engine`).
 
 ## Architektur-Inversion (User-Direktive 2026-05-12)
