@@ -34,7 +34,7 @@ PRT-ART-Repo nach Initial Commit 945e279 hatte:
 - `virtual_offset_address.hpp` — `position = sum(k[i] * 256^(k_count-1-i))`, kMaxKeyCount=8
 - `byte_path.hpp` — Cursor-basierte Schluessel-Sequenz mit consume/peek/advance
 - `cache_line_aligned_layout.hpp` — 64-Byte Padding + Slot-View<SlotBytes>
-- `multi_level_layout.hpp` — Tier-Routing L1Hot/L2Warm/L3Cold/Memory mit TierBudget
+- `multi_level_layout.hpp` — Ebenen-Routing L1Hot/L2Warm/L3Cold/Memory mit TierBudget
 
 **23 Tests in `test_memory_layout.cpp`** — alle gruen.
 
