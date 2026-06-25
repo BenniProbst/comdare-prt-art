@@ -1,14 +1,48 @@
-# comdare-prt-art — GitLab CI Pipeline (REV 7.6 V11.7)
-# Synchron mit .github/workflows/ci.yml
+# comdare-prt-art — GitLab CI/CD (REV 8, 2026-06-25): ci-templates-Lint + Standalone-Build/Test
+# ─────────────────────────────────────────────────────────────────────────────
+# Bindet die ci-templates-Lint-Stage ein und bewahrt den bewiesenen Standalone-Build/Test
+# (Docker debian:bookworm). prt-art-PROD baut OHNE cache-engine-Quelle (Prüfling-Standalone);
+# die zirkuläre Test-Kante (prt-art<->cache-engine) läuft NUR artefakt-isoliert (Spec §2.3).
+# Lint: gitleaks HART · clang-format/cppcheck ADVISORY (bis #179-Format-Pass), baremetal-hermetisch.
+
+include:
+  - project: 'comdare/cluster/ci-templates'
+    ref: development
+    file: '/base-pipeline.yml'
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+    - if: '$CI_COMMIT_BRANCH'
 
 stages:
+  - lint
   - configure
   - test
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle (legacy_reimpl via Regex referenzierbar)
 
+# ── Stufe 1: Lint (aus ci-templates, baremetal-hermetisch) ──
+lint:secrets:
+  extends: .lint-secrets
+  tags: [baremetal]
+lint:format:
+  extends: .lint-format
+  tags: [baremetal]
+  allow_failure: true
+lint:static:
+  extends: .lint-static
+  tags: [baremetal]
+  allow_failure: true
+
+# ── Standalone-Build/Test (BEWAHRT, Docker; synchron mit .github/workflows/ci.yml) ──
 .linux_base:
   image: debian:bookworm
   before_script:
@@ -19,12 +53,12 @@ variables:
 configure:default:
   extends: .linux_base
   stage: configure
+  needs: []
   script:
     - cmake -B build-default -G Ninja
     - cmake --build build-default --target comdare_prt_art_core
   artifacts:
-    paths:
-      - build-default/CMakeCache.txt
+    paths: [build-default/CMakeCache.txt]
     expire_in: 1 day
     when: always
 
@@ -38,7 +72,6 @@ test:hybrid_search_engine:
     # REV 7.6 V14.3 — Direkt-Ausfuehrung umgeht MSB3073 (MSVC); plattform-uniform
     - ./build-test/tests/unit/test_prt_art_identity
   artifacts:
-    paths:
-      - build-test/Testing/
+    paths: [build-test/Testing/]
     expire_in: 1 week
     when: always

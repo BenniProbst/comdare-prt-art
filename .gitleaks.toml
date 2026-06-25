@@ -1,0 +1,24 @@
+# gitleaks-Konfiguration — comdare-prt-art (CI-Stufe lint:secrets, HART)
+# Erweitert die Default-Regeln; allowlistet Submodule-/Build-/Vendored-Pfade gegen False-Positives.
+title = "comdare-prt-art gitleaks"
+
+[extend]
+useDefault = true
+# `generic-api-key` (entropie-basiert) wirft systematische False-Positives auf C++-Doku-Kommentaren;
+# deaktiviert — die spezifischen High-Confidence-Regeln bleiben aktiv.
+disabledRules = ["generic-api-key"]
+
+[[allowlists]]
+description = "Nicht-Quell-/Submodul-/Build-Pfade (keine echten Secrets)"
+paths = [
+  '''(^|/)ext/''',
+  '''(^|/)build[^/]*/''',
+  '''(^|/)cmake-build-[^/]*/''',
+  '''(^|/)legacy_reimpl/.*/(ext|third_party|vendor)/''',
+  '''(^|/)\.citools/''',
+]
+
+[[allowlists]]
+description = "Test-Fixtures mit absichtlichen Pseudo-Schlüsseln"
+regexTarget = "match"
+regexes = [ '''(?i)(example|dummy|sample|test|fake|placeholder)[-_]?(key|token|secret|pw|password)''' ]
