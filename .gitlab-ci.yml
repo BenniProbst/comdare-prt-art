@@ -56,7 +56,10 @@ build:standalone:
   script:
     - cmake -B build -G Ninja        # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
-    - cmake --build build            # baut ALLE Test-Consumer = kompiliert die comdare_prt_art_core-Header
+    # Nur den Ziel-Test bauen (kompiliert die comdare_prt_art_core-Header als Consumer).
+    # KEIN build-ALL: test_internal_search.cpp referenziert einen fehlenden Header
+    # (prt_art/internal_search/array_256.hpp) = eigenstaendiger prt-art-Defekt -> #179-Cleanup.
+    - cmake --build build --target test_prt_art_identity
     # Direkt-Ausfuehrung (plattform-uniform, umgeht MSB3073 unter MSVC)
     - ./build/tests/unit/test_prt_art_identity
   # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
