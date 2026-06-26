@@ -1,9 +1,11 @@
-# comdare-prt-art — GitLab CI/CD (REV 8, 2026-06-25): ci-templates-Lint + Standalone-Build/Test
+# comdare-prt-art — GitLab CI/CD (REV 9, 2026-06-26): ci-templates-Lint + Standalone-Build/Test (bare-metal)
 # ─────────────────────────────────────────────────────────────────────────────
-# Bindet die ci-templates-Lint-Stage ein und bewahrt den bewiesenen Standalone-Build/Test
-# (Docker debian:bookworm). prt-art-PROD baut OHNE cache-engine-Quelle (Prüfling-Standalone);
-# die zirkuläre Test-Kante (prt-art<->cache-engine) läuft NUR artefakt-isoliert (Spec §2.3).
-# Lint: gitleaks HART · clang-format/cppcheck ADVISORY (bis #179-Format-Pass), baremetal-hermetisch.
+# REV 9 (Debug-Befund 6950): Docker debian:bookworm+apt -> BARE-METAL (prod-Toolchain).
+#   Der Cluster-Docker-Runner hat KEINEN apt-Egress (deb.debian.org) -> "Unable to locate package"
+#   + 380s-Netz-Hang. Die prod-Runner haben die NEUESTE Toolchain (prod-runner-toolchain-setup.sh)
+#   -> luftleer/robust, konsistent mit cache-engine/super. Standalone-Eigenschaft bleibt
+#   (prt-art-PROD baut OHNE cache-engine-Quelle). GitHub-CI (.github/workflows/ci.yml) bleibt Docker
+#   (Internet-Runner) — andere Umgebung. Lint scannt nur prt-art-eigenen Code (submodule-none).
 
 include:
   - project: 'comdare/cluster/ci-templates'
@@ -27,51 +29,50 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
-  COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle (legacy_reimpl via Regex referenzierbar)
+  COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
 
-# ── Stufe 1: Lint (aus ci-templates, baremetal-hermetisch) ──
+# ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
 lint:secrets:
   extends: .lint-secrets
   tags: [baremetal]
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
 lint:format:
   extends: .lint-format
   tags: [baremetal]
   allow_failure: true
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
 lint:static:
   extends: .lint-static
   tags: [baremetal]
   allow_failure: true
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
 
-# ── Standalone-Build/Test (BEWAHRT, Docker; synchron mit .github/workflows/ci.yml) ──
-.linux_base:
-  image: debian:bookworm
+# ── Standalone-Build/Test (bare-metal prod-Toolchain; KEIN Docker/apt, KEIN Egress) ──
+.bm:
+  tags: [baremetal]
   before_script:
-    - apt-get update -qq
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-        build-essential cmake ninja-build git ca-certificates
+    - 'cmake --version; (g++ --version || c++ --version || echo "KEIN C++-Compiler"); (ninja --version || echo "kein ninja")'
 
 configure:default:
-  extends: .linux_base
+  extends: .bm
   stage: configure
   needs: []
   script:
     - cmake -B build-default -G Ninja
+    # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL (Runner-Core-Budget), NICHT -j nproc
     - cmake --build build-default --target comdare_prt_art_core
-  artifacts:
-    paths: [build-default/CMakeCache.txt]
-    expire_in: 1 day
-    when: always
+  # KEIN Artefakt (Standalone-Build-Gate; Beleg im Log)
 
 test:hybrid_search_engine:
-  extends: .linux_base
+  extends: .bm
   stage: test
   needs: ["configure:default"]
   script:
     - cmake -B build-test -G Ninja
     - cmake --build build-test
-    # REV 7.6 V14.3 — Direkt-Ausfuehrung umgeht MSB3073 (MSVC); plattform-uniform
+    # Direkt-Ausfuehrung (plattform-uniform, umgeht MSB3073 unter MSVC)
     - ./build-test/tests/unit/test_prt_art_identity
-  artifacts:
-    paths: [build-test/Testing/]
-    expire_in: 1 week
-    when: always
+  # KEIN Artefakt (Test-Gate; Beleg im Log)
