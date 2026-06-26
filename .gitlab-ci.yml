@@ -1,11 +1,10 @@
-# comdare-prt-art — GitLab CI/CD (REV 9, 2026-06-26): ci-templates-Lint + Standalone-Build/Test (bare-metal)
+# comdare-prt-art — GitLab CI/CD (REV 10, 2026-06-26): ci-templates-Lint + Standalone-Build+Test (bare-metal)
 # ─────────────────────────────────────────────────────────────────────────────
-# REV 9 (Debug-Befund 6950): Docker debian:bookworm+apt -> BARE-METAL (prod-Toolchain).
-#   Der Cluster-Docker-Runner hat KEINEN apt-Egress (deb.debian.org) -> "Unable to locate package"
-#   + 380s-Netz-Hang. Die prod-Runner haben die NEUESTE Toolchain (prod-runner-toolchain-setup.sh)
-#   -> luftleer/robust, konsistent mit cache-engine/super. Standalone-Eigenschaft bleibt
-#   (prt-art-PROD baut OHNE cache-engine-Quelle). GitHub-CI (.github/workflows/ci.yml) bleibt Docker
-#   (Internet-Runner) — andere Umgebung. Lint scannt nur prt-art-eigenen Code (submodule-none).
+# REV 10 (Debug-Befund 6954): comdare_prt_art_core ist eine INTERFACE-Library (header-only) -> KEIN baubares
+#   Ninja-Target -> `--target comdare_prt_art_core` warf "unknown target". Eine INTERFACE-Lib wird nur ueber
+#   ihre Consumer kompiliert (die Tests). Daher EIN build+test-Job: configure -> build ALL (kompiliert die
+#   Header via Test-Consumer) -> Identity-Test direkt ausfuehren. bare-metal prod-Toolchain (kein apt-Egress, REV 9).
+# REV 9: Docker->bare-metal. Lint scannt nur prt-art-eigenen Code (submodule-none).
 
 include:
   - project: 'comdare/cluster/ci-templates'
@@ -23,8 +22,7 @@ workflow:
 
 stages:
   - lint
-  - configure
-  - test
+  - build
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -50,29 +48,20 @@ lint:static:
   variables:
     GIT_SUBMODULE_STRATEGY: none
 
-# ── Standalone-Build/Test (bare-metal prod-Toolchain; KEIN Docker/apt, KEIN Egress) ──
+# ── Standalone-Build+Test (bare-metal prod-Toolchain; INTERFACE-Lib via Test-Consumer) ──
+build:standalone:
+  extends: .bm
+  stage: build
+  needs: []
+  script:
+    - cmake -B build -G Ninja        # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
+    # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
+    - cmake --build build            # baut ALLE Test-Consumer = kompiliert die comdare_prt_art_core-Header
+    # Direkt-Ausfuehrung (plattform-uniform, umgeht MSB3073 unter MSVC)
+    - ./build/tests/unit/test_prt_art_identity
+  # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
+
 .bm:
   tags: [baremetal]
   before_script:
     - 'cmake --version; (g++ --version || c++ --version || echo "KEIN C++-Compiler"); (ninja --version || echo "kein ninja")'
-
-configure:default:
-  extends: .bm
-  stage: configure
-  needs: []
-  script:
-    - cmake -B build-default -G Ninja
-    # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL (Runner-Core-Budget), NICHT -j nproc
-    - cmake --build build-default --target comdare_prt_art_core
-  # KEIN Artefakt (Standalone-Build-Gate; Beleg im Log)
-
-test:hybrid_search_engine:
-  extends: .bm
-  stage: test
-  needs: ["configure:default"]
-  script:
-    - cmake -B build-test -G Ninja
-    - cmake --build build-test
-    # Direkt-Ausfuehrung (plattform-uniform, umgeht MSB3073 unter MSVC)
-    - ./build-test/tests/unit/test_prt_art_identity
-  # KEIN Artefakt (Test-Gate; Beleg im Log)
