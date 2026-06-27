@@ -57,7 +57,7 @@ lint:static:
 build:standalone:
   extends: .bm
   stage: build
-  needs: []
+  needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
   script:
     - cmake -B build -G Ninja        # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
@@ -73,7 +73,7 @@ build:standalone:
 sanitize:asan-ubsan:
   extends: .bm
   stage: sanitize
-  needs: []
+  needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
   allow_failure: true
   script:
     - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
