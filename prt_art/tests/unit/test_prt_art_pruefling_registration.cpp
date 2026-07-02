@@ -18,8 +18,8 @@
 #include <topics/value_handle/axis_14_value_handle/axis_14_value_handle_registry.hpp>
 #include <topics/telemetry/axis_11_telemetry/axis_11_telemetry_registry.hpp>
 #include <anatomy/pruefling_merge.hpp>
-#include <src/permutations/permutation_engine.hpp>   // F.5: 3-Stufen-Permutations-Count
-#include <prt_art/slots/prt_art_composition_demo.hpp>  // F.5: codegen-fähige prt-art-Composition
+#include <src/permutations/permutation_engine.hpp>    // F.5: 3-Stufen-Permutations-Count
+#include <prt_art/slots/prt_art_composition_demo.hpp> // F.5: codegen-fähige prt-art-Composition
 #include <anatomy/composition_concept.hpp>
 #include <anatomy/search_algorithm_anatomy.hpp>
 #include <boost/mp11.hpp>
@@ -43,7 +43,7 @@ TEST(E11_PrtArtPruefling, RegistersIntoCacheEngineRegistry) {
 
 TEST(E11_PrtArtPruefling, FactoryCreatesRunnablePruefling) {
     ppf::PrtArtPrueflingFactory factory;
-    auto p = factory.create("page=redirect|node=bplus|vh=inline");
+    auto                        p = factory.create("page=redirect|node=bplus|vh=inline");
     ASSERT_NE(p, nullptr);
     EXPECT_EQ(p->name(), std::string_view{"prt-art"});
     EXPECT_EQ(p->axes_signature(), std::string_view{"page=redirect|node=bplus|vh=inline"});
@@ -54,7 +54,7 @@ TEST(E11_PrtArtPruefling, FactoryCreatesRunnablePruefling) {
 
 TEST(E11_PrtArtPruefling, ZeroOpsIsZeroLatency) {
     ppf::PrtArtPruefling p{"x"};
-    double micros = -1.0;
+    double               micros = -1.0;
     EXPECT_EQ(p.run(0, micros), 0);
     EXPECT_EQ(micros, 0.0);
 }
@@ -83,8 +83,7 @@ TEST(PhaseB_Axis07Slot, SlotIsPrueflingConformAndPopulated) {
     static_assert(pf07::PrueflingSlotConcept<slot07::Slot>);
     static_assert(pf07::HasPruefling_v<slot07::Slot>);
     // Gattungs-Constraint: SearchAlgorithm (kreuzbar mit CE-SearchAlgorithm-Achsen).
-    static_assert(pf07::slot_genus_v<slot07::Slot>
-                  == ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm);
+    static_assert(pf07::slot_genus_v<slot07::Slot> == ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm);
     SUCCEED();
 }
 
@@ -101,21 +100,17 @@ TEST(PhaseB_Axis07Slot, StufeThreeFullJoinUnionsBoth) {
     static_assert(mp11::mp_contains<Joined, slot07::PrtArtRedirectPrefetch>::value);
     static_assert(mp11::mp_contains<Joined, ce07::NonePrefetch>::value);
     static_assert(mp11::mp_contains<Joined, ce07::DistanceEstimatorPrefetch>::value);
-    static_assert(mp11::mp_size<Joined>::value
-                  == mp11::mp_size<ce07::AllPrefetchers>::value + 1);
+    static_assert(mp11::mp_size<Joined>::value == mp11::mp_size<ce07::AllPrefetchers>::value + 1);
     SUCCEED();
 }
 
 TEST(PhaseB_Axis07Slot, MergeAxisDispatchMatchesDirectStufen) {
     // MergeAxis-Dispatch (Non-Type-Template-Param, kein Runtime-Switch) == direkte Stufen.
-    using ViaDispatch2 = pf07::MergeAxis<pf07::MergeStrategy::Stufe2_PrueflingReplace,
-                                         ce07::AllPrefetchers, slot07::Slot>;
-    using ViaDispatch3 = pf07::MergeAxis<pf07::MergeStrategy::Stufe3_FullJoin,
-                                         ce07::AllPrefetchers, slot07::Slot>;
-    static_assert(std::is_same_v<ViaDispatch2,
-                                 pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>>);
-    static_assert(std::is_same_v<ViaDispatch3,
-                                 pf07::StufeThreeAxis<ce07::AllPrefetchers, slot07::Slot>>);
+    using ViaDispatch2 =
+        pf07::MergeAxis<pf07::MergeStrategy::Stufe2_PrueflingReplace, ce07::AllPrefetchers, slot07::Slot>;
+    using ViaDispatch3 = pf07::MergeAxis<pf07::MergeStrategy::Stufe3_FullJoin, ce07::AllPrefetchers, slot07::Slot>;
+    static_assert(std::is_same_v<ViaDispatch2, pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>>);
+    static_assert(std::is_same_v<ViaDispatch3, pf07::StufeThreeAxis<ce07::AllPrefetchers, slot07::Slot>>);
     SUCCEED();
 }
 
@@ -123,9 +118,9 @@ TEST(PhaseB_Axis07Slot, PrtArtAlgorithmLogicForwarded) {
     // Die migrierte prt-art-Logik (RedirectPrefetch fan-out) funktioniert im CE-Wrapper.
     slot07::PrtArtRedirectPrefetch p{};
     p.schedule(std::uint64_t{0x1000});
-    EXPECT_EQ(p.slot(0), 0x1000u);          // Hauptziel
-    EXPECT_EQ(p.slot(1), 0x1000u + 64u);    // +1 Cache-Line
-    EXPECT_EQ(p.slot(2), 0x1000u - 64u);    // -1 Cache-Line
+    EXPECT_EQ(p.slot(0), 0x1000u);       // Hauptziel
+    EXPECT_EQ(p.slot(1), 0x1000u + 64u); // +1 Cache-Line
+    EXPECT_EQ(p.slot(2), 0x1000u - 64u); // -1 Cache-Line
     EXPECT_EQ(p.total_scheduled(), 1u);
     EXPECT_EQ(slot07::PrtArtRedirectPrefetch::kFanOut, 3);
 }
@@ -155,10 +150,9 @@ TEST(PhaseB_Axis01Slot, StufeTwoReplacesCeDefaults) {
 TEST(PhaseB_Axis01Slot, StufeThreeFullJoinUnionsBoth) {
     using Joined = pf07::StufeThreeAxis<ce01::AllPageTypes, slot01::Slot>;
     static_assert(mp11::mp_contains<Joined, slot01::PrtArtBPlusPageType>::value);
-    static_assert(mp11::mp_contains<Joined, ce01::BPlusPageType>::value);       // CE-Default bleibt
+    static_assert(mp11::mp_contains<Joined, ce01::BPlusPageType>::value); // CE-Default bleibt
     static_assert(mp11::mp_contains<Joined, ce01::RedirectPageType>::value);
-    static_assert(mp11::mp_size<Joined>::value
-                  == mp11::mp_size<ce01::AllPageTypes>::value + 1);
+    static_assert(mp11::mp_size<Joined>::value == mp11::mp_size<ce01::AllPageTypes>::value + 1);
     SUCCEED();
 }
 
@@ -167,10 +161,9 @@ TEST(PhaseB_Axis01Slot, DensityDrivenDispatchIsDiplomaCore) {
     using K = slot01::PrtArtBPlusPageType::InternalSearchKind;
     slot01::PrtArtBPlusPageType page{};
     EXPECT_EQ(page.key_count(), 0u);
-    EXPECT_EQ(page.recommended_kind(), K::Array256);   // leer → Array256 (Density 0%)
+    EXPECT_EQ(page.recommended_kind(), K::Array256); // leer → Array256 (Density 0%)
     // 200/256 ≈ 78% → VectorU16U16 (>=75%).
-    for (std::uint64_t i = 0; i < 200; ++i)
-        page.insert_slot(static_cast<std::uint8_t>(i & 0xFF), i);
+    for (std::uint64_t i = 0; i < 200; ++i) page.insert_slot(static_cast<std::uint8_t>(i & 0xFF), i);
     EXPECT_EQ(page.key_count(), 200u);
     EXPECT_GT(page.density_percent(), 75.0);
     EXPECT_EQ(page.recommended_kind(), K::VectorU16U16);
@@ -186,7 +179,7 @@ namespace ce14   = ::comdare::cache_engine::value_handle::axis_14_value_handle;
 TEST(PhaseB_Axis14Slot, WrapperConformsToCeConcepts) {
     static_assert(ce14::concepts::ValueHandleStrategy<slot14::PrtArtChainRefHandle>);
     static_assert(ce14::concepts::CacheEnginePermutationStrategy<slot14::PrtArtChainRefHandle>);
-    static_assert(!slot14::PrtArtChainRefHandle::is_inline());  // chained external
+    static_assert(!slot14::PrtArtChainRefHandle::is_inline()); // chained external
     SUCCEED();
 }
 
@@ -199,9 +192,8 @@ TEST(PhaseB_Axis14Slot, StufeTwoReplacesCeDefaults) {
 TEST(PhaseB_Axis14Slot, StufeThreeFullJoinUnionsBoth) {
     using Joined = pf07::StufeThreeAxis<ce14::AllHandles, slot14::Slot>;
     static_assert(mp11::mp_contains<Joined, slot14::PrtArtChainRefHandle>::value);
-    static_assert(mp11::mp_contains<Joined, ce14::ChainRefValueHandle>::value);  // CE VH5 bleibt
-    static_assert(mp11::mp_size<Joined>::value
-                  == mp11::mp_size<ce14::AllHandles>::value + 1);
+    static_assert(mp11::mp_contains<Joined, ce14::ChainRefValueHandle>::value); // CE VH5 bleibt
+    static_assert(mp11::mp_size<Joined>::value == mp11::mp_size<ce14::AllHandles>::value + 1);
     SUCCEED();
 }
 
@@ -212,7 +204,7 @@ TEST(PhaseB_Axis14Slot, LinkedListManagementForwarded) {
     h.prepend_node(0x2000);
     h.prepend_node(0x3000);
     EXPECT_FALSE(h.is_empty());
-    EXPECT_EQ(h.chain_head_offset(), 0x3000u);  // letztes prepend ist Head
+    EXPECT_EQ(h.chain_head_offset(), 0x3000u); // letztes prepend ist Head
     EXPECT_EQ(h.chain_length(), 2u);
     h.clear();
     EXPECT_TRUE(h.is_empty());
@@ -229,7 +221,7 @@ namespace ce11   = ::comdare::cache_engine::telemetry::axis_11_telemetry;
 TEST(PhaseB_Axis11Slot, WrapperConformsToCeConcepts) {
     static_assert(ce11::concepts::TelemetryStrategy<slot11::PrtArtPerNodeCounter>);
     static_assert(ce11::concepts::CacheEnginePermutationStrategy<slot11::PrtArtPerNodeCounter>);
-    static_assert(!slot11::PrtArtPerNodeCounter::is_leaf_only());  // zählt ALLE Knoten (Anti-Pattern)
+    static_assert(!slot11::PrtArtPerNodeCounter::is_leaf_only()); // zählt ALLE Knoten (Anti-Pattern)
     SUCCEED();
 }
 
@@ -237,10 +229,9 @@ TEST(PhaseB_Axis11Slot, WrapperConformsToCeConcepts) {
 // im SELBEN Permutations-Sweep gegenüber → der Mess-Treiber kann beide vergleichen (Welch-Test).
 TEST(PhaseB_Axis11Slot, StufeThreeUnionsLeafOnlyAndPerNodeForF15) {
     using Joined = pf07::StufeThreeAxis<ce11::AllTelemetries, slot11::Slot>;
-    static_assert(mp11::mp_contains<Joined, slot11::PrtArtPerNodeCounter>::value);  // Anti-Pattern
-    static_assert(mp11::mp_contains<Joined, ce11::LeafOnlyCounter>::value);          // CE-Hauptvariante
-    static_assert(mp11::mp_size<Joined>::value
-                  == mp11::mp_size<ce11::AllTelemetries>::value + 1);
+    static_assert(mp11::mp_contains<Joined, slot11::PrtArtPerNodeCounter>::value); // Anti-Pattern
+    static_assert(mp11::mp_contains<Joined, ce11::LeafOnlyCounter>::value);        // CE-Hauptvariante
+    static_assert(mp11::mp_size<Joined>::value == mp11::mp_size<ce11::AllTelemetries>::value + 1);
     SUCCEED();
 }
 
@@ -254,10 +245,10 @@ TEST(PhaseB_Axis11Slot, PerNodeCountsAllNodesIncludingInner) {
     // Anti-Pattern-Verhalten: zählt auch Inner-Nodes (is_leaf=false) — im Gegensatz zu LeafOnly.
     slot11::PrtArtPerNodeCounter c{};
     c.record_access(0x10, /*is_leaf=*/true);
-    c.record_access(0x20, /*is_leaf=*/false);   // Inner-Node — PerNode zählt trotzdem
+    c.record_access(0x20, /*is_leaf=*/false); // Inner-Node — PerNode zählt trotzdem
     c.record_access(0x20, /*is_leaf=*/false);
     EXPECT_EQ(c.access_count(0x10), 1u);
-    EXPECT_EQ(c.access_count(0x20), 2u);         // Inner-Node mitgezählt (Ping-Pong-Risiko)
+    EXPECT_EQ(c.access_count(0x20), 2u); // Inner-Node mitgezählt (Ping-Pong-Risiko)
     EXPECT_EQ(c.tracked_nodes(), 2u);
     EXPECT_EQ(c.total_accesses(), 3u);
 }
@@ -273,22 +264,46 @@ TEST(PhaseB_Axis11Slot, PerNodeCountsAllNodesIncludingInner) {
 namespace pe = ::comdare::cache_engine::permutations;
 
 // Stufe 1 — comdare_perms_ce (CE-only, KEINE Pruefling-Beteiligung)
-struct TC07_S1 { using StaticAxisVariants = ce07::AllPrefetchers;  };
-struct TC01_S1 { using StaticAxisVariants = ce01::AllPageTypes;    };
-struct TC14_S1 { using StaticAxisVariants = ce14::AllHandles;      };
-struct TC11_S1 { using StaticAxisVariants = ce11::AllTelemetries;  };
+struct TC07_S1 {
+    using StaticAxisVariants = ce07::AllPrefetchers;
+};
+struct TC01_S1 {
+    using StaticAxisVariants = ce01::AllPageTypes;
+};
+struct TC14_S1 {
+    using StaticAxisVariants = ce14::AllHandles;
+};
+struct TC11_S1 {
+    using StaticAxisVariants = ce11::AllTelemetries;
+};
 
 // Stufe 2 — comdare_perms_pa (Pruefling ERSETZT pro Achse → je 1 Variante → 1 Komposition)
-struct TC07_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>; };
-struct TC01_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes,   slot01::Slot>; };
-struct TC14_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles,     slot14::Slot>; };
-struct TC11_S2 { using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>; };
+struct TC07_S2 {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>;
+};
+struct TC01_S2 {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes, slot01::Slot>;
+};
+struct TC14_S2 {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles, slot14::Slot>;
+};
+struct TC11_S2 {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>;
+};
 
 // Stufe 3 — comdare_perms_full_join (CE + Pruefling unioniert pro Achse)
-struct TC07_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce07::AllPrefetchers, slot07::Slot>; };
-struct TC01_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce01::AllPageTypes,   slot01::Slot>; };
-struct TC14_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce14::AllHandles,     slot14::Slot>; };
-struct TC11_S3 { using StaticAxisVariants = pf07::StufeThreeAxis<ce11::AllTelemetries, slot11::Slot>; };
+struct TC07_S3 {
+    using StaticAxisVariants = pf07::StufeThreeAxis<ce07::AllPrefetchers, slot07::Slot>;
+};
+struct TC01_S3 {
+    using StaticAxisVariants = pf07::StufeThreeAxis<ce01::AllPageTypes, slot01::Slot>;
+};
+struct TC14_S3 {
+    using StaticAxisVariants = pf07::StufeThreeAxis<ce14::AllHandles, slot14::Slot>;
+};
+struct TC11_S3 {
+    using StaticAxisVariants = pf07::StufeThreeAxis<ce11::AllTelemetries, slot11::Slot>;
+};
 
 TEST(F5_DreigliedrigkeitPermutationSpace, ThreeStufenProduceDistinctBinarySetSizes) {
     using EngineS1 = pe::PermutationEngine<TC07_S1, TC01_S1, TC14_S1, TC11_S1>;
@@ -327,10 +342,18 @@ TEST(F5_DreigliedrigkeitPermutationSpace, ThreeStufenProduceDistinctBinarySetSiz
 using ES = pf07::EmptyPrueflingSlot;
 
 // Belegt → 1 Prüfling-Variante.  Leer (ES) → volle CE-DefaultList.
-struct TC07_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>; };  // BELEGT
-struct TC01_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes,   ES>;           };  // LEER
-struct TC14_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles,     ES>;           };  // LEER
-struct TC11_S2mix { using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>; };  // BELEGT
+struct TC07_S2mix {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce07::AllPrefetchers, slot07::Slot>;
+}; // BELEGT
+struct TC01_S2mix {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce01::AllPageTypes, ES>;
+}; // LEER
+struct TC14_S2mix {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce14::AllHandles, ES>;
+}; // LEER
+struct TC11_S2mix {
+    using StaticAxisVariants = pf07::StufeTwoAxis<ce11::AllTelemetries, slot11::Slot>;
+}; // BELEGT
 
 TEST(F5_DreigliedrigkeitPermutationSpace, StufeTwoEmptyAxesReuseAllCeAlgorithms) {
     // (a) Type-Beleg der Regel: leere Achse ⇒ StufeTwoAxis == VOLLE CE-DefaultList.
@@ -340,14 +363,14 @@ TEST(F5_DreigliedrigkeitPermutationSpace, StufeTwoEmptyAxesReuseAllCeAlgorithms)
     static_assert(mp11::mp_size<TC07_S2mix::StaticAxisVariants>::value == 1);
     static_assert(mp11::mp_size<TC11_S2mix::StaticAxisVariants>::value == 1);
 
-    using EngineS2mix = pe::PermutationEngine<TC07_S2mix, TC01_S2mix, TC14_S2mix, TC11_S2mix>;
+    using EngineS2mix         = pe::PermutationEngine<TC07_S2mix, TC01_S2mix, TC14_S2mix, TC11_S2mix>;
     constexpr std::size_t n01 = mp11::mp_size<ce01::AllPageTypes>::value;
     constexpr std::size_t n14 = mp11::mp_size<ce14::AllHandles>::value;
 
     // (c) Stufe-2-Raum des Prototyps = Produkt NUR über die leeren Achsen (01,14) — NICHT die "1" der Teilsicht.
     static_assert(EngineS2mix::count() == n01 * n14);
-    static_assert(EngineS2mix::count() > 1);  // ⇒ die leeren Achsen expandieren echt aus
-    static_assert(n01 >= 2 && n14 >= 2);      // beide CE-Achsen haben mehrere Default-Algorithmen
+    static_assert(EngineS2mix::count() > 1); // ⇒ die leeren Achsen expandieren echt aus
+    static_assert(n01 >= 2 && n14 >= 2);     // beide CE-Achsen haben mehrere Default-Algorithmen
     SUCCEED();
 }
 
@@ -365,7 +388,7 @@ TEST(F5_PrtArtComposition, IsCodegenEligibleComposition) {
     // 17-Achsen-Vollständigkeit (das prüft das Codegen-Tool via descriptor_from_composition).
     static_assert(cea::IsComposition<C>);
     static_assert(cea::HasCompositionLocation<C>);
-    static_assert(cea::composition_organ_count<C>::value == 19);   // 17 SA-Achsen + queuing q1/q2 (Doc 30 §8.0)
+    static_assert(cea::composition_organ_count<C>::value == 19); // 17 SA-Achsen + queuing q1/q2 (Doc 30 §8.0)
     // Codegen-Lokalisierung korrekt gesetzt.
     EXPECT_EQ(C::name, std::string_view{"PrtArtCompositionDemo"});
     EXPECT_EQ(C::cpp_type_name, std::string_view{"::comdare::prt_art::slots::PrtArtCompositionDemo"});
@@ -375,17 +398,17 @@ TEST(F5_PrtArtComposition, IsCodegenEligibleComposition) {
 TEST(F5_PrtArtComposition, PrtArtSlotsAreTheOverriddenAxes) {
     using C = ::comdare::prt_art::slots::PrtArtCompositionDemo;
     // prefetch + value_handle sind prt-art-Slot-Wrapper; der Rest CE-Default (ArtComposition).
-    static_assert(std::is_same_v<C::prefetch,     ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch>);
+    static_assert(std::is_same_v<C::prefetch, ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch>);
     static_assert(std::is_same_v<C::value_handle, ::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle>);
-    static_assert(std::is_same_v<C::search_algo,  C::Base::search_algo>);   // CE-Default unverändert
-    static_assert(std::is_same_v<C::telemetry,    C::Base::telemetry>);     // CE LeafOnly (nicht PerNode-Anti-Pattern)
+    static_assert(std::is_same_v<C::search_algo, C::Base::search_algo>); // CE-Default unverändert
+    static_assert(std::is_same_v<C::telemetry, C::Base::telemetry>);     // CE LeafOnly (nicht PerNode-Anti-Pattern)
     SUCCEED();
 }
 
 TEST(F5_PrtArtComposition, FullAnatomyInstantiatesFromPrtArtSlots) {
     // Die volle SearchAlgorithmAnatomy baut aus der prt-art-Slot-Composition — die Codegen-Einheit.
     using Anatomy = cea::SearchAlgorithmAnatomy<::comdare::prt_art::slots::PrtArtCompositionDemo>;
-    Anatomy anatomy{};   // default-konstruierbar → instanziierbar als Codegen-Ziel
+    Anatomy anatomy{}; // default-konstruierbar → instanziierbar als Codegen-Ziel
     (void)anatomy;
     SUCCEED();
 }

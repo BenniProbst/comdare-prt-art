@@ -17,8 +17,8 @@
 namespace comdare::prt_art::serialization {
 
 enum class SignalKind : std::uint8_t {
-    Normal      = 0,    // signal_bit = 0
-    Special     = 1,    // signal_bit = 1 (tombstone, layout-switch, layout-marker)
+    Normal  = 0, // signal_bit = 0
+    Special = 1, // signal_bit = 1 (tombstone, layout-switch, layout-marker)
 };
 
 // Varlen-Encoding analog Protobuf-style (7-Bit-Continue): bis 9 Bytes
@@ -42,7 +42,7 @@ public:
     };
 
     [[nodiscard]] static Decoded decode(std::span<std::byte const> in) noexcept {
-        Decoded result{};
+        Decoded       result{};
         std::uint64_t shift = 0;
         for (std::byte b : in) {
             ++result.consumed_bytes;
@@ -50,7 +50,7 @@ public:
             if ((static_cast<std::uint8_t>(b) & 0x80) == 0) break;
             shift += 7;
             if (shift >= 64) {
-                result.consumed_bytes = 0;     // overflow
+                result.consumed_bytes = 0; // overflow
                 result.value          = 0;
                 break;
             }
@@ -63,7 +63,7 @@ class SignalingStream {
 public:
     void append(SignalKind signal, std::span<std::byte const> payload) {
         // Reserve worst case
-        std::byte length_buf[9];
+        std::byte   length_buf[9];
         std::size_t length_bytes =
             VarLenEncoder::encode(static_cast<std::uint64_t>(payload.size()), length_buf, sizeof(length_buf));
 
@@ -79,8 +79,8 @@ public:
         return std::span<std::byte const>(buffer_.data(), buffer_.size());
     }
 
-    [[nodiscard]] std::size_t   entry_count() const noexcept { return entry_count_; }
-    [[nodiscard]] std::size_t   byte_size()   const noexcept { return buffer_.size(); }
+    [[nodiscard]] std::size_t entry_count() const noexcept { return entry_count_; }
+    [[nodiscard]] std::size_t byte_size() const noexcept { return buffer_.size(); }
 
     void clear() noexcept {
         buffer_.clear();
@@ -89,13 +89,12 @@ public:
 
     // Iterator-style decode
     struct Entry {
-        SignalKind                  signal  = SignalKind::Normal;
-        std::span<std::byte const>  payload{};
-        std::size_t                 next_offset = 0;
+        SignalKind                 signal = SignalKind::Normal;
+        std::span<std::byte const> payload{};
+        std::size_t                next_offset = 0;
     };
 
-    [[nodiscard]] static Entry decode_one(std::span<std::byte const> stream,
-                                          std::size_t offset) noexcept {
+    [[nodiscard]] static Entry decode_one(std::span<std::byte const> stream, std::size_t offset) noexcept {
         Entry e{};
         if (offset + 1 > stream.size()) return e;
         e.signal = static_cast<SignalKind>(static_cast<std::uint8_t>(stream[offset]));
@@ -115,4 +114,4 @@ private:
     std::size_t            entry_count_ = 0;
 };
 
-}  // namespace comdare::prt_art::serialization
+} // namespace comdare::prt_art::serialization

@@ -23,7 +23,7 @@ TEST(InlineHandle, DefaultConstructorEmpty) {
 
 TEST(InlineHandle, StoreAndRead) {
     std::array<std::byte, 4> data{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
-    vh::InlineHandle<8> h{data};
+    vh::InlineHandle<8>      h{data};
     EXPECT_EQ(h.size(), 4u);
     auto bytes = h.bytes();
     ASSERT_EQ(bytes.size(), 4u);
@@ -41,7 +41,7 @@ TEST(InlineHandle, OversizedStoreTruncates) {
     std::array<std::byte, 16> big{};
     for (int i = 0; i < 16; ++i) big[i] = static_cast<std::byte>(i);
     vh::InlineHandle<8> h{big};
-    EXPECT_EQ(h.size(), 8u);   // truncated
+    EXPECT_EQ(h.size(), 8u); // truncated
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,12 +115,15 @@ TEST(ValueHandle, ConstructFromChainRef) {
 
 TEST(ValueHandle, VisitorPattern) {
     vh::ValueHandle<8> v{vh::ExternalHandle{100, 16}};
-    int hits[3] = {0, 0, 0};
+    int                hits[3] = {0, 0, 0};
     v.visit([&](auto const& h) {
         using T = std::decay_t<decltype(h)>;
-        if constexpr (std::is_same_v<T, vh::InlineHandle<8>>)        ++hits[0];
-        else if constexpr (std::is_same_v<T, vh::ExternalHandle>)    ++hits[1];
-        else if constexpr (std::is_same_v<T, vh::ChainRefHandle>)    ++hits[2];
+        if constexpr (std::is_same_v<T, vh::InlineHandle<8>>)
+            ++hits[0];
+        else if constexpr (std::is_same_v<T, vh::ExternalHandle>)
+            ++hits[1];
+        else if constexpr (std::is_same_v<T, vh::ChainRefHandle>)
+            ++hits[2];
     });
     EXPECT_EQ(hits[0], 0);
     EXPECT_EQ(hits[1], 1);
@@ -150,7 +153,7 @@ TEST(CostModel, RecommendExternalForLargeValues) {
 TEST(CostModel, RecommendInlineForSmallSingleAccess) {
     vh::WorkloadProfile w;
     w.access_count_per_value = 1;
-    auto r = vh::recommend_handle(4, false, w);
+    auto r                   = vh::recommend_handle(4, false, w);
     EXPECT_EQ(r, vh::HandleRecommendation::Inline);
 }
 
@@ -158,17 +161,17 @@ TEST(CostModel, InlineRemainsCheaperThanExternalForSmallValues) {
     // 8-Byte-Werte profitieren grundsaetzlich von Inline (vermeidet Pointer-Chase)
     // selbst bei hoher Access-Count. Das ist H3-Hypothese: kleine Werte → Inline.
     vh::WorkloadProfile w;
-    w.access_count_per_value         = 100000;
-    w.cache_line_pollution_factor    = 5.0;
-    w.pointer_chase_cycles           = 1.0;
-    auto r = vh::recommend_handle(8, false, w);
+    w.access_count_per_value      = 100000;
+    w.cache_line_pollution_factor = 5.0;
+    w.pointer_chase_cycles        = 1.0;
+    auto r                        = vh::recommend_handle(8, false, w);
     EXPECT_EQ(r, vh::HandleRecommendation::Inline);
 }
 
 TEST(CostModel, ExternalIsRecommendedOnceValueExceedsCapacity) {
     vh::WorkloadProfile w;
     w.inline_capacity_bytes = 8;
-    EXPECT_EQ(vh::recommend_handle(9,  false, w), vh::HandleRecommendation::External);
+    EXPECT_EQ(vh::recommend_handle(9, false, w), vh::HandleRecommendation::External);
     EXPECT_EQ(vh::recommend_handle(64, false, w), vh::HandleRecommendation::External);
 }
 

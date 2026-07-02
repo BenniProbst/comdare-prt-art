@@ -12,7 +12,7 @@ namespace comdare::prt_art::internal_search {
 
 class Array65535 {
 public:
-    static constexpr std::size_t kCapacity = 65535;
+    static constexpr std::size_t kCapacity          = 65535;
     static constexpr double      kDensityMinPercent = 25.0;
     static constexpr double      kDensityMaxPercent = 50.0;
 
@@ -28,13 +28,12 @@ public:
         return v;
     }
 
-    void erase(std::uint16_t discriminator) noexcept {
-        slots_[discriminator] = kEmpty;
-    }
+    void erase(std::uint16_t discriminator) noexcept { slots_[discriminator] = kEmpty; }
 
     [[nodiscard]] std::size_t occupied_count() const noexcept {
         std::size_t n = 0;
-        for (auto v : slots_) if (v != kEmpty) ++n;
+        for (auto v : slots_)
+            if (v != kEmpty) ++n;
         return n;
     }
 
@@ -44,7 +43,7 @@ public:
 
 private:
     static constexpr std::uint64_t kEmpty = static_cast<std::uint64_t>(-1);
-    std::vector<std::uint64_t> slots_;
+    std::vector<std::uint64_t>     slots_;
 };
 
-}  // namespace comdare::prt_art::internal_search
+} // namespace comdare::prt_art::internal_search

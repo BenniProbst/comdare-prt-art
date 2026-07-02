@@ -39,8 +39,8 @@ namespace comdare::prt_art::telemetry {
  * kann False-Sharing zwischen Counter-Tupeln vermieden werden.
  */
 struct alignas(64) NodeAccessCount {
-    std::atomic<std::uint64_t> counter {0};
-    char padding[64 - sizeof(std::atomic<std::uint64_t>)] {};
+    std::atomic<std::uint64_t> counter{0};
+    char                       padding[64 - sizeof(std::atomic<std::uint64_t>)]{};
 };
 
 /**
@@ -86,9 +86,7 @@ public:
     }
 
     /// Anzahl tracked Blatt-Knoten
-    [[nodiscard]] std::size_t tracked_leaves() const noexcept {
-        return counts_.size();
-    }
+    [[nodiscard]] std::size_t tracked_leaves() const noexcept { return counts_.size(); }
 
     /// Cache-Pressure-Estimate: normalisiertes Mass [0.0, 1.0]
     /// = (Anzahl Leaves mit count > 0) / (Anzahl tracked Leaves)
@@ -104,23 +102,19 @@ public:
     /// Aggregate-Counter ueber alle tracked Leaves
     [[nodiscard]] std::uint64_t total_accesses() const {
         std::uint64_t sum = 0;
-        for (const auto& [_, slot] : counts_) {
-            sum += slot->counter.load(std::memory_order_relaxed);
-        }
+        for (const auto& [_, slot] : counts_) { sum += slot->counter.load(std::memory_order_relaxed); }
         return sum;
     }
 
     /// Reset (vor naechster Mess-Phase)
-    void reset() {
-        counts_.clear();
-    }
+    void reset() { counts_.clear(); }
 
 private:
     NodeAccessCount& ensure_slot(NodeId node) {
         auto it = counts_.find(node);
         if (it == counts_.end()) {
-            auto slot = std::make_unique<NodeAccessCount>();
-            auto& ref = *slot;
+            auto  slot = std::make_unique<NodeAccessCount>();
+            auto& ref  = *slot;
             counts_.emplace(node, std::move(slot));
             return ref;
         }
@@ -161,15 +155,11 @@ public:
         return it->second->counter.load(std::memory_order_relaxed);
     }
 
-    [[nodiscard]] std::size_t tracked_nodes() const noexcept {
-        return counts_.size();
-    }
+    [[nodiscard]] std::size_t tracked_nodes() const noexcept { return counts_.size(); }
 
     [[nodiscard]] std::uint64_t total_accesses() const {
         std::uint64_t sum = 0;
-        for (const auto& [_, slot] : counts_) {
-            sum += slot->counter.load(std::memory_order_relaxed);
-        }
+        for (const auto& [_, slot] : counts_) { sum += slot->counter.load(std::memory_order_relaxed); }
         return sum;
     }
 
@@ -179,8 +169,8 @@ private:
     NodeAccessCount& ensure_slot(NodeId node) {
         auto it = counts_.find(node);
         if (it == counts_.end()) {
-            auto slot = std::make_unique<NodeAccessCount>();
-            auto& ref = *slot;
+            auto  slot = std::make_unique<NodeAccessCount>();
+            auto& ref  = *slot;
             counts_.emplace(node, std::move(slot));
             return ref;
         }
@@ -190,4 +180,4 @@ private:
     std::unordered_map<NodeId, std::unique_ptr<NodeAccessCount>> counts_;
 };
 
-}  // namespace comdare::prt_art::telemetry
+} // namespace comdare::prt_art::telemetry

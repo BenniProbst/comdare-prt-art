@@ -19,7 +19,7 @@ TEST(VebLayout, HeightThreeSevenNodes) {
     std::set<std::size_t> indices;
     for (std::size_t i = 0; i < 7; ++i) indices.insert(veb.veb_index(i));
     EXPECT_EQ(indices.size(), 7u);
-    EXPECT_EQ(*indices.begin(),  0u);
+    EXPECT_EQ(*indices.begin(), 0u);
     EXPECT_EQ(*indices.rbegin(), 6u);
 }
 
@@ -60,8 +60,8 @@ TEST(VebLayout, HeightFourDiffersFromBfs) {
     EXPECT_EQ(veb.veb_index(2), 2u);
     // Bottom-Subtree 1: enthaelt node 3 (Wurzel) + node 7,8 (Kinder von 3)
     EXPECT_EQ(veb.veb_index(3), 3u);
-    EXPECT_EQ(veb.veb_index(7), 4u);  // <- vEB-spezifisch! BFS waere 7.
-    EXPECT_EQ(veb.veb_index(8), 5u);  // <- vEB-spezifisch! BFS waere 8.
+    EXPECT_EQ(veb.veb_index(7), 4u); // <- vEB-spezifisch! BFS waere 7.
+    EXPECT_EQ(veb.veb_index(8), 5u); // <- vEB-spezifisch! BFS waere 8.
     // Bottom-Subtree 2: enthaelt node 4 + node 9,10
     EXPECT_EQ(veb.veb_index(4), 6u);
     EXPECT_EQ(veb.veb_index(9), 7u);
@@ -77,11 +77,11 @@ TEST(VebLayout, HeightFourDiffersFromBfs) {
 }
 
 TEST(VebLayout, HeightFourAllIndicesUnique) {
-    co::VebLayout veb{4};
+    co::VebLayout         veb{4};
     std::set<std::size_t> indices;
     for (std::size_t i = 0; i < 15; ++i) indices.insert(veb.veb_index(i));
     EXPECT_EQ(indices.size(), 15u);
-    EXPECT_EQ(*indices.begin(),  0u);
+    EXPECT_EQ(*indices.begin(), 0u);
     EXPECT_EQ(*indices.rbegin(), 14u);
 }
 
@@ -96,6 +96,6 @@ TEST(VebLayout, HeightFiveAllIndicesUnique) {
     std::set<std::size_t> indices;
     for (std::size_t i = 0; i < 31; ++i) indices.insert(veb.veb_index(i));
     EXPECT_EQ(indices.size(), 31u);
-    EXPECT_EQ(*indices.begin(),  0u);
+    EXPECT_EQ(*indices.begin(), 0u);
     EXPECT_EQ(*indices.rbegin(), 30u);
 }

@@ -22,11 +22,9 @@ TEST(PrefetchTracker, ResetClears) {
 
 TEST(WiderNode, ScanEmitsPrefetchHints) {
     pf::WiderNodeWithPrefetch<4> node;
-    for (std::uint32_t i = 0; i < 32; ++i) {
-        node.insert(i, i * 10);
-    }
+    for (std::uint32_t i = 0; i < 32; ++i) { node.insert(i, i * 10); }
     pf::PrefetchTracker t;
-    auto v = node.scan_with_prefetch(20, t);
+    auto                v = node.scan_with_prefetch(20, t);
     EXPECT_EQ(v, 200u);
     EXPECT_GT(t.hint_count(), 0u);
 }

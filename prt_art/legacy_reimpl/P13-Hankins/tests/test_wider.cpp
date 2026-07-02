@@ -22,8 +22,8 @@ TEST(WiderBPlus, InsertAndLookup) {
 
 TEST(CostModel, TotalWeighted) {
     hk::CostModel m;
-    double t = m.total(100, 10, 5, 2);
-    EXPECT_DOUBLE_EQ(t, 100*1.0 + 10*4.0 + 5*0.5 + 2*2.0);
+    double        t = m.total(100, 10, 5, 2);
+    EXPECT_DOUBLE_EQ(t, 100 * 1.0 + 10 * 4.0 + 5 * 0.5 + 2 * 2.0);
 }
 
 TEST(CostModel, CustomWeights) {

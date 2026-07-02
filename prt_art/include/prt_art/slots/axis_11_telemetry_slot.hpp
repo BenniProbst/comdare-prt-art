@@ -14,9 +14,9 @@
 #include <topics/telemetry/axis_11_telemetry/concepts/axis_11_telemetry_concept.hpp>
 #include <topics/telemetry/axis_11_telemetry/concepts/axis_11_telemetry_cache_engine_permutation_concept.hpp>
 #include <topics/telemetry/concepts/topic_telemetry_concept.hpp>
-#include <anatomy/pruefling_merge.hpp>   // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
 
-#include <prt_art/telemetry/leaf_only_counter.hpp>  // prt-art PerNodeCounter (Anti-Pattern)
+#include <prt_art/telemetry/leaf_only_counter.hpp> // prt-art PerNodeCounter (Anti-Pattern)
 
 #include <boost/mp11.hpp>
 #include <cstddef>
@@ -41,22 +41,24 @@ class PrtArtPerNodeCounter : public ce11::TelemetryStrategyBase<PrtArtPerNodeCou
 public:
     using topic_tag = ::comdare::cache_engine::telemetry::concepts::TelemetryTopicTag;
     using axis_tag  = per_node_scope_tag;
-    using family_id = std::integral_constant<int, 14>;  // prt-art Telemetry-Range (distinkt zu CE)
+    using family_id = std::integral_constant<int, 14>; // prt-art Telemetry-Range (distinkt zu CE)
 
-    static constexpr bool enabled = true;  // Pruefling-Variante: aktiv wenn der Slot geladen ist
+    static constexpr bool enabled = true; // Pruefling-Variante: aktiv wenn der Slot geladen ist
 
     /// SONDERFALL: NICHT leaf-only — zählt ALLE Knoten (Anti-Pattern, F15-Vergleichsbasis).
     [[nodiscard]] static constexpr bool             is_leaf_only() noexcept { return false; }
-    [[nodiscard]] static constexpr std::string_view name()        noexcept { return "prtart_per_node_counter"; }
-    [[nodiscard]] static constexpr std::string_view family_name() noexcept { return "PrtArtPerNodeCounter (F15 anti-pattern: per-node counter, cache-line ping-pong baseline)"; }
+    [[nodiscard]] static constexpr std::string_view name() noexcept { return "prtart_per_node_counter"; }
+    [[nodiscard]] static constexpr std::string_view family_name() noexcept {
+        return "PrtArtPerNodeCounter (F15 anti-pattern: per-node counter, cache-line ping-pong baseline)";
+    }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_PER_NODE"; }
 
     // prt-art-Algorithmus-Logik (PerNodeCounter) — forwarded.
     void record_access(std::uint64_t node, bool is_leaf) { counter_.record_access(node, is_leaf); }
     [[nodiscard]] std::uint64_t access_count(std::uint64_t node) const { return counter_.access_count(node); }
-    [[nodiscard]] std::size_t   tracked_nodes()  const noexcept { return counter_.tracked_nodes(); }
+    [[nodiscard]] std::size_t   tracked_nodes() const noexcept { return counter_.tracked_nodes(); }
     [[nodiscard]] std::uint64_t total_accesses() const { return counter_.total_accesses(); }
-    void reset() { counter_.reset(); }
+    void                        reset() { counter_.reset(); }
 
 private:
     ::comdare::prt_art::telemetry::PerNodeCounter<std::uint64_t> counter_{};
@@ -64,8 +66,8 @@ private:
 
 /// Slot — pruefling_merge-konformer axis_11-Slot (SearchAlgorithm-Gattung).
 struct Slot {
-    using PrueflingVariants = mp::mp_list<PrtArtPerNodeCounter>;
-    static constexpr bool has_pruefling = true;
+    using PrueflingVariants                                                       = mp::mp_list<PrtArtPerNodeCounter>;
+    static constexpr bool                                           has_pruefling = true;
     static constexpr ::comdare::cache_engine::anatomy::AnatomyGenus genus =
         ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm;
 };
@@ -75,4 +77,4 @@ static_assert(ce11::concepts::CacheEnginePermutationStrategy<PrtArtPerNodeCounte
 static_assert(pf::PrueflingSlotConcept<Slot>);
 static_assert(pf::HasPruefling_v<Slot>);
 
-}  // namespace comdare::prt_art::slots::axis_11
+} // namespace comdare::prt_art::slots::axis_11

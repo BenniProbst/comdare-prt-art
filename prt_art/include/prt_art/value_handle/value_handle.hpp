@@ -28,21 +28,19 @@ public:
     using Storage_t  = std::variant<Inline_t, External_t, Chain_t>;
 
     ValueHandle() = default;
-    explicit ValueHandle(Inline_t   v) : storage_(std::move(v)) {}
+    explicit ValueHandle(Inline_t v) : storage_(std::move(v)) {}
     explicit ValueHandle(External_t v) : storage_(std::move(v)) {}
-    explicit ValueHandle(Chain_t    v) : storage_(std::move(v)) {}
+    explicit ValueHandle(Chain_t v) : storage_(std::move(v)) {}
 
-    [[nodiscard]] HandleKind kind() const noexcept {
-        return static_cast<HandleKind>(storage_.index());
-    }
+    [[nodiscard]] HandleKind kind() const noexcept { return static_cast<HandleKind>(storage_.index()); }
 
-    [[nodiscard]] bool is_inline()    const noexcept { return std::holds_alternative<Inline_t>(storage_); }
-    [[nodiscard]] bool is_external()  const noexcept { return std::holds_alternative<External_t>(storage_); }
+    [[nodiscard]] bool is_inline() const noexcept { return std::holds_alternative<Inline_t>(storage_); }
+    [[nodiscard]] bool is_external() const noexcept { return std::holds_alternative<External_t>(storage_); }
     [[nodiscard]] bool is_chain_ref() const noexcept { return std::holds_alternative<Chain_t>(storage_); }
 
-    [[nodiscard]] Inline_t   const& as_inline()    const { return std::get<Inline_t>(storage_); }
-    [[nodiscard]] External_t const& as_external()  const { return std::get<External_t>(storage_); }
-    [[nodiscard]] Chain_t    const& as_chain_ref() const { return std::get<Chain_t>(storage_); }
+    [[nodiscard]] Inline_t const&   as_inline() const { return std::get<Inline_t>(storage_); }
+    [[nodiscard]] External_t const& as_external() const { return std::get<External_t>(storage_); }
+    [[nodiscard]] Chain_t const&    as_chain_ref() const { return std::get<Chain_t>(storage_); }
 
     template <typename Visitor>
     decltype(auto) visit(Visitor&& v) const {
@@ -53,4 +51,4 @@ private:
     Storage_t storage_{Inline_t{}};
 };
 
-}  // namespace comdare::prt_art::value_handle
+} // namespace comdare::prt_art::value_handle

@@ -11,9 +11,9 @@
 #include <topics/value_handle/axis_14_value_handle/concepts/axis_14_value_handle_concept.hpp>
 #include <topics/value_handle/axis_14_value_handle/concepts/axis_14_value_handle_cache_engine_permutation_concept.hpp>
 #include <topics/value_handle/concepts/topic_value_handle_concept.hpp>
-#include <anatomy/pruefling_merge.hpp>   // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
 
-#include <prt_art/value_handle/chain_ref_handle.hpp>  // prt-art-Algorithmus-Logik
+#include <prt_art/value_handle/chain_ref_handle.hpp> // prt-art-Algorithmus-Logik
 
 #include <boost/mp11.hpp>
 #include <cstdint>
@@ -37,19 +37,21 @@ class PrtArtChainRefHandle : public ce14::ValueHandleStrategyBase<PrtArtChainRef
 public:
     using topic_tag = ::comdare::cache_engine::value_handle::concepts::ValueHandleTopicTag;
     using axis_tag  = chained_external_tag;
-    using family_id = std::integral_constant<int, 15>;  // prt-art VH-Range (distinkt zu CE 1-5)
+    using family_id = std::integral_constant<int, 15>; // prt-art VH-Range (distinkt zu CE 1-5)
 
-    static constexpr bool enabled = true;  // Pruefling-Variante: aktiv wenn der Slot geladen ist
+    static constexpr bool enabled = true; // Pruefling-Variante: aktiv wenn der Slot geladen ist
 
-    [[nodiscard]] static constexpr bool             is_inline()   noexcept { return false; }  // chained external
-    [[nodiscard]] static constexpr std::string_view name()        noexcept { return "prtart_chain_ref_handle"; }
-    [[nodiscard]] static constexpr std::string_view family_name() noexcept { return "PrtArtChainRefHandle (multi-value linked-list pool reference, prt-art REV6 §5.4)"; }
+    [[nodiscard]] static constexpr bool             is_inline() noexcept { return false; } // chained external
+    [[nodiscard]] static constexpr std::string_view name() noexcept { return "prtart_chain_ref_handle"; }
+    [[nodiscard]] static constexpr std::string_view family_name() noexcept {
+        return "PrtArtChainRefHandle (multi-value linked-list pool reference, prt-art REV6 §5.4)";
+    }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_CHAIN_REF"; }
 
     // prt-art-Algorithmus-Logik (ChainRefHandle Linked-List-Verwaltung) — forwarded.
     [[nodiscard]] std::uint64_t chain_head_offset() const noexcept { return handle_.chain_head_offset(); }
-    [[nodiscard]] std::uint32_t chain_length()      const noexcept { return handle_.chain_length(); }
-    [[nodiscard]] bool          is_empty()          const noexcept { return handle_.is_empty(); }
+    [[nodiscard]] std::uint32_t chain_length() const noexcept { return handle_.chain_length(); }
+    [[nodiscard]] bool          is_empty() const noexcept { return handle_.is_empty(); }
     void prepend_node(std::uint64_t new_head_offset) noexcept { handle_.prepend_node(new_head_offset); }
     void clear() noexcept { handle_.clear(); }
 
@@ -59,8 +61,8 @@ private:
 
 /// Slot — pruefling_merge-konformer axis_14-Slot (SearchAlgorithm-Gattung).
 struct Slot {
-    using PrueflingVariants = mp::mp_list<PrtArtChainRefHandle>;
-    static constexpr bool has_pruefling = true;
+    using PrueflingVariants                                                       = mp::mp_list<PrtArtChainRefHandle>;
+    static constexpr bool                                           has_pruefling = true;
     static constexpr ::comdare::cache_engine::anatomy::AnatomyGenus genus =
         ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm;
 };
@@ -70,4 +72,4 @@ static_assert(ce14::concepts::CacheEnginePermutationStrategy<PrtArtChainRefHandl
 static_assert(pf::PrueflingSlotConcept<Slot>);
 static_assert(pf::HasPruefling_v<Slot>);
 
-}  // namespace comdare::prt_art::slots::axis_14
+} // namespace comdare::prt_art::slots::axis_14

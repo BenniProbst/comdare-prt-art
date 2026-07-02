@@ -15,13 +15,13 @@ namespace al = comdare::prt_art::allocator;
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST(PoolDescriptor, KindNamesAreSpecific) {
-    EXPECT_EQ(al::name(al::PoolKind::A_TrieHuelle),    "A_TrieHuelle");
-    EXPECT_EQ(al::name(al::PoolKind::B_DensePages),    "B_DensePages");
-    EXPECT_EQ(al::name(al::PoolKind::C_MultiLevel),    "C_MultiLevel");
-    EXPECT_EQ(al::name(al::PoolKind::D_DecisionSpan),  "D_DecisionSpan");
-    EXPECT_EQ(al::name(al::PoolKind::R_Rest),          "R_Rest");
-    EXPECT_EQ(al::name(al::PoolKind::V_StaticValue),   "V_StaticValue");
-    EXPECT_EQ(al::name(al::PoolKind::V_DynamicValue),  "V_DynamicValue");
+    EXPECT_EQ(al::name(al::PoolKind::A_TrieHuelle), "A_TrieHuelle");
+    EXPECT_EQ(al::name(al::PoolKind::B_DensePages), "B_DensePages");
+    EXPECT_EQ(al::name(al::PoolKind::C_MultiLevel), "C_MultiLevel");
+    EXPECT_EQ(al::name(al::PoolKind::D_DecisionSpan), "D_DecisionSpan");
+    EXPECT_EQ(al::name(al::PoolKind::R_Rest), "R_Rest");
+    EXPECT_EQ(al::name(al::PoolKind::V_StaticValue), "V_StaticValue");
+    EXPECT_EQ(al::name(al::PoolKind::V_DynamicValue), "V_DynamicValue");
 }
 
 TEST(PoolStatistics, OnAllocIncrementsCounters) {
@@ -37,8 +37,8 @@ TEST(PoolStatistics, OnAllocIncrementsCounters) {
 TEST(PoolStatistics, OnDeallocReducesInUse) {
     al::PoolStatistics s;
     s.on_alloc(100);
-    s.on_alloc(50);                 // peak 150, in-use 150
-    s.on_dealloc(50);               // in-use 100, peak bleibt 150
+    s.on_alloc(50);   // peak 150, in-use 150
+    s.on_dealloc(50); // in-use 100, peak bleibt 150
     EXPECT_EQ(s.deallocations, 1u);
     EXPECT_EQ(s.bytes_deallocated, 50u);
     EXPECT_EQ(s.current_bytes_in_use, 100u);
@@ -48,7 +48,7 @@ TEST(PoolStatistics, OnDeallocReducesInUse) {
 TEST(PoolStatistics, OnDeallocClampsAtZero) {
     al::PoolStatistics s;
     s.on_alloc(10);
-    s.on_dealloc(50);   // mehr deallociert als alloziert — clamp at 0
+    s.on_dealloc(50); // mehr deallociert als alloziert — clamp at 0
     EXPECT_EQ(s.current_bytes_in_use, 0u);
 }
 
@@ -64,8 +64,8 @@ TEST(PoolSet, SevenPoolsExist) {
 
 TEST(PoolSet, EachPoolKindIsAccessible) {
     al::PoolSet ps;
-    EXPECT_EQ(ps.get(al::PoolKind::A_TrieHuelle).kind,    al::PoolKind::A_TrieHuelle);
-    EXPECT_EQ(ps.get(al::PoolKind::V_DynamicValue).kind,  al::PoolKind::V_DynamicValue);
+    EXPECT_EQ(ps.get(al::PoolKind::A_TrieHuelle).kind, al::PoolKind::A_TrieHuelle);
+    EXPECT_EQ(ps.get(al::PoolKind::V_DynamicValue).kind, al::PoolKind::V_DynamicValue);
 }
 
 TEST(PoolSet, ConfigureSetsSlotSizeAndCapacity) {
@@ -78,11 +78,11 @@ TEST(PoolSet, ConfigureSetsSlotSizeAndCapacity) {
 
 TEST(PoolSet, NoteAllocAggregatesAcrossPools) {
     al::PoolSet ps;
-    ps.note_alloc(al::PoolKind::A_TrieHuelle,   64);
-    ps.note_alloc(al::PoolKind::B_DensePages,   128);
-    ps.note_alloc(al::PoolKind::V_StaticValue,  8);
+    ps.note_alloc(al::PoolKind::A_TrieHuelle, 64);
+    ps.note_alloc(al::PoolKind::B_DensePages, 128);
+    ps.note_alloc(al::PoolKind::V_StaticValue, 8);
     EXPECT_EQ(ps.total_allocated_bytes(), 200u);
-    EXPECT_EQ(ps.total_in_use_bytes(),     200u);
+    EXPECT_EQ(ps.total_in_use_bytes(), 200u);
 }
 
 TEST(PoolSet, NoteDeallocReducesInUse) {
@@ -98,20 +98,18 @@ TEST(PoolSet, NoteDeallocReducesInUse) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST(PoolRouter, RoutePageEncodingsToCorrectPools) {
-    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::Redirect),        al::PoolKind::A_TrieHuelle);
-    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::DenseByte),       al::PoolKind::B_DensePages);
-    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::SparsePatricia),  al::PoolKind::B_DensePages);
+    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::Redirect), al::PoolKind::A_TrieHuelle);
+    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::DenseByte), al::PoolKind::B_DensePages);
+    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::SparsePatricia), al::PoolKind::B_DensePages);
     EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::MultilevelDense), al::PoolKind::C_MultiLevel);
-    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::DecisionSpan),    al::PoolKind::D_DecisionSpan);
-    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::CustomAligned),   al::PoolKind::D_DecisionSpan);
+    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::DecisionSpan), al::PoolKind::D_DecisionSpan);
+    EXPECT_EQ(al::PoolRouter::route_page(al::PageEncodingTag::CustomAligned), al::PoolKind::D_DecisionSpan);
 }
 
 TEST(PoolRouter, RouteValueHandlesToValuePools) {
-    EXPECT_EQ(al::PoolRouter::route_value(al::ValueHandleTag::Inline),   al::PoolKind::V_StaticValue);
+    EXPECT_EQ(al::PoolRouter::route_value(al::ValueHandleTag::Inline), al::PoolKind::V_StaticValue);
     EXPECT_EQ(al::PoolRouter::route_value(al::ValueHandleTag::External), al::PoolKind::V_DynamicValue);
     EXPECT_EQ(al::PoolRouter::route_value(al::ValueHandleTag::ChainRef), al::PoolKind::V_DynamicValue);
 }
 
-TEST(PoolRouter, MiscRoutesToRestPool) {
-    EXPECT_EQ(al::PoolRouter::route_misc(), al::PoolKind::R_Rest);
-}
+TEST(PoolRouter, MiscRoutesToRestPool) { EXPECT_EQ(al::PoolRouter::route_misc(), al::PoolKind::R_Rest); }

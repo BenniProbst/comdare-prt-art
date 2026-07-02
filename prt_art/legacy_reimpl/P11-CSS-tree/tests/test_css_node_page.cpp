@@ -4,9 +4,7 @@
 
 namespace css = comdare::prt_art::legacy_reimpl::css_node_page;
 
-TEST(CssNodePage, FitsInCacheLine) {
-    EXPECT_LE(sizeof(css::CssNodePage<7>), css::kCacheLineBytes);
-}
+TEST(CssNodePage, FitsInCacheLine) { EXPECT_LE(sizeof(css::CssNodePage<7>), css::kCacheLineBytes); }
 
 TEST(CssNodePage, InsertSortedAndLookup) {
     css::CssNodePage<7> node;
@@ -27,7 +25,7 @@ TEST(CssNodePage, InsertSortedAndLookup) {
 TEST(CssNodePage, DuplicateInsertRejected) {
     css::CssNodePage<7> node;
     EXPECT_EQ(node.insert_sorted(1, 11), 0);
-    EXPECT_EQ(node.insert_sorted(1, 99), 1);  // already exists
+    EXPECT_EQ(node.insert_sorted(1, 99), 1); // already exists
     auto v = node.lookup(1);
     ASSERT_TRUE(v.has_value());
     EXPECT_EQ(*v, 11u);
@@ -39,7 +37,7 @@ TEST(CssNodePage, FullRejectsInsert) {
     EXPECT_EQ(small.insert_sorted(2, 2), 0);
     EXPECT_EQ(small.insert_sorted(3, 3), 0);
     EXPECT_TRUE(small.full());
-    EXPECT_EQ(small.insert_sorted(4, 4), 5);  // capacity_exceeded
+    EXPECT_EQ(small.insert_sorted(4, 4), 5); // capacity_exceeded
 }
 
 TEST(CssTree, IndexArithmeticConsistent) {
@@ -58,5 +56,5 @@ TEST(CssTree, AddRootOnce) {
     EXPECT_EQ(tree.node_count(), 0u);
     EXPECT_EQ(tree.add_root(), 0);
     EXPECT_EQ(tree.node_count(), 1u);
-    EXPECT_EQ(tree.add_root(), 1);  // already exists
+    EXPECT_EQ(tree.add_root(), 1); // already exists
 }

@@ -25,7 +25,7 @@ TEST(HierarchicalBundle, AddAddressesToL1) {
 TEST(HierarchicalBundle, AdditionalAddressOpensNewBundle) {
     za::HierarchicalBundlePrefetcher p;
     for (int i = 0; i < 5; ++i) p.add_address_to_bundle(0x1000 + i, 1);
-    EXPECT_EQ(p.bundle_count(), 2u);  // 1 voll, 1 mit 1 Adresse
+    EXPECT_EQ(p.bundle_count(), 2u); // 1 voll, 1 mit 1 Adresse
 }
 
 TEST(HierarchicalBundle, BundleLevelTracked) {
@@ -40,7 +40,7 @@ TEST(HierarchicalBundle, BundleLevelTracked) {
 
 TEST(HierarchicalBundle, InvalidLevelRejected) {
     za::HierarchicalBundlePrefetcher p;
-    EXPECT_EQ(p.add_address_to_bundle(0x1000, 0),  4);
+    EXPECT_EQ(p.add_address_to_bundle(0x1000, 0), 4);
     EXPECT_EQ(p.add_address_to_bundle(0x2000, 99), 4);
     EXPECT_EQ(p.bundle_count(), 0u);
 }

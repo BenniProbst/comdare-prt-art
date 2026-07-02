@@ -12,9 +12,9 @@
 #include <topics/nodes/axis_01_page_type/concepts/axis_01_page_type_concept.hpp>
 #include <topics/nodes/axis_01_page_type/concepts/axis_01_page_type_cache_engine_permutation_concept.hpp>
 #include <topics/nodes/concepts/topic_nodes_concept.hpp>
-#include <anatomy/pruefling_merge.hpp>   // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
 
-#include <prt_art/nodes/bplus_node.hpp>  // prt-art-Algorithmus-Logik (Density-Dispatch)
+#include <prt_art/nodes/bplus_node.hpp> // prt-art-Algorithmus-Logik (Density-Dispatch)
 
 #include <boost/mp11.hpp>
 #include <cstddef>
@@ -39,17 +39,19 @@ class PrtArtBPlusPageType : public ce01::PageTypeStrategyBase<PrtArtBPlusPageTyp
 public:
     using topic_tag = ::comdare::cache_engine::nodes::concepts::NodesTopicTag;
     using axis_tag  = density_branch_tag;
-    using family_id = std::integral_constant<int, 16>;  // prt-art Page-Type-Range (distinkt zu CE 0-5)
+    using family_id = std::integral_constant<int, 16>; // prt-art Page-Type-Range (distinkt zu CE 0-5)
 
-    static constexpr bool enabled = true;  // Pruefling-Variante: aktiv wenn der Slot geladen ist
+    static constexpr bool enabled = true; // Pruefling-Variante: aktiv wenn der Slot geladen ist
 
     [[nodiscard]] static constexpr ce01::concepts::PageKind page_kind() noexcept {
         return ce01::concepts::PageKind::BPlus;
     }
-    [[nodiscard]] static constexpr bool             is_branch()   noexcept { return true; }
-    [[nodiscard]] static constexpr bool             is_leaf()     noexcept { return false; }
-    [[nodiscard]] static constexpr std::string_view name()        noexcept { return "prtart_bplus_page"; }
-    [[nodiscard]] static constexpr std::string_view family_name() noexcept { return "PrtArtBPlusPageType (density-driven branch page, prt-art REV6 §5.17)"; }
+    [[nodiscard]] static constexpr bool             is_branch() noexcept { return true; }
+    [[nodiscard]] static constexpr bool             is_leaf() noexcept { return false; }
+    [[nodiscard]] static constexpr std::string_view name() noexcept { return "prtart_bplus_page"; }
+    [[nodiscard]] static constexpr std::string_view family_name() noexcept {
+        return "PrtArtBPlusPageType (density-driven branch page, prt-art REV6 §5.17)";
+    }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_BPLUS"; }
 
     using InternalSearchKind = ::comdare::prt_art::nodes::InternalSearchKind;
@@ -58,10 +60,10 @@ public:
     void insert_slot(std::uint8_t discriminator, std::uint64_t child_index) {
         node_.insert_slot(discriminator, child_index);
     }
-    [[nodiscard]] std::size_t key_count()        const noexcept { return node_.key_count(); }
-    [[nodiscard]] double      density_percent()  const noexcept { return node_.density_percent(); }
-    [[nodiscard]] InternalSearchKind kind()      const noexcept { return node_.kind(); }
-    void set_kind(InternalSearchKind k)                noexcept { node_.set_kind(k); }
+    [[nodiscard]] std::size_t        key_count() const noexcept { return node_.key_count(); }
+    [[nodiscard]] double             density_percent() const noexcept { return node_.density_percent(); }
+    [[nodiscard]] InternalSearchKind kind() const noexcept { return node_.kind(); }
+    void                             set_kind(InternalSearchKind k) noexcept { node_.set_kind(k); }
     /// Diplomarbeit-Kern: density-getriebene Reklassifizierung (25/50/75%-Schwellen).
     [[nodiscard]] InternalSearchKind recommended_kind() const noexcept { return node_.recommended_kind(); }
 
@@ -71,8 +73,8 @@ private:
 
 /// Slot — pruefling_merge-konformer axis_01-Slot (SearchAlgorithm-Gattung).
 struct Slot {
-    using PrueflingVariants = mp::mp_list<PrtArtBPlusPageType>;
-    static constexpr bool has_pruefling = true;
+    using PrueflingVariants                                                       = mp::mp_list<PrtArtBPlusPageType>;
+    static constexpr bool                                           has_pruefling = true;
     static constexpr ::comdare::cache_engine::anatomy::AnatomyGenus genus =
         ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm;
 };
@@ -82,4 +84,4 @@ static_assert(ce01::concepts::CacheEnginePermutationStrategy<PrtArtBPlusPageType
 static_assert(pf::PrueflingSlotConcept<Slot>);
 static_assert(pf::HasPruefling_v<Slot>);
 
-}  // namespace comdare::prt_art::slots::axis_01
+} // namespace comdare::prt_art::slots::axis_01

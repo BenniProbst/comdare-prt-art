@@ -30,12 +30,12 @@ TEST(DensityTracker, RecordAndQuery) {
 
 TEST(DensityTracker, Histogram4BucketsByThresholds) {
     meas::DensityTracker t;
-    t.record(1, 10.0);   // bucket 0 (<25)
-    t.record(2, 20.0);   // bucket 0
-    t.record(3, 30.0);   // bucket 1 (25-50)
-    t.record(4, 60.0);   // bucket 2 (50-75)
-    t.record(5, 80.0);   // bucket 3 (>=75)
-    t.record(6, 95.0);   // bucket 3
+    t.record(1, 10.0); // bucket 0 (<25)
+    t.record(2, 20.0); // bucket 0
+    t.record(3, 30.0); // bucket 1 (25-50)
+    t.record(4, 60.0); // bucket 2 (50-75)
+    t.record(5, 80.0); // bucket 3 (>=75)
+    t.record(6, 95.0); // bucket 3
     auto h = t.histogram();
     ASSERT_EQ(h.size(), 4u);
     EXPECT_EQ(h[0].node_count, 2u);
@@ -68,9 +68,9 @@ TEST(H1PageTypeCost, NoteLookupBuildsOnlineMean) {
 
 TEST(H1PageTypeCost, MultiplePageTypesTrackedSeparately) {
     meas::H1PageTypeCost h1;
-    h1.note_lookup("DenseByte",    50.0);
+    h1.note_lookup("DenseByte", 50.0);
     h1.note_lookup("SparsePatricia", 150.0);
-    EXPECT_DOUBLE_EQ(h1.mean_cycles_per_lookup_by_page_type["DenseByte"],      50.0);
+    EXPECT_DOUBLE_EQ(h1.mean_cycles_per_lookup_by_page_type["DenseByte"], 50.0);
     EXPECT_DOUBLE_EQ(h1.mean_cycles_per_lookup_by_page_type["SparsePatricia"], 150.0);
 }
 
@@ -81,7 +81,7 @@ TEST(H1PageTypeCost, MultiplePageTypesTrackedSeparately) {
 TEST(H2CodeQuality, ScoreAndNote) {
     meas::H2CodeQuality h2;
     h2.score("P01_unodb", 0.92, "well-structured, BSD-licensed");
-    h2.score("P02_hot",   0.85);
+    h2.score("P02_hot", 0.85);
     EXPECT_DOUBLE_EQ(h2.quality_score_by_source["P01_unodb"], 0.92);
     EXPECT_EQ(h2.note_by_source["P01_unodb"], "well-structured, BSD-licensed");
     EXPECT_TRUE(h2.note_by_source.find("P02_hot") == h2.note_by_source.end());
@@ -103,9 +103,9 @@ TEST(H3InlineVsExternal, SharesSumToOne) {
     for (int i = 0; i < 30; ++i) h3.note_external();
     for (int i = 0; i < 10; ++i) h3.note_chain();
     EXPECT_EQ(h3.total(), 100u);
-    EXPECT_DOUBLE_EQ(h3.inline_share(),   0.60);
+    EXPECT_DOUBLE_EQ(h3.inline_share(), 0.60);
     EXPECT_DOUBLE_EQ(h3.external_share(), 0.30);
-    EXPECT_DOUBLE_EQ(h3.chain_share(),    0.10);
+    EXPECT_DOUBLE_EQ(h3.chain_share(), 0.10);
 }
 
 TEST(PrtArtHypothesisMetrics, AllThreeAccessible) {

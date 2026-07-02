@@ -18,19 +18,18 @@
 namespace comdare::prt_art::legacy_reimpl::multi_level_reloc {
 
 struct Block {
-    std::uint64_t block_id      = 0;
-    std::uint32_t level         = 0;        // 0 = L1, 1 = L2, ...
-    std::uint64_t access_count  = 0;
-    std::uint64_t last_used_ts  = 0;
+    std::uint64_t block_id     = 0;
+    std::uint32_t level        = 0; // 0 = L1, 1 = L2, ...
+    std::uint64_t access_count = 0;
+    std::uint64_t last_used_ts = 0;
 };
 
 class MultiLevelRelocation {
 public:
-    explicit MultiLevelRelocation(std::uint32_t max_levels = 4) noexcept
-        : max_levels_(max_levels) {}
+    explicit MultiLevelRelocation(std::uint32_t max_levels = 4) noexcept : max_levels_(max_levels) {}
 
     int add_block(Block b) {
-        if (b.level >= max_levels_) return 4;  // invalid_argument
+        if (b.level >= max_levels_) return 4; // invalid_argument
         blocks_.push_back(b);
         return 0;
     }
@@ -46,18 +45,18 @@ public:
             queue.pop();
             auto& b = blocks_[idx];
             if (b.access_count > hot_threshold && b.level > 0) {
-                --b.level;   // Hot -> hoeherer Cache-Level (L1-naeher)
+                --b.level; // Hot -> hoeherer Cache-Level (L1-naeher)
                 ++migrations_;
             } else if (b.access_count == 0 && b.level + 1 < max_levels_) {
-                ++b.level;   // Cold -> tieferer Level
+                ++b.level; // Cold -> tieferer Level
                 ++migrations_;
             }
         }
     }
 
-    [[nodiscard]] std::size_t                block_count()  const noexcept { return blocks_.size(); }
-    [[nodiscard]] std::uint64_t              migrations()   const noexcept { return migrations_; }
-    [[nodiscard]] std::vector<Block> const& blocks()       const noexcept { return blocks_; }
+    [[nodiscard]] std::size_t               block_count() const noexcept { return blocks_.size(); }
+    [[nodiscard]] std::uint64_t             migrations() const noexcept { return migrations_; }
+    [[nodiscard]] std::vector<Block> const& blocks() const noexcept { return blocks_; }
 
 private:
     std::uint32_t      max_levels_;
@@ -65,4 +64,4 @@ private:
     std::uint64_t      migrations_ = 0;
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::multi_level_reloc
+} // namespace comdare::prt_art::legacy_reimpl::multi_level_reloc

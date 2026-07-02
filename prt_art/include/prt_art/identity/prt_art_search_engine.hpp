@@ -46,22 +46,22 @@ namespace comdare::prt_art::identity {
 // REV 7.6 V11.1 — alle Member sind public exposed fuer Adapter-Verdrahtung
 // ─────────────────────────────────────────────────────────────────────────────
 struct PrtArtComponents {
-    ::comdare::prt_art::allocator::PoolSet                       pools{};
-    ::comdare::prt_art::concurrency::OlcWithReservedValueBlocks  concurrency{};
-    ::comdare::prt_art::memory_layout::MultiLevelLayout          memory_layout{};
-    ::comdare::prt_art::prefetch::PathOrientedPrefetch           path_prefetch{};
-    ::comdare::prt_art::measurement::DensityTracker              density_tracker{};
-    ::comdare::prt_art::measurement::PrtArtHypothesisMetrics     hypothesis_metrics{};
+    ::comdare::prt_art::allocator::PoolSet                      pools{};
+    ::comdare::prt_art::concurrency::OlcWithReservedValueBlocks concurrency{};
+    ::comdare::prt_art::memory_layout::MultiLevelLayout         memory_layout{};
+    ::comdare::prt_art::prefetch::PathOrientedPrefetch          path_prefetch{};
+    ::comdare::prt_art::measurement::DensityTracker             density_tracker{};
+    ::comdare::prt_art::measurement::PrtArtHypothesisMetrics    hypothesis_metrics{};
 
     PrtArtComponents() {
         using PK = ::comdare::prt_art::allocator::PoolKind;
-        pools.configure(PK::A_TrieHuelle,    64,   1024);
-        pools.configure(PK::B_DensePages,   256,   1024);
-        pools.configure(PK::C_MultiLevel,  1024,    512);
-        pools.configure(PK::D_DecisionSpan, 4096,   256);
-        pools.configure(PK::R_Rest,           0,      0);
-        pools.configure(PK::V_StaticValue,   16,   8192);
-        pools.configure(PK::V_DynamicValue,   0,   2048);
+        pools.configure(PK::A_TrieHuelle, 64, 1024);
+        pools.configure(PK::B_DensePages, 256, 1024);
+        pools.configure(PK::C_MultiLevel, 1024, 512);
+        pools.configure(PK::D_DecisionSpan, 4096, 256);
+        pools.configure(PK::R_Rest, 0, 0);
+        pools.configure(PK::V_StaticValue, 16, 8192);
+        pools.configure(PK::V_DynamicValue, 0, 2048);
     }
 };
 
@@ -90,8 +90,8 @@ public:
     PrtArtSearchEngine() : components_{} {}
 
     // ─── Capacity (Lese-Ops) ─────────────────────────────────────────────────
-    [[nodiscard]] size_type size()     const noexcept { return data_.size(); }
-    [[nodiscard]] bool      empty()    const noexcept { return data_.empty(); }
+    [[nodiscard]] size_type size() const noexcept { return data_.size(); }
+    [[nodiscard]] bool      empty() const noexcept { return data_.empty(); }
     [[nodiscard]] size_type capacity() const noexcept { return data_.capacity(); }
     [[nodiscard]] size_type max_size() const noexcept { return data_.max_size(); }
 
@@ -115,38 +115,34 @@ public:
 
     // Iterator-Zugriff (read-only)
     [[nodiscard]] const_iterator begin() const noexcept { return data_.cbegin(); }
-    [[nodiscard]] const_iterator end()   const noexcept { return data_.cend(); }
+    [[nodiscard]] const_iterator end() const noexcept { return data_.cend(); }
     [[nodiscard]] const_iterator cbegin() const noexcept { return data_.cbegin(); }
-    [[nodiscard]] const_iterator cend()   const noexcept { return data_.cend(); }
+    [[nodiscard]] const_iterator cend() const noexcept { return data_.cend(); }
 
     // ─── Schreib-Ops (returnen int errno-style) ─────────────────────────────
     status_t push_back(Value const& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.push_back(v);
             update_density();
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t push_back(Value&& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.push_back(std::move(v));
             update_density();
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t pop_back() {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         if (data_.empty()) return status_empty_container;
         data_.pop_back();
         return status_ok;
@@ -154,7 +150,7 @@ public:
 
     status_t set_at(size_type index, Value const& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         if (index >= data_.size()) return status_out_of_range;
         data_[index] = v;
         return status_ok;
@@ -162,19 +158,17 @@ public:
 
     status_t insert_at(size_type index, Value const& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         if (index > data_.size()) return status_out_of_range;
         try {
             data_.insert(data_.begin() + index, v);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t erase_at(size_type index) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         if (index >= data_.size()) return status_out_of_range;
         data_.erase(data_.begin() + index);
         return status_ok;
@@ -182,100 +176,86 @@ public:
 
     status_t clear() {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         data_.clear();
         return status_ok;
     }
 
     status_t resize(size_type n) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.resize(n);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t resize(size_type n, Value const& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.resize(n, v);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t reserve(size_type n) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.reserve(n);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     status_t shrink_to_fit() {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         data_.shrink_to_fit();
         return status_ok;
     }
 
     status_t assign(size_type n, Value const& v) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.assign(n, v);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     // REV 7.6 V12.1 — Range-Assign aus Iteratoren
     template <typename InputIt>
     status_t assign(InputIt first, InputIt last) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.assign(first, last);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     // REV 7.6 V12.1 — operator[] nicht-throwing Random-Access
     // (Lese: undefined wenn out-of-range; Schreiben via set_at)
-    [[nodiscard]] const_reference operator[](size_type index) const noexcept {
-        return data_[index];
-    }
+    [[nodiscard]] const_reference operator[](size_type index) const noexcept { return data_[index]; }
 
     // REV 7.6 V12.1 — Reverse-Iteratoren (read-only)
     using const_reverse_iterator = typename std::vector<Value>::const_reverse_iterator;
-    [[nodiscard]] const_reverse_iterator rbegin()  const noexcept { return data_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator rend()    const noexcept { return data_.crend(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return data_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return data_.crend(); }
     [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return data_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator crend()   const noexcept { return data_.crend(); }
+    [[nodiscard]] const_reverse_iterator crend() const noexcept { return data_.crend(); }
 
     // REV 7.6 V12.1 — emplace_back via perfect forwarding (analog std::vector)
     template <typename... Args>
     status_t emplace_back(Args&&... args) {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             data_.emplace_back(std::forward<Args>(args)...);
             update_density();
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     // REV 7.6 V12.1 — Member-Swap (noexcept-Garantie der std::vector + std::shared_mutex)
@@ -291,24 +271,22 @@ public:
     [[nodiscard]] static ::comdare::cache_engine::PermutationFlags identity_flags() noexcept {
         return prt_art_permutation_flags();
     }
-    [[nodiscard]] static std::string identifier() {
-        return prt_art_identifier();
-    }
+    [[nodiscard]] static std::string identifier() { return prt_art_identifier(); }
 
     // ─── Komponenten-Accessors ───────────────────────────────────────────────
-    [[nodiscard]] auto& pools()              noexcept { return components_.pools; }
-    [[nodiscard]] auto& concurrency()        noexcept { return components_.concurrency; }
-    [[nodiscard]] auto& memory_layout()      noexcept { return components_.memory_layout; }
-    [[nodiscard]] auto& path_prefetch()      noexcept { return components_.path_prefetch; }
-    [[nodiscard]] auto& density_tracker()    noexcept { return components_.density_tracker; }
+    [[nodiscard]] auto& pools() noexcept { return components_.pools; }
+    [[nodiscard]] auto& concurrency() noexcept { return components_.concurrency; }
+    [[nodiscard]] auto& memory_layout() noexcept { return components_.memory_layout; }
+    [[nodiscard]] auto& path_prefetch() noexcept { return components_.path_prefetch; }
+    [[nodiscard]] auto& density_tracker() noexcept { return components_.density_tracker; }
     [[nodiscard]] auto& hypothesis_metrics() noexcept { return components_.hypothesis_metrics; }
 
 private:
     void update_density() {
         std::uint64_t const synthetic_node_id =
             static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(data_.data()) & 0xFFFFu);
-        double const density_pct = (data_.size() * 100.0)
-            / static_cast<double>((std::max<std::size_t>)(1, data_.capacity()));
+        double const density_pct =
+            (data_.size() * 100.0) / static_cast<double>((std::max<std::size_t>)(1, data_.capacity()));
         components_.density_tracker.record(synthetic_node_id, density_pct);
     }
 
@@ -328,10 +306,7 @@ public:
     static constexpr std::size_t kValueArity = 1 + sizeof...(Rest);
 
     using key_type        = Key;
-    using mapped_type     = std::conditional_t<
-                                kValueArity == 1,
-                                First,
-                                std::tuple<First, Rest...>>;
+    using mapped_type     = std::conditional_t<kValueArity == 1, First, std::tuple<First, Rest...>>;
     using value_type      = std::pair<Key const, mapped_type>;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
@@ -350,7 +325,7 @@ public:
     PrtArtSearchEngine() : components_{} {}
 
     // ─── Capacity (Lese-Ops) ─────────────────────────────────────────────────
-    [[nodiscard]] size_type size()  const noexcept { return storage_.size(); }
+    [[nodiscard]] size_type size() const noexcept { return storage_.size(); }
     [[nodiscard]] bool      empty() const noexcept { return storage_.empty(); }
     [[nodiscard]] size_type count(Key const& k) const {
         std::shared_lock guard{rw_lock_};
@@ -363,9 +338,9 @@ public:
 
     // ─── Read-Ops (natuerliche Returns) ──────────────────────────────────────
     [[nodiscard]] std::optional<mapped_type> lookup(Key const& k) const {
-        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        auto             bk = ::comdare::fingerprint::to_binary_string(k);
         std::shared_lock guard{rw_lock_};
-        auto it = storage_.find(bk);
+        auto             it = storage_.find(bk);
         if (it == storage_.end()) {
             ++const_misses_;
             return std::nullopt;
@@ -374,19 +349,15 @@ public:
         return it->second.second;
     }
 
-    [[nodiscard]] std::optional<mapped_type> find(Key const& k) const {
-        return lookup(k);
-    }
+    [[nodiscard]] std::optional<mapped_type> find(Key const& k) const { return lookup(k); }
 
-    [[nodiscard]] std::optional<mapped_type> at(Key const& k) const {
-        return lookup(k);
-    }
+    [[nodiscard]] std::optional<mapped_type> at(Key const& k) const { return lookup(k); }
 
     // ─── Iterator-Zugriff (read-only) ────────────────────────────────────────
     [[nodiscard]] const_iterator begin() const noexcept { return storage_.cbegin(); }
-    [[nodiscard]] const_iterator end()   const noexcept { return storage_.cend(); }
+    [[nodiscard]] const_iterator end() const noexcept { return storage_.cend(); }
     [[nodiscard]] const_iterator cbegin() const noexcept { return storage_.cbegin(); }
-    [[nodiscard]] const_iterator cend()   const noexcept { return storage_.cend(); }
+    [[nodiscard]] const_iterator cend() const noexcept { return storage_.cend(); }
     [[nodiscard]] const_iterator lower_bound(Key const& k) const {
         std::shared_lock guard{rw_lock_};
         return storage_.lower_bound(::comdare::fingerprint::to_binary_string(k));
@@ -395,17 +366,15 @@ public:
         std::shared_lock guard{rw_lock_};
         return storage_.upper_bound(::comdare::fingerprint::to_binary_string(k));
     }
-    [[nodiscard]] std::pair<const_iterator, const_iterator>
-    equal_range(Key const& k) const {
+    [[nodiscard]] std::pair<const_iterator, const_iterator> equal_range(Key const& k) const {
         std::shared_lock guard{rw_lock_};
         return storage_.equal_range(::comdare::fingerprint::to_binary_string(k));
     }
 
     // Range-Scan (PRT-ART-spezifisch, REV 7 §4.2(f))
-    [[nodiscard]] std::vector<mapped_type>
-    range_scan(Key const& start, size_type max_count) const {
-        auto bk = ::comdare::fingerprint::to_binary_string(start);
-        std::shared_lock guard{rw_lock_};
+    [[nodiscard]] std::vector<mapped_type> range_scan(Key const& start, size_type max_count) const {
+        auto                     bk = ::comdare::fingerprint::to_binary_string(start);
+        std::shared_lock         guard{rw_lock_};
         std::vector<mapped_type> result;
         result.reserve(max_count);
         auto it = storage_.lower_bound(bk);
@@ -419,28 +388,24 @@ public:
     // ─── Schreib-Ops (returnen int errno-style) ─────────────────────────────
     // 2-Param: insert(Key, Value)
     template <std::size_t N = kValueArity>
-    std::enable_if_t<N == 1, status_t>
-    insert(Key const& k, First const& v) {
+    std::enable_if_t<N == 1, status_t> insert(Key const& k, First const& v) {
         return insert_internal(k, mapped_type(v));
     }
 
     // N>2: insert(Key, V1, V2, ...) - akzeptiert die einzelnen Values
     template <std::size_t N = kValueArity>
-    std::enable_if_t<(N > 1), status_t>
-    insert(Key const& k, First const& v1, Rest const&... vs) {
+    std::enable_if_t<(N > 1), status_t> insert(Key const& k, First const& v1, Rest const&... vs) {
         return insert_internal(k, mapped_type{v1, vs...});
     }
 
     // Direkt mit fertigem mapped_type (auch fuer Tuple-Construct)
-    status_t insert_mapped(Key const& k, mapped_type const& mv) {
-        return insert_internal(k, mv);
-    }
+    status_t insert_mapped(Key const& k, mapped_type const& mv) { return insert_internal(k, mv); }
 
     status_t erase(Key const& k) {
-        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        auto                                        bk = ::comdare::fingerprint::to_binary_string(k);
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
-        auto it = storage_.find(bk);
+        std::unique_lock                            lock{rw_lock_};
+        auto                                        it = storage_.find(bk);
         if (it == storage_.end()) return status_key_not_found;
         storage_.erase(it);
         ++erases_;
@@ -449,16 +414,16 @@ public:
 
     status_t clear() {
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         storage_.clear();
         return status_ok;
     }
 
     status_t set(Key const& k, mapped_type const& v) {
-        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        auto                                        bk = ::comdare::fingerprint::to_binary_string(k);
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
-        auto it = storage_.find(bk);
+        std::unique_lock                            lock{rw_lock_};
+        auto                                        it = storage_.find(bk);
         if (it == storage_.end()) {
             storage_.try_emplace(bk, storage_value_t{k, v});
             ++inserts_;
@@ -491,28 +456,26 @@ public:
 
     // operator[]: Lazy-Insert-Default + return reference (Lese-Variante: by-value optional)
     // Schreib-API bewusst nicht als reference — Concurrency-Korrektheit (use set() / insert_or_assign)
-    [[nodiscard]] std::optional<mapped_type> operator[](Key const& k) const {
-        return lookup(k);
-    }
+    [[nodiscard]] std::optional<mapped_type> operator[](Key const& k) const { return lookup(k); }
 
     // max_size — analog std::map
     [[nodiscard]] size_type max_size() const noexcept { return storage_.max_size(); }
 
     // Reverse-Iteratoren (read-only, std::map-konform)
     using const_reverse_iterator = typename storage_map_t::const_reverse_iterator;
-    [[nodiscard]] const_reverse_iterator rbegin()  const noexcept { return storage_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator rend()    const noexcept { return storage_.crend(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return storage_.crbegin(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return storage_.crend(); }
     [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return storage_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator crend()   const noexcept { return storage_.crend(); }
+    [[nodiscard]] const_reverse_iterator crend() const noexcept { return storage_.crend(); }
 
     // Member-Swap (deadlock-vermeidend via std::scoped_lock)
     void swap(PrtArtSearchEngine& other) noexcept {
         if (this == &other) return;
         std::scoped_lock both{rw_lock_, other.rw_lock_};
         storage_.swap(other.storage_);
-        std::swap(inserts_,      other.inserts_);
-        std::swap(erases_,       other.erases_);
-        std::swap(const_hits_,   other.const_hits_);
+        std::swap(inserts_, other.inserts_);
+        std::swap(erases_, other.erases_);
+        std::swap(const_hits_, other.const_hits_);
         std::swap(const_misses_, other.const_misses_);
     }
 
@@ -529,7 +492,7 @@ public:
         if (this == &other) return 0;
         // Cross-Engine-Lock-Strategy: deadlock-vermeidend via std::scoped_lock
         std::scoped_lock both{rw_lock_, other.rw_lock_};
-        std::size_t merged = 0;
+        std::size_t      merged = 0;
         for (auto it = other.storage_.begin(); it != other.storage_.end();) {
             if (storage_.find(it->first) == storage_.end()) {
                 // Key in *this nicht vorhanden -> Knoten ruebergeben
@@ -539,7 +502,7 @@ public:
                 ++merged;
                 ++(other.erases_);
             } else {
-                ++it;  // Key existiert -> Eintrag bleibt in other
+                ++it; // Key existiert -> Eintrag bleibt in other
             }
         }
         return merged;
@@ -548,10 +511,10 @@ public:
     // extract: liefert den Wert + entfernt den Eintrag (analog std::map::extract by key).
     // Returnt std::nullopt wenn Key nicht existiert.
     [[nodiscard]] std::optional<mapped_type> extract(Key const& k) {
-        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        auto                                        bk = ::comdare::fingerprint::to_binary_string(k);
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
-        auto it = storage_.find(bk);
+        std::unique_lock                            lock{rw_lock_};
+        auto                                        it = storage_.find(bk);
         if (it == storage_.end()) return std::nullopt;
         mapped_type extracted = std::move(it->second.second);
         storage_.erase(it);
@@ -561,50 +524,43 @@ public:
 
     // ─── Counters / Stats (read-only) ────────────────────────────────────────
     [[nodiscard]] std::uint64_t total_inserts() const noexcept { return inserts_; }
-    [[nodiscard]] std::uint64_t total_erases()  const noexcept { return erases_; }
-    [[nodiscard]] std::uint64_t total_hits()    const noexcept { return const_hits_; }
-    [[nodiscard]] std::uint64_t total_misses()  const noexcept { return const_misses_; }
+    [[nodiscard]] std::uint64_t total_erases() const noexcept { return erases_; }
+    [[nodiscard]] std::uint64_t total_hits() const noexcept { return const_hits_; }
+    [[nodiscard]] std::uint64_t total_misses() const noexcept { return const_misses_; }
 
     // ─── Identity API ─────────────────────────────────────────────────────────
     [[nodiscard]] static ::comdare::cache_engine::PermutationFlags identity_flags() noexcept {
         return prt_art_permutation_flags();
     }
-    [[nodiscard]] static std::string identifier() {
-        return prt_art_identifier();
-    }
+    [[nodiscard]] static std::string identifier() { return prt_art_identifier(); }
 
     // ─── Komponenten-Accessors ───────────────────────────────────────────────
-    [[nodiscard]] auto& pools()              noexcept { return components_.pools; }
-    [[nodiscard]] auto& concurrency()        noexcept { return components_.concurrency; }
-    [[nodiscard]] auto& memory_layout()      noexcept { return components_.memory_layout; }
-    [[nodiscard]] auto& path_prefetch()      noexcept { return components_.path_prefetch; }
-    [[nodiscard]] auto& density_tracker()    noexcept { return components_.density_tracker; }
+    [[nodiscard]] auto& pools() noexcept { return components_.pools; }
+    [[nodiscard]] auto& concurrency() noexcept { return components_.concurrency; }
+    [[nodiscard]] auto& memory_layout() noexcept { return components_.memory_layout; }
+    [[nodiscard]] auto& path_prefetch() noexcept { return components_.path_prefetch; }
+    [[nodiscard]] auto& density_tracker() noexcept { return components_.density_tracker; }
     [[nodiscard]] auto& hypothesis_metrics() noexcept { return components_.hypothesis_metrics; }
 
 private:
     status_t insert_internal(Key const& k, mapped_type const& mv) {
-        auto bk = ::comdare::fingerprint::to_binary_string(k);
+        auto                                        bk = ::comdare::fingerprint::to_binary_string(k);
         ::comdare::prt_art::concurrency::WriteGuard olc_guard{components_.concurrency};
-        std::unique_lock lock{rw_lock_};
+        std::unique_lock                            lock{rw_lock_};
         try {
             auto [it, inserted] = storage_.try_emplace(bk, storage_value_t{k, mv});
-            if (!inserted) {
-                return status_key_already_exists;
-            }
+            if (!inserted) { return status_key_already_exists; }
             ++inserts_;
             update_density(bk);
             return status_ok;
-        } catch (std::bad_alloc const&) {
-            return status_out_of_memory;
-        }
+        } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
     void update_density(binary_key_t const& bk) {
         std::uint64_t const synthetic_node_id =
             static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(bk.data()) & 0xFFFFu);
-        std::size_t const sz = storage_.size();
-        double const density_pct = (sz * 100.0)
-            / static_cast<double>((std::max<std::size_t>)(1, sz + 64));
+        std::size_t const sz          = storage_.size();
+        double const      density_pct = (sz * 100.0) / static_cast<double>((std::max<std::size_t>)(1, sz + 64));
         components_.density_tracker.record(synthetic_node_id, density_pct);
     }
 
@@ -612,10 +568,10 @@ private:
     storage_map_t             storage_;
     PrtArtComponents          components_;
 
-    std::uint64_t           inserts_      = 0;
-    std::uint64_t           erases_       = 0;
-    mutable std::uint64_t   const_hits_   = 0;
-    mutable std::uint64_t   const_misses_ = 0;
+    std::uint64_t         inserts_      = 0;
+    std::uint64_t         erases_       = 0;
+    mutable std::uint64_t const_hits_   = 0;
+    mutable std::uint64_t const_misses_ = 0;
 };
 
-}  // namespace comdare::prt_art::identity
+} // namespace comdare::prt_art::identity

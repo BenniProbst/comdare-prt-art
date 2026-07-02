@@ -53,5 +53,5 @@ TEST(LayoutInvariantBuffer, CapacityRejectsOverflow) {
     EXPECT_EQ(b.insert(2), 0);
     EXPECT_EQ(b.insert(3), 0);
     EXPECT_EQ(b.insert(4), 0);
-    EXPECT_EQ(b.insert(5), 5);  // capacity_exceeded
+    EXPECT_EQ(b.insert(5), 5); // capacity_exceeded
 }

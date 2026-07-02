@@ -19,14 +19,13 @@ public:
     void enqueue(std::uint64_t addr) {
         recent_path_.push_back(addr);
         if (recent_path_.size() > kMaxTrackedSlots) {
-            recent_path_.erase(recent_path_.begin(),
-                               recent_path_.begin() + (recent_path_.size() - kMaxTrackedSlots));
+            recent_path_.erase(recent_path_.begin(), recent_path_.begin() + (recent_path_.size() - kMaxTrackedSlots));
         }
         ++total_enqueued_;
     }
 
     [[nodiscard]] std::uint64_t total_enqueued() const noexcept { return total_enqueued_; }
-    [[nodiscard]] std::size_t   queue_depth()    const noexcept { return recent_path_.size(); }
+    [[nodiscard]] std::size_t   queue_depth() const noexcept { return recent_path_.size(); }
 
     [[nodiscard]] std::vector<std::uint64_t> const& path() const noexcept { return recent_path_; }
 
@@ -34,8 +33,8 @@ public:
     [[nodiscard]] std::uint64_t suggest_next() const noexcept {
         if (recent_path_.size() < 2) return recent_path_.empty() ? 0 : recent_path_.back();
         // einfache Extrapolation: letzter Schritt extrapolieren
-        std::uint64_t a = recent_path_[recent_path_.size() - 2];
-        std::uint64_t b = recent_path_.back();
+        std::uint64_t a    = recent_path_[recent_path_.size() - 2];
+        std::uint64_t b    = recent_path_.back();
         std::uint64_t step = (b > a) ? (b - a) : 0;
         return b + step;
     }
@@ -50,7 +49,7 @@ public:
     void note_hot_path_bytes(std::byte const* data, std::size_t bytes) noexcept {
         if (data == nullptr || bytes == 0) return;
         std::uint64_t addr = 0;
-        std::size_t copy = bytes < sizeof(addr) ? bytes : sizeof(addr);
+        std::size_t   copy = bytes < sizeof(addr) ? bytes : sizeof(addr);
         std::memcpy(&addr, data, copy);
         enqueue(addr);
         ++total_hot_path_hints_;
@@ -61,7 +60,7 @@ private:
     static constexpr std::size_t kMaxTrackedSlots = 16;
     std::vector<std::uint64_t>   recent_path_{};
     std::uint64_t                total_enqueued_       = 0;
-    std::uint64_t                total_hot_path_hints_ = 0;  // V11.1
+    std::uint64_t                total_hot_path_hints_ = 0; // V11.1
 };
 
-}  // namespace comdare::prt_art::prefetch
+} // namespace comdare::prt_art::prefetch

@@ -16,10 +16,10 @@ public:
     BytePath() = default;
     explicit BytePath(std::span<std::byte const> key) : key_(key) {}
 
-    [[nodiscard]] std::size_t cursor()      const noexcept { return cursor_; }
+    [[nodiscard]] std::size_t cursor() const noexcept { return cursor_; }
     [[nodiscard]] std::size_t total_bytes() const noexcept { return key_.size(); }
-    [[nodiscard]] std::size_t remaining()   const noexcept { return key_.size() - cursor_; }
-    [[nodiscard]] bool        exhausted()   const noexcept { return cursor_ >= key_.size(); }
+    [[nodiscard]] std::size_t remaining() const noexcept { return key_.size() - cursor_; }
+    [[nodiscard]] bool        exhausted() const noexcept { return cursor_ >= key_.size(); }
 
     [[nodiscard]] std::span<std::byte const> peek(std::size_t n) const noexcept {
         std::size_t avail = remaining();
@@ -27,9 +27,7 @@ public:
         return key_.subspan(cursor_, take);
     }
 
-    void advance(std::size_t n) noexcept {
-        cursor_ += (n <= remaining()) ? n : remaining();
-    }
+    void advance(std::size_t n) noexcept { cursor_ += (n <= remaining()) ? n : remaining(); }
 
     void reset() noexcept { cursor_ = 0; }
 
@@ -45,4 +43,4 @@ private:
     std::size_t                cursor_ = 0;
 };
 
-}  // namespace comdare::prt_art::memory_layout
+} // namespace comdare::prt_art::memory_layout

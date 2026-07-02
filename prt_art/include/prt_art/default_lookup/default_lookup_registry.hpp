@@ -22,10 +22,10 @@ namespace comdare::prt_art::default_lookup {
  * @subsystem PA
  */
 struct DefaultLookupAxis {
-    std::string_view axis_id;           ///< z.B. "11" oder "3.B"
-    std::string_view human_name;        ///< z.B. "TELEMETRY-COLLECTION"
-    std::string_view ce_library_path;   ///< CE-Pfad fuer Lookup
-    std::string_view indicator_header;  ///< Platzhalter-File in default_lookup/
+    std::string_view axis_id;          ///< z.B. "11" oder "3.B"
+    std::string_view human_name;       ///< z.B. "TELEMETRY-COLLECTION"
+    std::string_view ce_library_path;  ///< CE-Pfad fuer Lookup
+    std::string_view indicator_header; ///< Platzhalter-File in default_lookup/
 };
 
 /**
@@ -39,35 +39,21 @@ struct DefaultLookupAxis {
 class DefaultLookupRegistry {
 public:
     [[nodiscard]] static constexpr auto enumerate() {
-        return std::array<DefaultLookupAxis, 9> {{
-            {"3.B", "Cache-Memory-Traversal",
-             "cache-engine/concepts/disciplines/array_discipline.hpp",
-             "prt_art_3b_cache_traversal_default.hpp"},
-            {"6.2", "Reclamation-Policy",
-             "cache-engine/reclamation/rcu_reclaim/",
-             "prt_art_62_reclamation_default.hpp"},
-            {"6.3", "NUMA-Affinity",
-             "cache-engine/concepts/numa_affinity.hpp",
-             "prt_art_63_numa_default.hpp"},
-            {"6.4", "Huge-Page-Policy",
-             "cache-engine/allocators/portable_aligned_alloc.hpp",
-             "prt_art_64_huge_page_default.hpp"},
-            {"8.2", "Locking-Mode",
-             "cache-engine/concepts/locking_mode.hpp",
-             "prt_art_82_locking_default.hpp"},
-            {"9", "ISA-Targeting",
-             "cache-engine/IPlatformProbe Output",
-             "prt_art_9_isa_default.hpp"},
-            {"11", "Telemetry-Collection",
-             "cache-engine/concepts/telemetry/",
-             "prt_art_11_telemetry_default.hpp"},
-            {"12", "Hardware-Strategy",
-             "cache-engine/concepts/hardware_strategy.hpp",
-             "prt_art_12_hardware_default.hpp"},
-            {"13", "Scheduling-Strategy",
-             "cache-engine/concepts/scheduling_strategy.hpp",
-             "prt_art_13_scheduling_default.hpp"}
-        }};
+        return std::array<DefaultLookupAxis, 9>{
+            {{"3.B", "Cache-Memory-Traversal", "cache-engine/concepts/disciplines/array_discipline.hpp",
+              "prt_art_3b_cache_traversal_default.hpp"},
+             {"6.2", "Reclamation-Policy", "cache-engine/reclamation/rcu_reclaim/",
+              "prt_art_62_reclamation_default.hpp"},
+             {"6.3", "NUMA-Affinity", "cache-engine/concepts/numa_affinity.hpp", "prt_art_63_numa_default.hpp"},
+             {"6.4", "Huge-Page-Policy", "cache-engine/allocators/portable_aligned_alloc.hpp",
+              "prt_art_64_huge_page_default.hpp"},
+             {"8.2", "Locking-Mode", "cache-engine/concepts/locking_mode.hpp", "prt_art_82_locking_default.hpp"},
+             {"9", "ISA-Targeting", "cache-engine/IPlatformProbe Output", "prt_art_9_isa_default.hpp"},
+             {"11", "Telemetry-Collection", "cache-engine/concepts/telemetry/", "prt_art_11_telemetry_default.hpp"},
+             {"12", "Hardware-Strategy", "cache-engine/concepts/hardware_strategy.hpp",
+              "prt_art_12_hardware_default.hpp"},
+             {"13", "Scheduling-Strategy", "cache-engine/concepts/scheduling_strategy.hpp",
+              "prt_art_13_scheduling_default.hpp"}}};
     }
 
     [[nodiscard]] static constexpr bool is_default_lookup(std::string_view axis_id) {
@@ -77,9 +63,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] static constexpr std::size_t count() {
-        return enumerate().size();
-    }
+    [[nodiscard]] static constexpr std::size_t count() { return enumerate().size(); }
 };
 
-}  // namespace comdare::prt_art::default_lookup
+} // namespace comdare::prt_art::default_lookup
