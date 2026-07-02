@@ -21,16 +21,12 @@ class OlcWithReservedValueBlocks {
 public:
     using Version = std::uint64_t;
 
-    static constexpr Version kWriteMarker  = 1;        // niedrigstes Bit = Write-in-Progress
-    static constexpr Version kIncrementStep = 2;       // Increments in 2er-Schritten
+    static constexpr Version kWriteMarker   = 1; // niedrigstes Bit = Write-in-Progress
+    static constexpr Version kIncrementStep = 2; // Increments in 2er-Schritten
 
-    [[nodiscard]] Version read_version() const noexcept {
-        return version_.load(std::memory_order_acquire);
-    }
+    [[nodiscard]] Version read_version() const noexcept { return version_.load(std::memory_order_acquire); }
 
-    [[nodiscard]] static constexpr bool is_write_in_progress(Version v) noexcept {
-        return (v & kWriteMarker) != 0;
-    }
+    [[nodiscard]] static constexpr bool is_write_in_progress(Version v) noexcept { return (v & kWriteMarker) != 0; }
 
     // Optimistic-Read: traverse mit captured_version, dann am Ende prueft validate()
     [[nodiscard]] bool validate(Version captured) const noexcept {
@@ -39,9 +35,7 @@ public:
     }
 
     // Writer markiert Versions-Slot
-    void begin_write() noexcept {
-        version_.fetch_add(kWriteMarker, std::memory_order_acq_rel);
-    }
+    void begin_write() noexcept { version_.fetch_add(kWriteMarker, std::memory_order_acq_rel); }
 
     void end_write() noexcept {
         // Increment um kIncrementStep + Loeschen des Write-Markers
@@ -83,7 +77,7 @@ public:
 
 private:
     OlcWithReservedValueBlocks& lock_;
-    std::uint64_t                block_id_ = 0;
+    std::uint64_t               block_id_ = 0;
 };
 
-}  // namespace comdare::prt_art::concurrency
+} // namespace comdare::prt_art::concurrency

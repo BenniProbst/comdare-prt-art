@@ -33,11 +33,10 @@ public:
     }
 
     [[nodiscard]] std::size_t veb_index(std::size_t node_id) const {
-        return node_id < veb_index_of_node_.size()
-            ? veb_index_of_node_[node_id] : 0;
+        return node_id < veb_index_of_node_.size() ? veb_index_of_node_[node_id] : 0;
     }
 
-    [[nodiscard]] std::size_t height()     const noexcept { return height_; }
+    [[nodiscard]] std::size_t height() const noexcept { return height_; }
     [[nodiscard]] std::size_t node_count() const noexcept { return veb_index_of_node_.size(); }
 
 private:
@@ -52,8 +51,8 @@ private:
             return;
         }
 
-        std::size_t const top_h = (sub_height + 1) / 2;   // ceiling
-        std::size_t const bot_h = sub_height - top_h;     // floor
+        std::size_t const top_h = (sub_height + 1) / 2; // ceiling
+        std::size_t const bot_h = sub_height - top_h;   // floor
 
         // 1) Top-Subtree REKURSIV vEB layouten (NICHT BFS!)
         layout_veb(root_id, top_h, next_index);
@@ -62,15 +61,12 @@ private:
         std::vector<std::size_t> bottom_roots = collect_bottom_roots(root_id, top_h);
 
         // 3) Jeder Bottom-Subtree rekursiv vEB layouten
-        for (auto br : bottom_roots) {
-            layout_veb(br, bot_h, next_index);
-        }
+        for (auto br : bottom_roots) { layout_veb(br, bot_h, next_index); }
     }
 
     // Sammelt die Wurzeln aller Bottom-Subtrees:
     // = Kinder der Top-Leaves (Knoten auf Level top_h-1 unter root_id).
-    [[nodiscard]] std::vector<std::size_t>
-    collect_bottom_roots(std::size_t root_id, std::size_t top_h) const {
+    [[nodiscard]] std::vector<std::size_t> collect_bottom_roots(std::size_t root_id, std::size_t top_h) const {
         std::vector<std::size_t> current{root_id};
         // BFS durch den Top-Subtree bis Level top_h-1
         for (std::size_t lvl = 1; lvl < top_h; ++lvl) {
@@ -99,4 +95,4 @@ private:
     std::vector<std::size_t> veb_index_of_node_;
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::cache_oblivious_layout
+} // namespace comdare::prt_art::legacy_reimpl::cache_oblivious_layout

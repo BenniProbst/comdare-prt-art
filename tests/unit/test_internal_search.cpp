@@ -45,8 +45,7 @@ TEST(Array256, EraseRemovesEntry) {
 
 TEST(Array256, DensityCalculation) {
     is::Array256 a;
-    for (std::uint16_t i = 0; i < 64; ++i)
-        a.insert(static_cast<std::uint8_t>(i), i);
+    for (std::uint16_t i = 0; i < 64; ++i) a.insert(static_cast<std::uint8_t>(i), i);
     EXPECT_DOUBLE_EQ(a.density_percent(), 25.0);
 }
 
@@ -148,7 +147,7 @@ TEST(VectorU16U16, EntriesSortedByDiscriminator) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST(InternalSearch, DensityThresholdsFormPartition) {
-    EXPECT_DOUBLE_EQ(is::Array256::kDensityMaxPercent,    is::Array65535::kDensityMinPercent);
-    EXPECT_DOUBLE_EQ(is::Array65535::kDensityMaxPercent,  is::VectorU8U8::kDensityMinPercent);
-    EXPECT_DOUBLE_EQ(is::VectorU8U8::kDensityMaxPercent,  is::VectorU16U16::kDensityMinPercent);
+    EXPECT_DOUBLE_EQ(is::Array256::kDensityMaxPercent, is::Array65535::kDensityMinPercent);
+    EXPECT_DOUBLE_EQ(is::Array65535::kDensityMaxPercent, is::VectorU8U8::kDensityMinPercent);
+    EXPECT_DOUBLE_EQ(is::VectorU8U8::kDensityMaxPercent, is::VectorU16U16::kDensityMinPercent);
 }

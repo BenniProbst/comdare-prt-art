@@ -19,16 +19,16 @@
 namespace comdare::prt_art::memory_layout {
 
 enum class CacheTier : std::uint8_t {
-    L1Hot   = 0,
-    L2Warm  = 1,
-    L3Cold  = 2,
-    Memory  = 3,
+    L1Hot  = 0,
+    L2Warm = 1,
+    L3Cold = 2,
+    Memory = 3,
 };
 
 struct TierBudget {
-    std::size_t l1_bytes = 32   * 1024;        // 32 KiB
-    std::size_t l2_bytes = 1024 * 1024;        // 1 MiB
-    std::size_t l3_bytes = 32   * 1024 * 1024; // 32 MiB
+    std::size_t l1_bytes = 32 * 1024;        // 32 KiB
+    std::size_t l2_bytes = 1024 * 1024;      // 1 MiB
+    std::size_t l3_bytes = 32 * 1024 * 1024; // 32 MiB
 };
 
 class MultiLevelLayout {
@@ -38,20 +38,18 @@ public:
     [[nodiscard]] CacheTier tier_for_offset(std::uint64_t byte_offset) const noexcept {
         if (byte_offset < budget_.l1_bytes) return CacheTier::L1Hot;
         if (byte_offset < budget_.l1_bytes + budget_.l2_bytes) return CacheTier::L2Warm;
-        if (byte_offset < budget_.l1_bytes + budget_.l2_bytes + budget_.l3_bytes)
-            return CacheTier::L3Cold;
+        if (byte_offset < budget_.l1_bytes + budget_.l2_bytes + budget_.l3_bytes) return CacheTier::L3Cold;
         return CacheTier::Memory;
     }
 
     [[nodiscard]] std::uint64_t resolve_address(std::span<std::byte const> key,
-                                                std::size_t slot_size_bytes) const noexcept {
-        std::uint64_t pos = VirtualOffsetAddress::compute(key);
-        std::size_t aligned_slot = CacheLineAlignedLayout::aligned_offset(slot_size_bytes);
+                                                std::size_t                slot_size_bytes) const noexcept {
+        std::uint64_t pos          = VirtualOffsetAddress::compute(key);
+        std::size_t   aligned_slot = CacheLineAlignedLayout::aligned_offset(slot_size_bytes);
         return pos * static_cast<std::uint64_t>(aligned_slot);
     }
 
-    [[nodiscard]] CacheTier tier_for_key(std::span<std::byte const> key,
-                                         std::size_t slot_size_bytes) const noexcept {
+    [[nodiscard]] CacheTier tier_for_key(std::span<std::byte const> key, std::size_t slot_size_bytes) const noexcept {
         return tier_for_offset(resolve_address(key, slot_size_bytes));
     }
 
@@ -63,4 +61,4 @@ private:
     TierBudget budget_;
 };
 
-}  // namespace comdare::prt_art::memory_layout
+} // namespace comdare::prt_art::memory_layout

@@ -16,9 +16,9 @@
 #include <topics/prefetch/concepts/topic_prefetch_concept.hpp>
 #include <topics/prefetch/axis_07_prefetch/concepts/axis_07_prefetch_concept.hpp>
 #include <topics/prefetch/axis_07_prefetch/concepts/axis_07_prefetch_cache_engine_permutation_concept.hpp>
-#include <anatomy/pruefling_merge.hpp>   // PrueflingSlot-Pattern + AnatomyGenus (via anatomy_base)
+#include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus (via anatomy_base)
 
-#include <prt_art/prefetch/redirect_prefetch.hpp>  // prt-art-Algorithmus-Logik
+#include <prt_art/prefetch/redirect_prefetch.hpp> // prt-art-Algorithmus-Logik
 
 #include <boost/mp11.hpp>
 #include <cstdint>
@@ -42,22 +42,24 @@ class PrtArtRedirectPrefetch : public ce07::PrefetchStrategyBase<PrtArtRedirectP
 public:
     using topic_tag = ::comdare::cache_engine::prefetch::concepts::PrefetchTopicTag;
     using axis_tag  = redirect_subtree_tag;
-    using family_id = std::integral_constant<int, 4>;  // PF4 (prt-art-Variante)
+    using family_id = std::integral_constant<int, 4>; // PF4 (prt-art-Variante)
 
-    static constexpr bool enabled = true;  // Pruefling-Variante: aktiv wenn der Slot geladen ist
+    static constexpr bool enabled = true; // Pruefling-Variante: aktiv wenn der Slot geladen ist
 
-    [[nodiscard]] static constexpr bool             is_active()   noexcept { return true; }
-    [[nodiscard]] static constexpr std::string_view name()        noexcept { return "prtart_redirect_prefetch"; }
-    [[nodiscard]] static constexpr std::string_view family_name() noexcept { return "PrtArtRedirectPrefetch (RedirectNode-subtree fan-out prefetch, prt-art REV6 §5.17)"; }
+    [[nodiscard]] static constexpr bool             is_active() noexcept { return true; }
+    [[nodiscard]] static constexpr std::string_view name() noexcept { return "prtart_redirect_prefetch"; }
+    [[nodiscard]] static constexpr std::string_view family_name() noexcept {
+        return "PrtArtRedirectPrefetch (RedirectNode-subtree fan-out prefetch, prt-art REV6 §5.17)";
+    }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_REDIRECT"; }
 
     static constexpr std::uint8_t kFanOut = ::comdare::prt_art::prefetch::RedirectPrefetch::kFanOut;
 
     // prt-art-Algorithmus-Logik (RedirectPrefetch) — forwarded.
-    void schedule(std::uint64_t terminal_addr) noexcept { impl_.schedule(terminal_addr); }
-    [[nodiscard]] std::uint64_t slot(std::uint8_t i)   const noexcept { return impl_.slot(i); }
-    [[nodiscard]] std::uint64_t total_scheduled()      const noexcept { return impl_.total_scheduled(); }
-    void reset() noexcept { impl_.reset(); }
+    void                        schedule(std::uint64_t terminal_addr) noexcept { impl_.schedule(terminal_addr); }
+    [[nodiscard]] std::uint64_t slot(std::uint8_t i) const noexcept { return impl_.slot(i); }
+    [[nodiscard]] std::uint64_t total_scheduled() const noexcept { return impl_.total_scheduled(); }
+    void                        reset() noexcept { impl_.reset(); }
 
 private:
     ::comdare::prt_art::prefetch::RedirectPrefetch impl_{};
@@ -66,8 +68,8 @@ private:
 /// Slot — pruefling_merge-konformer axis_07-Slot (SearchAlgorithm-Gattung).
 /// has_pruefling=true → Stufe-2 ERSETZT die CE-Defaults; Stufe-3 nimmt die Variante zusätzlich auf.
 struct Slot {
-    using PrueflingVariants = mp::mp_list<PrtArtRedirectPrefetch>;
-    static constexpr bool has_pruefling = true;
+    using PrueflingVariants                                                       = mp::mp_list<PrtArtRedirectPrefetch>;
+    static constexpr bool                                           has_pruefling = true;
     static constexpr ::comdare::cache_engine::anatomy::AnatomyGenus genus =
         ::comdare::cache_engine::anatomy::AnatomyGenus::SearchAlgorithm;
 };
@@ -78,4 +80,4 @@ static_assert(ce07::concepts::CacheEnginePermutationStrategy<PrtArtRedirectPrefe
 static_assert(pf::PrueflingSlotConcept<Slot>);
 static_assert(pf::HasPruefling_v<Slot>);
 
-}  // namespace comdare::prt_art::slots::axis_07
+} // namespace comdare::prt_art::slots::axis_07

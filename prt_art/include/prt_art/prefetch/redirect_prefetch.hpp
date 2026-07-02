@@ -12,7 +12,7 @@ namespace comdare::prt_art::prefetch {
 
 class RedirectPrefetch {
 public:
-    static constexpr std::uint8_t kFanOut       = 3;     // 1 Hauptziel + 2 Geschwister
+    static constexpr std::uint8_t kFanOut        = 3; // 1 Hauptziel + 2 Geschwister
     static constexpr std::uint8_t kCacheLineSize = 64;
 
     void schedule(std::uint64_t terminal_addr) noexcept {
@@ -21,7 +21,7 @@ public:
     }
 
     [[nodiscard]] std::uint64_t last_scheduled_addr() const noexcept { return last_scheduled_addr_; }
-    [[nodiscard]] std::uint64_t total_scheduled()    const noexcept { return total_scheduled_; }
+    [[nodiscard]] std::uint64_t total_scheduled() const noexcept { return total_scheduled_; }
 
     // Liefert den i-ten Prefetch-Slot fuer den letzten Schedule-Aufruf.
     // i in [0..kFanOut). Die Geschwister-Slots liegen +/- kCacheLineSize.
@@ -29,9 +29,7 @@ public:
         switch (i) {
             case 0: return last_scheduled_addr_;
             case 1: return last_scheduled_addr_ + kCacheLineSize;
-            case 2: return last_scheduled_addr_ >= kCacheLineSize
-                           ? last_scheduled_addr_ - kCacheLineSize
-                           : 0;
+            case 2: return last_scheduled_addr_ >= kCacheLineSize ? last_scheduled_addr_ - kCacheLineSize : 0;
             default: return last_scheduled_addr_;
         }
     }
@@ -46,4 +44,4 @@ private:
     std::uint64_t total_scheduled_     = 0;
 };
 
-}  // namespace comdare::prt_art::prefetch
+} // namespace comdare::prt_art::prefetch

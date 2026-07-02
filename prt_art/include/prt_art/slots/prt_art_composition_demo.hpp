@@ -13,10 +13,10 @@
 // hätten eigene Slot-Wrapper, hier noch nicht angelegt). Telemetry bleibt bewusst CE-Default
 // (LeafOnlyCounter) — der prt-art PerNodeCounter ist das F15-Anti-Pattern, nicht die Identität.
 
-#include <compositions/art_reference.hpp>                  // CE-Default-Achsen (Anatomie-Rahmen)
-#include <anatomy/composition_concept.hpp>                 // IsComposition + COMDARE_DEFINE_COMPOSITION_LOCATION
-#include <prt_art/slots/axis_07_prefetch_slot.hpp>         // PrtArtRedirectPrefetch
-#include <prt_art/slots/axis_14_value_handle_slot.hpp>     // PrtArtChainRefHandle
+#include <compositions/art_reference.hpp>              // CE-Default-Achsen (Anatomie-Rahmen)
+#include <anatomy/composition_concept.hpp>             // IsComposition + COMDARE_DEFINE_COMPOSITION_LOCATION
+#include <prt_art/slots/axis_07_prefetch_slot.hpp>     // PrtArtRedirectPrefetch
+#include <prt_art/slots/axis_14_value_handle_slot.hpp> // PrtArtChainRefHandle
 
 #include <string_view>
 
@@ -37,30 +37,29 @@ struct PrtArtCompositionDemo {
     using allocator          = Base::allocator;
     using concurrency        = Base::concurrency;
     using serialization      = Base::serialization;
-    using telemetry          = Base::telemetry;          // CE-Default (LeafOnly), NICHT PerNode-Anti-Pattern
+    using telemetry          = Base::telemetry; // CE-Default (LeafOnly), NICHT PerNode-Anti-Pattern
     using isa                = Base::isa;
     using index_organization = Base::index_organization;
     using io_dispatch        = Base::io_dispatch;
     using migration_policy   = Base::migration_policy;
     using filter             = Base::filter;
-    using queuing_q1         = Base::queuing_q1;   // T17 (Doc 30 §8.0: mandatorische SA-Achse, 19-Slot-Composition)
-    using queuing_q2         = Base::queuing_q2;   // T18
+    using queuing_q1         = Base::queuing_q1; // T17 (Doc 30 §8.0: mandatorische SA-Achse, 19-Slot-Composition)
+    using queuing_q2         = Base::queuing_q2; // T18
 
     // 2 Achsen durch prt-art-Slot-Wrapper ersetzt (optional_prt_art_impl)
-    using prefetch           = ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch;
-    using value_handle       = ::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle;
+    using prefetch     = ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch;
+    using value_handle = ::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle;
 
     static constexpr std::string_view name        = "PrtArtCompositionDemo";
     static constexpr std::string_view paper_id    = "prt-art REV6 §5.17 (Pruefling-Slot-Demonstration)";
     static constexpr std::string_view paper_title = "PRT-ART slot composition into full CacheEngine anatomy";
 
-    COMDARE_DEFINE_COMPOSITION_LOCATION(
-        "::comdare::prt_art::slots::PrtArtCompositionDemo",
-        "prt_art/slots/prt_art_composition_demo.hpp");
+    COMDARE_DEFINE_COMPOSITION_LOCATION("::comdare::prt_art::slots::PrtArtCompositionDemo",
+                                        "prt_art/slots/prt_art_composition_demo.hpp");
 };
 
 // Compile-Time-Garantien: codegen-fähige Composition (das prüft das anatomy_codegen_tool).
 static_assert(::comdare::cache_engine::anatomy::IsComposition<PrtArtCompositionDemo>);
 static_assert(::comdare::cache_engine::anatomy::HasCompositionLocation<PrtArtCompositionDemo>);
 
-}  // namespace comdare::prt_art::slots
+} // namespace comdare::prt_art::slots

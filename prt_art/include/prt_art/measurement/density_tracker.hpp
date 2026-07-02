@@ -10,8 +10,8 @@
 namespace comdare::prt_art::measurement {
 
 struct DensityBucket {
-    std::uint64_t node_count           = 0;
-    double        sum_density_percent  = 0.0;
+    std::uint64_t node_count          = 0;
+    double        sum_density_percent = 0.0;
 
     [[nodiscard]] double avg_density_percent() const noexcept {
         return node_count > 0 ? (sum_density_percent / static_cast<double>(node_count)) : 0.0;
@@ -46,10 +46,14 @@ public:
         std::vector<DensityBucket> h(4);
         for (auto const& [node, d] : per_node_) {
             std::size_t bucket;
-            if      (d < 25.0) bucket = 0;
-            else if (d < 50.0) bucket = 1;
-            else if (d < 75.0) bucket = 2;
-            else               bucket = 3;
+            if (d < 25.0)
+                bucket = 0;
+            else if (d < 50.0)
+                bucket = 1;
+            else if (d < 75.0)
+                bucket = 2;
+            else
+                bucket = 3;
             ++h[bucket].node_count;
             h[bucket].sum_density_percent += d;
         }
@@ -63,8 +67,8 @@ public:
 
 private:
     std::unordered_map<std::uint64_t, double> per_node_{};
-    std::uint64_t                              total_observations_ = 0;
-    double                                     last_external_sample_ = 0.0;  // V11.1
+    std::uint64_t                             total_observations_   = 0;
+    double                                    last_external_sample_ = 0.0; // V11.1
 };
 
-}  // namespace comdare::prt_art::measurement
+} // namespace comdare::prt_art::measurement

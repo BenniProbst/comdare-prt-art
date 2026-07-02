@@ -26,10 +26,10 @@ public:
 
     // O(1) Insert: belege erste freie Zelle
     int insert(value_t v) noexcept {
-        if (size_ >= Capacity) return 5;  // capacity_exceeded
+        if (size_ >= Capacity) return 5; // capacity_exceeded
         std::size_t pos = find_first_free();
         if (pos >= Capacity) return 5;
-        cells_[pos]    = v;
+        cells_[pos] = v;
         occupied_.set(pos);
         ++size_;
         return 0;
@@ -37,7 +37,7 @@ public:
 
     // O(1) Erase: markiere Zelle frei (Tombstone-Style)
     int erase_at(std::size_t pos) noexcept {
-        if (pos >= Capacity) return 7;     // out_of_range
+        if (pos >= Capacity) return 7;      // out_of_range
         if (!occupied_.test(pos)) return 2; // not_found
         occupied_.reset(pos);
         --size_;
@@ -67,9 +67,9 @@ private:
         return Capacity;
     }
 
-    std::vector<value_t>    cells_{std::vector<value_t>(Capacity, 0)};
-    std::bitset<Capacity>   occupied_{};
-    std::size_t             size_ = 0;
+    std::vector<value_t>  cells_{std::vector<value_t>(Capacity, 0)};
+    std::bitset<Capacity> occupied_{};
+    std::size_t           size_ = 0;
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::layout_invariant
+} // namespace comdare::prt_art::legacy_reimpl::layout_invariant

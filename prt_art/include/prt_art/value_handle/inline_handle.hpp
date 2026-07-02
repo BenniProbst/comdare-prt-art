@@ -22,9 +22,7 @@ public:
 
     InlineHandle() = default;
 
-    explicit InlineHandle(std::span<std::byte const> bytes) {
-        store(bytes);
-    }
+    explicit InlineHandle(std::span<std::byte const> bytes) { store(bytes); }
 
     void store(std::span<std::byte const> bytes) noexcept {
         std::size_t n = bytes.size() <= Capacity ? bytes.size() : Capacity;
@@ -37,15 +35,13 @@ public:
     }
 
     [[nodiscard]] std::size_t size() const noexcept { return size_; }
-    [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+    [[nodiscard]] bool        empty() const noexcept { return size_ == 0; }
 
-    [[nodiscard]] static constexpr bool fits(std::size_t value_bytes) noexcept {
-        return value_bytes <= Capacity;
-    }
+    [[nodiscard]] static constexpr bool fits(std::size_t value_bytes) noexcept { return value_bytes <= Capacity; }
 
 private:
     std::array<std::byte, Capacity> data_{};
     std::uint8_t                    size_ = 0;
 };
 
-}  // namespace comdare::prt_art::value_handle
+} // namespace comdare::prt_art::value_handle

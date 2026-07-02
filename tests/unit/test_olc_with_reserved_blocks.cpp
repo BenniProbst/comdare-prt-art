@@ -14,7 +14,7 @@ TEST(OlcWithReservedValueBlocks, InitialVersionIsZero) {
 
 TEST(OlcWithReservedValueBlocks, ValidateUnchangedVersion) {
     conc::OlcWithReservedValueBlocks lock;
-    auto v = lock.read_version();
+    auto                             v = lock.read_version();
     EXPECT_TRUE(lock.validate(v));
 }
 
@@ -26,7 +26,7 @@ TEST(OlcWithReservedValueBlocks, BeginWriteSetsWriteMarker) {
 
 TEST(OlcWithReservedValueBlocks, EndWriteIncrementsAndClearsMarker) {
     conc::OlcWithReservedValueBlocks lock;
-    auto v0 = lock.read_version();
+    auto                             v0 = lock.read_version();
     lock.begin_write();
     lock.end_write();
     auto v1 = lock.read_version();
@@ -36,7 +36,7 @@ TEST(OlcWithReservedValueBlocks, EndWriteIncrementsAndClearsMarker) {
 
 TEST(OlcWithReservedValueBlocks, ValidateFailsAfterWrite) {
     conc::OlcWithReservedValueBlocks lock;
-    auto captured = lock.read_version();
+    auto                             captured = lock.read_version();
     lock.begin_write();
     lock.end_write();
     EXPECT_FALSE(lock.validate(captured));
@@ -44,9 +44,9 @@ TEST(OlcWithReservedValueBlocks, ValidateFailsAfterWrite) {
 
 TEST(OlcWithReservedValueBlocks, ReserveBlockReturnsUniqueIds) {
     conc::OlcWithReservedValueBlocks lock;
-    auto a = lock.reserve_value_block();
-    auto b = lock.reserve_value_block();
-    auto c = lock.reserve_value_block();
+    auto                             a = lock.reserve_value_block();
+    auto                             b = lock.reserve_value_block();
+    auto                             c = lock.reserve_value_block();
     EXPECT_EQ(a, 0u);
     EXPECT_EQ(b, 1u);
     EXPECT_EQ(c, 2u);
@@ -66,7 +66,7 @@ TEST(OlcWithReservedValueBlocks, ResetClearsState) {
 // WriteGuard RAII
 TEST(WriteGuard, AcquiresAndReleasesAutomatically) {
     conc::OlcWithReservedValueBlocks lock;
-    auto v0 = lock.read_version();
+    auto                             v0 = lock.read_version();
     {
         conc::WriteGuard g{lock};
         EXPECT_TRUE(conc::OlcWithReservedValueBlocks::is_write_in_progress(lock.read_version()));

@@ -33,4 +33,4 @@ private:
     std::uint32_t value_bytes_ = 0;
 };
 
-}  // namespace comdare::prt_art::value_handle
+} // namespace comdare::prt_art::value_handle

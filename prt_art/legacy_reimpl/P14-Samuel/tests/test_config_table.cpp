@@ -11,7 +11,7 @@ TEST(ConfigurationTable, EmptyLookupReturnsNullopt) {
 }
 
 TEST(ConfigurationTable, InsertAndLookup) {
-    sm::ConfigurationTable t;
+    sm::ConfigurationTable   t;
     sm::ConfigRecommendation r{4, 31, true, true};
     t.insert({1, 1, sm::UpdateRatioBin::Mixed}, r);
 

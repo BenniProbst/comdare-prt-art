@@ -17,12 +17,11 @@ public:
     static constexpr std::uint8_t kMaxDistance = 16;
 
     // Schaetzt Prefetch-Distance abhaengig von Density (in Prozent) + Cache-Hierarchy-Tier-Latenz
-    [[nodiscard]] static constexpr std::uint8_t estimate(double density_percent,
-                                                         double tier_latency_cycles) noexcept {
+    [[nodiscard]] static constexpr std::uint8_t estimate(double density_percent, double tier_latency_cycles) noexcept {
         // Spaerliche Knoten profitieren von mehr Prefetch-Distance
         double sparseness = 1.0 - (density_percent / 100.0);
         // Latenz-Faktor: hoeher Latenz → mehr Distanz noetig (cache-line-coverage wichtiger)
-        double latency_factor = tier_latency_cycles / 10.0;     // ca. 1 bei L1, 30 bei DRAM
+        double latency_factor = tier_latency_cycles / 10.0; // ca. 1 bei L1, 30 bei DRAM
         double estimate       = 1.0 + sparseness * 8.0 + latency_factor;
         if (estimate < kMinDistance) estimate = kMinDistance;
         if (estimate > kMaxDistance) estimate = kMaxDistance;
@@ -36,4 +35,4 @@ public:
     }
 };
 
-}  // namespace comdare::prt_art::prefetch
+} // namespace comdare::prt_art::prefetch

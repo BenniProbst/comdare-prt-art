@@ -31,32 +31,35 @@ class PrtArtPruefling final : public api::IPruefling {
 public:
     explicit PrtArtPruefling(std::string axes) : axes_(std::move(axes)) {}
 
-    [[nodiscard]] std::string_view name() const override           { return "prt-art"; }
-    [[nodiscard]] std::string_view version() const override        { return "0.1.0"; }
+    [[nodiscard]] std::string_view name() const override { return "prt-art"; }
+    [[nodiscard]] std::string_view version() const override { return "0.1.0"; }
     [[nodiscard]] std::string_view axes_signature() const override { return axes_; }
 
     // TODO(E6): echten PrtArtExecutionEngineAdapter einhaengen (nach nested-cache-engine-Cleanup).
     // Vorerst self-contained representativer Workload (insert+lookup), um den Plugin-Controller-
     // Mechanismus messbar zu machen.
     [[nodiscard]] int run(std::size_t n_ops, double& out_micros_per_op) override {
-        if (n_ops == 0) { out_micros_per_op = 0.0; return 0; }
-        auto t0 = std::chrono::steady_clock::now();
+        if (n_ops == 0) {
+            out_micros_per_op = 0.0;
+            return 0;
+        }
+        auto                                             t0 = std::chrono::steady_clock::now();
         std::unordered_map<std::uint64_t, std::uint64_t> store;
         store.reserve(n_ops);
         for (std::size_t i = 0; i < n_ops; ++i) {
-            std::uint64_t k = (i * 2654435761u) & 0xFFFFFF;  // Knuth-Multiplikativ-Streuung
-            store[k] = i;
+            std::uint64_t k = (i * 2654435761u) & 0xFFFFFF; // Knuth-Multiplikativ-Streuung
+            store[k]        = i;
         }
         std::uint64_t sink = 0;
         for (std::size_t i = 0; i < n_ops; ++i) {
-            std::uint64_t k = (i * 2654435761u) & 0xFFFFFF;
-            auto it = store.find(k);
+            std::uint64_t k  = (i * 2654435761u) & 0xFFFFFF;
+            auto          it = store.find(k);
             if (it != store.end()) sink += it->second;
         }
-        auto t1 = std::chrono::steady_clock::now();
-        double total_us = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() / 1000.0;
+        auto   t1         = std::chrono::steady_clock::now();
+        double total_us   = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() / 1000.0;
         out_micros_per_op = total_us / static_cast<double>(2 * n_ops);
-        return (sink == ~0ull) ? 1 : 0;  // sink-Nutzung verhindert Wegoptimierung; immer 0
+        return (sink == ~0ull) ? 1 : 0; // sink-Nutzung verhindert Wegoptimierung; immer 0
     }
 
 private:
@@ -88,4 +91,4 @@ inline void register_prt_art_pruefling(api::IPrueflingRegistry& registry) {
     registry.register_factory(std::make_unique<PrtArtPrueflingFactory>());
 }
 
-}  // namespace comdare::prt_art::pruefling
+} // namespace comdare::prt_art::pruefling

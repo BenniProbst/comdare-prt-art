@@ -16,11 +16,11 @@
 
 namespace id = comdare::prt_art::identity;
 namespace ce = comdare::cache_engine;
-using comdare::prt_art::status_ok;
+using comdare::prt_art::status_empty_container;
 using comdare::prt_art::status_key_already_exists;
 using comdare::prt_art::status_key_not_found;
+using comdare::prt_art::status_ok;
 using comdare::prt_art::status_out_of_range;
-using comdare::prt_art::status_empty_container;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PrtArtIdentity (PermutationFlags-Tag)
@@ -38,16 +38,16 @@ TEST(PrtArtIdentity, FlagsAreValidCombination) {
 
 TEST(PrtArtIdentity, FlagsHaveAllBanksFilled) {
     auto f = id::prt_art_permutation_flags();
-    EXPECT_NE(f.page_bank,         0u);
-    EXPECT_NE(f.node_bank,         0u);
-    EXPECT_NE(f.traversal_bank,    0u);
+    EXPECT_NE(f.page_bank, 0u);
+    EXPECT_NE(f.node_bank, 0u);
+    EXPECT_NE(f.traversal_bank, 0u);
     EXPECT_NE(f.value_handle_bank, 0u);
-    EXPECT_NE(f.memory_layout_bank,0u);
-    EXPECT_NE(f.allocator_bank,    0u);
-    EXPECT_NE(f.prefetch_bank,     0u);
-    EXPECT_NE(f.concurrency_bank,  0u);
-    EXPECT_NE(f.isa_bank,          0u);
-    EXPECT_NE(f.telemetry_bank,    0u);
+    EXPECT_NE(f.memory_layout_bank, 0u);
+    EXPECT_NE(f.allocator_bank, 0u);
+    EXPECT_NE(f.prefetch_bank, 0u);
+    EXPECT_NE(f.concurrency_bank, 0u);
+    EXPECT_NE(f.isa_bank, 0u);
+    EXPECT_NE(f.telemetry_bank, 0u);
 }
 
 TEST(PrtArtIdentity, IdentifierIsHexString) {
@@ -58,16 +58,16 @@ TEST(PrtArtIdentity, IdentifierIsHexString) {
 TEST(PrtArtIdentity, FlagsContainPrtartSpecificPageBits) {
     auto f = id::prt_art_permutation_flags();
     using namespace ce::flags;
-    EXPECT_NE(f.page_bank & page_bank::PRTART_REDIRECT,        0u);
-    EXPECT_NE(f.page_bank & page_bank::PRTART_DENSEBYTE,       0u);
-    EXPECT_NE(f.page_bank & page_bank::PRTART_SPARSEPATRICIA,  0u);
+    EXPECT_NE(f.page_bank & page_bank::PRTART_REDIRECT, 0u);
+    EXPECT_NE(f.page_bank & page_bank::PRTART_DENSEBYTE, 0u);
+    EXPECT_NE(f.page_bank & page_bank::PRTART_SPARSEPATRICIA, 0u);
 }
 
 TEST(PrtArtIdentity, ContainsPrtArtBPlusAndRedirectNodes) {
     auto f = id::prt_art_permutation_flags();
     using namespace ce::flags;
     EXPECT_NE(f.node_bank & node_bank::PRTART_REDIRECT, 0u);
-    EXPECT_NE(f.node_bank & node_bank::PRTART_BPLUS,    0u);
+    EXPECT_NE(f.node_bank & node_bank::PRTART_BPLUS, 0u);
 }
 
 TEST(PrtArtIdentity, OlcConcurrencyIsSet) {
@@ -100,11 +100,11 @@ TEST(MapApi, IdentifierMatchesFreeFunction) {
 TEST(MapApi, PoolsConfiguredFor7Slots) {
     id::PrtArtSearchEngine<int, int> e;
     using ce_pool = comdare::prt_art::allocator::PoolKind;
-    EXPECT_EQ(e.pools().get(ce_pool::A_TrieHuelle).slot_size_bytes,    64u);
-    EXPECT_EQ(e.pools().get(ce_pool::B_DensePages).slot_size_bytes,   256u);
-    EXPECT_EQ(e.pools().get(ce_pool::C_MultiLevel).slot_size_bytes,  1024u);
+    EXPECT_EQ(e.pools().get(ce_pool::A_TrieHuelle).slot_size_bytes, 64u);
+    EXPECT_EQ(e.pools().get(ce_pool::B_DensePages).slot_size_bytes, 256u);
+    EXPECT_EQ(e.pools().get(ce_pool::C_MultiLevel).slot_size_bytes, 1024u);
     EXPECT_EQ(e.pools().get(ce_pool::D_DecisionSpan).slot_size_bytes, 4096u);
-    EXPECT_EQ(e.pools().get(ce_pool::V_StaticValue).slot_size_bytes,   16u);
+    EXPECT_EQ(e.pools().get(ce_pool::V_StaticValue).slot_size_bytes, 16u);
 }
 
 TEST(MapApi, InsertReturnsStatusOk) {
@@ -116,7 +116,7 @@ TEST(MapApi, InsertReturnsStatusOk) {
 
 TEST(MapApi, InsertExistingReturnsKeyAlreadyExists) {
     id::PrtArtSearchEngine<int, int> e;
-    EXPECT_EQ(e.insert(5, 50),  status_ok);
+    EXPECT_EQ(e.insert(5, 50), status_ok);
     EXPECT_EQ(e.insert(5, 500), status_key_already_exists);
     EXPECT_EQ(e.size(), 1u);
     auto v = e.lookup(5);
@@ -126,7 +126,7 @@ TEST(MapApi, InsertExistingReturnsKeyAlreadyExists) {
 
 TEST(MapApi, SetUpdatesExistingKey) {
     id::PrtArtSearchEngine<int, int> e;
-    EXPECT_EQ(e.set(5, 50),  status_ok);
+    EXPECT_EQ(e.set(5, 50), status_ok);
     EXPECT_EQ(e.set(5, 500), status_ok);
     EXPECT_EQ(e.size(), 1u);
     auto v = e.lookup(5);
@@ -142,7 +142,7 @@ TEST(MapApi, LookupOnEmptyReturnsNullopt) {
 TEST(MapApi, LookupAfterInsertRoundtrip) {
     id::PrtArtSearchEngine<int, int> e;
     e.insert(42, 4242);
-    e.insert(7,  77);
+    e.insert(7, 77);
     auto v1 = e.lookup(42);
     ASSERT_TRUE(v1.has_value());
     EXPECT_EQ(*v1, 4242);
@@ -163,7 +163,7 @@ TEST(MapApi, EraseRemovesEntryAndReturnsOk) {
 
 TEST(MapApi, EraseNonExistentReturnsKeyNotFound) {
     id::PrtArtSearchEngine<int, int> e;
-    EXPECT_EQ(e.erase(0),   status_key_not_found);
+    EXPECT_EQ(e.erase(0), status_key_not_found);
     EXPECT_EQ(e.erase(123), status_key_not_found);
     EXPECT_EQ(e.total_erases(), 0u);
 }
@@ -195,8 +195,8 @@ TEST(MapApi, RangeScanReturnsNonEmpty) {
 
 TEST(MapApi, StringKeyAndStringValueWorks) {
     id::PrtArtSearchEngine<std::string, std::string> e;
-    EXPECT_EQ(e.insert("alpha", "first"),  status_ok);
-    EXPECT_EQ(e.insert("beta",  "second"), status_ok);
+    EXPECT_EQ(e.insert("alpha", "first"), status_ok);
+    EXPECT_EQ(e.insert("beta", "second"), status_ok);
     auto v = e.lookup(std::string{"alpha"});
     ASSERT_TRUE(v.has_value());
     EXPECT_EQ(*v, "first");
@@ -213,7 +213,7 @@ TEST(MapApi, DensityTrackerReceivesUpdatesOnInserts) {
 
 TEST(MapApi, OlcReservedBlocksGrowWithWrites) {
     id::PrtArtSearchEngine<int, int> e;
-    auto const before = e.concurrency().total_blocks_reserved();
+    auto const                       before = e.concurrency().total_blocks_reserved();
     for (int i = 0; i < 16; ++i) e.insert(i, i * 7);
     auto const after = e.concurrency().total_blocks_reserved();
     EXPECT_GE(after - before, 16u);
@@ -221,8 +221,8 @@ TEST(MapApi, OlcReservedBlocksGrowWithWrites) {
 
 TEST(MapApi, MultiThreadedInsertsAreConsistent) {
     id::PrtArtSearchEngine<int, int> e;
-    constexpr int kThreads          = 4;
-    constexpr int kPerThreadInserts = 250;
+    constexpr int                    kThreads          = 4;
+    constexpr int                    kPerThreadInserts = 250;
 
     std::vector<std::thread> threads;
     threads.reserve(kThreads);
@@ -253,7 +253,7 @@ TEST(MapApi, HitMissCountersTracked) {
     (void)e.lookup(3);
     (void)e.lookup(4);
     (void)e.lookup(5);
-    EXPECT_EQ(e.total_hits(),   2u);
+    EXPECT_EQ(e.total_hits(), 2u);
     EXPECT_EQ(e.total_misses(), 3u);
 }
 
@@ -273,8 +273,7 @@ TEST(MapApi, ComponentAccessorsAreReachable) {
 
 TEST(TupleApi, MappedTypeIsTuple) {
     using Engine = id::PrtArtSearchEngine<int, int, double, std::string>;
-    static_assert(std::is_same_v<Engine::mapped_type,
-                                  std::tuple<int, double, std::string>>);
+    static_assert(std::is_same_v<Engine::mapped_type, std::tuple<int, double, std::string>>);
     EXPECT_EQ(Engine::kValueArity, 3u);
 }
 
@@ -293,8 +292,8 @@ TEST(TupleApi, InsertWithMultipleValuesPacksIntoTuple) {
 
 TEST(TupleApi, DuplicateInsertReturnsKeyAlreadyExists) {
     id::PrtArtSearchEngine<int, int, double> e;
-    EXPECT_EQ(e.insert(1, 10, 1.5),  status_ok);
-    EXPECT_EQ(e.insert(1, 20, 2.5),  status_key_already_exists);
+    EXPECT_EQ(e.insert(1, 10, 1.5), status_ok);
+    EXPECT_EQ(e.insert(1, 20, 2.5), status_key_already_exists);
     auto v = e.lookup(1);
     ASSERT_TRUE(v.has_value());
     EXPECT_EQ(std::get<0>(*v), 10);
@@ -399,9 +398,15 @@ TEST(VectorApi, InsertAtInTheMiddle) {
     v.push_back(10);
     v.push_back(30);
     EXPECT_EQ(v.insert_at(1, 20), status_ok);
-    auto a0 = v.at(0);  ASSERT_TRUE(a0.has_value()); EXPECT_EQ(*a0, 10);
-    auto a1 = v.at(1);  ASSERT_TRUE(a1.has_value()); EXPECT_EQ(*a1, 20);
-    auto a2 = v.at(2);  ASSERT_TRUE(a2.has_value()); EXPECT_EQ(*a2, 30);
+    auto a0 = v.at(0);
+    ASSERT_TRUE(a0.has_value());
+    EXPECT_EQ(*a0, 10);
+    auto a1 = v.at(1);
+    ASSERT_TRUE(a1.has_value());
+    EXPECT_EQ(*a1, 20);
+    auto a2 = v.at(2);
+    ASSERT_TRUE(a2.has_value());
+    EXPECT_EQ(*a2, 30);
 }
 
 TEST(VectorApi, EraseAtRemovesElement) {
@@ -411,8 +416,12 @@ TEST(VectorApi, EraseAtRemovesElement) {
     v.push_back(30);
     EXPECT_EQ(v.erase_at(1), status_ok);
     EXPECT_EQ(v.size(), 2u);
-    auto a0 = v.at(0);  ASSERT_TRUE(a0.has_value()); EXPECT_EQ(*a0, 10);
-    auto a1 = v.at(1);  ASSERT_TRUE(a1.has_value()); EXPECT_EQ(*a1, 30);
+    auto a0 = v.at(0);
+    ASSERT_TRUE(a0.has_value());
+    EXPECT_EQ(*a0, 10);
+    auto a1 = v.at(1);
+    ASSERT_TRUE(a1.has_value());
+    EXPECT_EQ(*a1, 30);
 }
 
 TEST(VectorApi, ClearAndReserveAndResize) {
@@ -428,8 +437,12 @@ TEST(VectorApi, ClearAndReserveAndResize) {
 
     EXPECT_EQ(v.resize(5, 42), status_ok);
     EXPECT_EQ(v.size(), 5u);
-    auto a0 = v.at(0);  ASSERT_TRUE(a0.has_value()); EXPECT_EQ(*a0, 42);
-    auto a4 = v.at(4);  ASSERT_TRUE(a4.has_value()); EXPECT_EQ(*a4, 42);
+    auto a0 = v.at(0);
+    ASSERT_TRUE(a0.has_value());
+    EXPECT_EQ(*a0, 42);
+    auto a4 = v.at(4);
+    ASSERT_TRUE(a4.has_value());
+    EXPECT_EQ(*a4, 42);
 }
 
 TEST(VectorApi, AssignReplacesAll) {
@@ -439,7 +452,9 @@ TEST(VectorApi, AssignReplacesAll) {
     v.push_back(3);
     EXPECT_EQ(v.assign(5, 99), status_ok);
     EXPECT_EQ(v.size(), 5u);
-    auto a0 = v.at(0);  ASSERT_TRUE(a0.has_value()); EXPECT_EQ(*a0, 99);
+    auto a0 = v.at(0);
+    ASSERT_TRUE(a0.has_value());
+    EXPECT_EQ(*a0, 99);
 }
 
 TEST(VectorApi, ShrinkToFitOk) {
@@ -486,22 +501,19 @@ TEST(VectorApi, ComponentAccessorsAreReachable) {
 
 TEST(VectorApi, MultiThreadedPushBackIsConsistent) {
     id::PrtArtSearchEngine<int> v;
-    constexpr int kThreads          = 4;
-    constexpr int kPerThreadInserts = 250;
+    constexpr int               kThreads          = 4;
+    constexpr int               kPerThreadInserts = 250;
 
     std::vector<std::thread> threads;
     threads.reserve(kThreads);
     for (int t = 0; t < kThreads; ++t) {
         threads.emplace_back([t, &v]() {
-            for (int i = 0; i < kPerThreadInserts; ++i) {
-                (void)v.push_back(t * kPerThreadInserts + i);
-            }
+            for (int i = 0; i < kPerThreadInserts; ++i) { (void)v.push_back(t * kPerThreadInserts + i); }
         });
     }
     for (auto& th : threads) th.join();
 
-    EXPECT_EQ(v.size(),
-              static_cast<std::size_t>(kThreads * kPerThreadInserts));
+    EXPECT_EQ(v.size(), static_cast<std::size_t>(kThreads * kPerThreadInserts));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -512,9 +524,9 @@ TEST(Status, ConstantsAreDistinct) {
     using namespace comdare::prt_art;
     EXPECT_EQ(status_ok, 0);
     EXPECT_NE(status_key_already_exists, status_ok);
-    EXPECT_NE(status_key_not_found,      status_ok);
-    EXPECT_NE(status_out_of_range,       status_ok);
-    EXPECT_NE(status_empty_container,    status_ok);
+    EXPECT_NE(status_key_not_found, status_ok);
+    EXPECT_NE(status_out_of_range, status_ok);
+    EXPECT_NE(status_empty_container, status_ok);
     EXPECT_TRUE(status_is_ok(status_ok));
     EXPECT_TRUE(status_is_error(status_key_not_found));
 }
@@ -571,7 +583,7 @@ TEST(VectorApi_V12, ReverseIteratorsTraverseInReverseOrder) {
 TEST(VectorApi_V12, AssignFromRange) {
     using namespace comdare::prt_art::identity;
     PrtArtSearchEngine<int> v;
-    std::vector<int> source{10, 20, 30, 40};
+    std::vector<int>        source{10, 20, 30, 40};
     EXPECT_EQ(v.assign(source.begin(), source.end()), status_ok);
     EXPECT_EQ(v.size(), 4u);
     EXPECT_EQ(v[3], 40);
@@ -595,7 +607,7 @@ TEST(MapApi_V12, OperatorBracketLookup) {
 TEST(MapApi_V12, EmplaceWithArgs) {
     using namespace comdare::prt_art::identity;
     PrtArtSearchEngine<int, std::string> m;
-    EXPECT_EQ(m.emplace(7, 3, 'x'), status_ok);  // string(3, 'x') = "xxx"
+    EXPECT_EQ(m.emplace(7, 3, 'x'), status_ok); // string(3, 'x') = "xxx"
     auto v = m.find(7);
     ASSERT_TRUE(v.has_value());
     EXPECT_EQ(*v, "xxx");
@@ -604,7 +616,7 @@ TEST(MapApi_V12, EmplaceWithArgs) {
 TEST(MapApi_V12, TryEmplaceFailsOnExistingKey) {
     using namespace comdare::prt_art::identity;
     PrtArtSearchEngine<int, std::string> m;
-    EXPECT_EQ(m.try_emplace(1, std::string("first")),  status_ok);
+    EXPECT_EQ(m.try_emplace(1, std::string("first")), status_ok);
     EXPECT_EQ(m.try_emplace(1, std::string("second")), status_key_already_exists);
 }
 
@@ -640,9 +652,10 @@ TEST(MapApi_V12, MaxSizeIsPositive) {
 TEST(MapApi_V12, KeyCompAndValueCompCallable) {
     using namespace comdare::prt_art::identity;
     PrtArtSearchEngine<int, int> m;
-    auto kc = m.key_comp();
-    auto vc = m.value_comp();
-    (void)kc; (void)vc;  // verifiziert nur dass sie compile-bar sind
+    auto                         kc = m.key_comp();
+    auto                         vc = m.value_comp();
+    (void)kc;
+    (void)vc; // verifiziert nur dass sie compile-bar sind
     SUCCEED();
 }
 
@@ -656,13 +669,13 @@ TEST(MapApi_V13, MergeTakesOnlyUniqueKeys) {
     PrtArtSearchEngine<int, std::string> b;
     EXPECT_EQ(a.insert(1, "a1"), status_ok);
     EXPECT_EQ(a.insert(2, "a2"), status_ok);
-    EXPECT_EQ(b.insert(2, "b2"), status_ok);  // Duplikat -> wird NICHT gemerged
-    EXPECT_EQ(b.insert(3, "b3"), status_ok);  // unique -> wird gemerged
-    EXPECT_EQ(b.insert(4, "b4"), status_ok);  // unique -> wird gemerged
+    EXPECT_EQ(b.insert(2, "b2"), status_ok); // Duplikat -> wird NICHT gemerged
+    EXPECT_EQ(b.insert(3, "b3"), status_ok); // unique -> wird gemerged
+    EXPECT_EQ(b.insert(4, "b4"), status_ok); // unique -> wird gemerged
     auto merged = a.merge(b);
-    EXPECT_EQ(merged, 2u);  // 3+4 gemerged, 2 nicht
+    EXPECT_EQ(merged, 2u); // 3+4 gemerged, 2 nicht
     EXPECT_EQ(a.size(), 4u);
-    EXPECT_EQ(b.size(), 1u);  // nur key=2 bleibt
+    EXPECT_EQ(b.size(), 1u); // nur key=2 bleibt
     EXPECT_TRUE(b.contains(2));
 }
 
@@ -681,6 +694,6 @@ TEST(MapApi_V13, ExtractReturnsValueAndRemoves) {
 TEST(MapApi_V13, ExtractMissingKeyReturnsNullopt) {
     using namespace comdare::prt_art::identity;
     PrtArtSearchEngine<int, std::string> m;
-    auto extracted = m.extract(999);
+    auto                                 extracted = m.extract(999);
     EXPECT_FALSE(extracted.has_value());
 }

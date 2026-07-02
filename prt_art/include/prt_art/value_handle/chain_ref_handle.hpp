@@ -19,11 +19,9 @@ public:
         : chain_head_offset_(chain_head_offset), chain_length_(chain_length) {}
 
     [[nodiscard]] std::uint64_t chain_head_offset() const noexcept { return chain_head_offset_; }
-    [[nodiscard]] std::uint32_t chain_length()      const noexcept { return chain_length_; }
+    [[nodiscard]] std::uint32_t chain_length() const noexcept { return chain_length_; }
 
-    [[nodiscard]] bool is_empty() const noexcept {
-        return chain_head_offset_ == kEmptyChain || chain_length_ == 0;
-    }
+    [[nodiscard]] bool is_empty() const noexcept { return chain_head_offset_ == kEmptyChain || chain_length_ == 0; }
 
     void prepend_node(std::uint64_t new_head_offset) noexcept {
         chain_head_offset_ = new_head_offset;
@@ -32,7 +30,7 @@ public:
 
     void clear() noexcept {
         chain_head_offset_ = kEmptyChain;
-        chain_length_ = 0;
+        chain_length_      = 0;
     }
 
 private:
@@ -40,4 +38,4 @@ private:
     std::uint32_t chain_length_      = 0;
 };
 
-}  // namespace comdare::prt_art::value_handle
+} // namespace comdare::prt_art::value_handle

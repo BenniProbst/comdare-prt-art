@@ -18,15 +18,13 @@ namespace comdare::prt_art::memory_layout {
 
 class VirtualOffsetAddress {
 public:
-    static constexpr std::size_t kMaxKeyCount = 8;
-    static constexpr std::uint64_t kBase      = 256;
+    static constexpr std::size_t   kMaxKeyCount = 8;
+    static constexpr std::uint64_t kBase        = 256;
 
     [[nodiscard]] static constexpr std::uint64_t compute(std::span<std::byte const> key) noexcept {
-        std::size_t n = key.size() <= kMaxKeyCount ? key.size() : kMaxKeyCount;
+        std::size_t   n        = key.size() <= kMaxKeyCount ? key.size() : kMaxKeyCount;
         std::uint64_t position = 0;
-        for (std::size_t i = 0; i < n; ++i) {
-            position = position * kBase + static_cast<std::uint64_t>(key[i]);
-        }
+        for (std::size_t i = 0; i < n; ++i) { position = position * kBase + static_cast<std::uint64_t>(key[i]); }
         return position;
     }
 
@@ -40,9 +38,7 @@ public:
 
     // Inverse: Rekonstruiert den k_count-Byte-Praefix aus einer Position.
     // Schreibt n_bytes in out_bytes (highest-significant-byte first).
-    static constexpr void decompose(std::uint64_t position,
-                                    std::size_t k_count,
-                                    std::byte* out_bytes) noexcept {
+    static constexpr void decompose(std::uint64_t position, std::size_t k_count, std::byte* out_bytes) noexcept {
         if (k_count == 0 || k_count > kMaxKeyCount) return;
         for (std::size_t i = k_count; i-- > 0;) {
             out_bytes[i] = static_cast<std::byte>(position & 0xFFu);
@@ -51,4 +47,4 @@ public:
     }
 };
 
-}  // namespace comdare::prt_art::memory_layout
+} // namespace comdare::prt_art::memory_layout

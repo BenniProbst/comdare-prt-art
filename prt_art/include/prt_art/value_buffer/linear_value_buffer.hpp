@@ -14,9 +14,9 @@
 namespace comdare::prt_art::value_buffer {
 
 struct ValueRecord {
-    std::uint64_t offset       = 0;
-    std::uint32_t bytes        = 0;
-    bool          tombstone    = false;
+    std::uint64_t offset    = 0;
+    std::uint32_t bytes     = 0;
+    bool          tombstone = false;
 };
 
 class LinearValueBuffer {
@@ -51,10 +51,10 @@ public:
         return slot_id < records_.size() && !records_[slot_id].tombstone;
     }
 
-    [[nodiscard]] std::size_t total_records()  const noexcept { return records_.size(); }
-    [[nodiscard]] std::size_t alive_records()  const noexcept { return records_.size() - tombstone_count_; }
+    [[nodiscard]] std::size_t total_records() const noexcept { return records_.size(); }
+    [[nodiscard]] std::size_t alive_records() const noexcept { return records_.size() - tombstone_count_; }
     [[nodiscard]] std::size_t tombstone_records() const noexcept { return tombstone_count_; }
-    [[nodiscard]] std::size_t buffer_bytes()   const noexcept { return buffer_.size(); }
+    [[nodiscard]] std::size_t buffer_bytes() const noexcept { return buffer_.size(); }
     [[nodiscard]] std::size_t tombstone_bytes() const noexcept { return tombstone_bytes_; }
 
     // Gibt true zurueck wenn Garbage-Collection sich lohnt (Tombstone-Anteil > Schwellwert)
@@ -78,15 +78,13 @@ public:
             ValueRecord nr{};
             nr.offset = static_cast<std::uint64_t>(new_buffer.size());
             nr.bytes  = r.bytes;
-            new_buffer.insert(new_buffer.end(),
-                              buffer_.begin() + r.offset,
-                              buffer_.begin() + r.offset + r.bytes);
+            new_buffer.insert(new_buffer.end(), buffer_.begin() + r.offset, buffer_.begin() + r.offset + r.bytes);
             mapping[i] = static_cast<std::uint64_t>(new_records.size());
             new_records.push_back(nr);
         }
 
-        buffer_         = std::move(new_buffer);
-        records_        = std::move(new_records);
+        buffer_          = std::move(new_buffer);
+        records_         = std::move(new_records);
         tombstone_count_ = 0;
         tombstone_bytes_ = 0;
         return mapping;
@@ -99,4 +97,4 @@ private:
     std::size_t              tombstone_bytes_ = 0;
 };
 
-}  // namespace comdare::prt_art::value_buffer
+} // namespace comdare::prt_art::value_buffer

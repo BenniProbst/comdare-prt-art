@@ -18,18 +18,17 @@
 namespace comdare::prt_art::nodes {
 
 enum class InternalSearchKind : std::uint8_t {
-    Array256       = 0,   // Density bis 25%
-    Array65535     = 1,   // Density 25-50%
-    VectorU8U8     = 2,   // Density 50-75%
-    VectorU16U16   = 3,   // Density >75%
+    Array256     = 0, // Density bis 25%
+    Array65535   = 1, // Density 25-50%
+    VectorU8U8   = 2, // Density 50-75%
+    VectorU16U16 = 3, // Density >75%
 };
 
 class BPlusNode {
 public:
     static constexpr std::uint8_t kPriorityP0 = 0;
 
-    explicit BPlusNode(InternalSearchKind kind = InternalSearchKind::Array256)
-        : kind_(kind) {}
+    explicit BPlusNode(InternalSearchKind kind = InternalSearchKind::Array256) : kind_(kind) {}
 
     [[nodiscard]] InternalSearchKind kind() const noexcept { return kind_; }
 
@@ -45,9 +44,9 @@ public:
     // Density = key_count / kapazitaet[kind] (in %), kapazitaet abhaengig von Kind
     [[nodiscard]] static constexpr std::size_t capacity_for(InternalSearchKind k) noexcept {
         switch (k) {
-            case InternalSearchKind::Array256:     return 256;
-            case InternalSearchKind::Array65535:   return 65535;
-            case InternalSearchKind::VectorU8U8:   return 256;        // Vector mit u8-Diskriminatoren
+            case InternalSearchKind::Array256: return 256;
+            case InternalSearchKind::Array65535: return 65535;
+            case InternalSearchKind::VectorU8U8: return 256; // Vector mit u8-Diskriminatoren
             case InternalSearchKind::VectorU16U16: return 65535;
         }
         return 256;
@@ -81,4 +80,4 @@ private:
     std::size_t        key_count_ = 0;
 };
 
-}  // namespace comdare::prt_art::nodes
+} // namespace comdare::prt_art::nodes

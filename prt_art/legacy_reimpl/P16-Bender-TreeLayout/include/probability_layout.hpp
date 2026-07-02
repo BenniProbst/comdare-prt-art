@@ -19,39 +19,34 @@
 namespace comdare::prt_art::legacy_reimpl::probability_layout {
 
 struct AccessNode {
-    std::uint64_t node_id          = 0;
+    std::uint64_t node_id            = 0;
     double        access_probability = 0.0;
-    std::uint64_t parent_id        = 0;
+    std::uint64_t parent_id          = 0;
 };
 
 // LayoutBlock: ein "Block" (Cache-Line/Memory-Page) mit fester Kapazitaet.
 struct LayoutBlock {
-    std::uint64_t              block_id   = 0;
-    double                     density    = 0.0;
+    std::uint64_t              block_id = 0;
+    double                     density  = 0.0;
     std::vector<std::uint64_t> node_ids{};
 };
 
 // ProbabilityLayout: Greedy Layout-Algorithmus
 class ProbabilityLayout {
 public:
-    explicit ProbabilityLayout(std::size_t block_capacity) noexcept
-        : block_capacity_(block_capacity) {}
+    explicit ProbabilityLayout(std::size_t block_capacity) noexcept : block_capacity_(block_capacity) {}
 
-    void add_node(AccessNode n) {
-        nodes_.push_back(n);
-    }
+    void add_node(AccessNode n) { nodes_.push_back(n); }
 
     // Greedy: sortiere absteigend nach access_probability,
     // packe in Bloecke bis Kapazitaet erreicht.
     std::vector<LayoutBlock> compute_layout() const {
         std::vector<AccessNode> sorted(nodes_);
         std::sort(sorted.begin(), sorted.end(),
-            [](AccessNode const& a, AccessNode const& b) {
-                return a.access_probability > b.access_probability;
-            });
+                  [](AccessNode const& a, AccessNode const& b) { return a.access_probability > b.access_probability; });
 
         std::vector<LayoutBlock> blocks;
-        LayoutBlock current{0, 0.0, {}};
+        LayoutBlock              current{0, 0.0, {}};
         for (auto const& n : sorted) {
             if (current.node_ids.size() >= block_capacity_) {
                 blocks.push_back(current);
@@ -68,8 +63,8 @@ public:
     [[nodiscard]] std::size_t block_capacity() const noexcept { return block_capacity_; }
 
 private:
-    std::size_t              block_capacity_;
-    std::vector<AccessNode>  nodes_{};
+    std::size_t             block_capacity_;
+    std::vector<AccessNode> nodes_{};
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::probability_layout
+} // namespace comdare::prt_art::legacy_reimpl::probability_layout

@@ -17,22 +17,14 @@ class RedirectNode {
 public:
     static constexpr std::uint8_t kPriorityP0 = 0;
 
-    explicit RedirectNode(std::span<std::byte const> rest_suffix,
-                          std::uint64_t terminal_handle = 0)
-        : rest_suffix_(rest_suffix.begin(), rest_suffix.end()),
-          terminal_handle_(terminal_handle) {}
+    explicit RedirectNode(std::span<std::byte const> rest_suffix, std::uint64_t terminal_handle = 0)
+        : rest_suffix_(rest_suffix.begin(), rest_suffix.end()), terminal_handle_(terminal_handle) {}
 
-    [[nodiscard]] std::span<std::byte const> rest_suffix() const noexcept {
-        return rest_suffix_;
-    }
+    [[nodiscard]] std::span<std::byte const> rest_suffix() const noexcept { return rest_suffix_; }
 
-    [[nodiscard]] std::uint64_t terminal_handle() const noexcept {
-        return terminal_handle_;
-    }
+    [[nodiscard]] std::uint64_t terminal_handle() const noexcept { return terminal_handle_; }
 
-    [[nodiscard]] std::size_t bytes_consumed() const noexcept {
-        return rest_suffix_.size();
-    }
+    [[nodiscard]] std::size_t bytes_consumed() const noexcept { return rest_suffix_.size(); }
 
     // Match: vergleicht Rest-Suffix mit dem konsumierbaren Praefix des Suchschluessels.
     // Liefert Anzahl matched Bytes (= rest_suffix_.size() bei vollem Match).
@@ -45,8 +37,7 @@ public:
     }
 
     [[nodiscard]] bool is_complete_match(std::span<std::byte const> remaining_key) const noexcept {
-        return remaining_key.size() == rest_suffix_.size() &&
-               try_match(remaining_key) == rest_suffix_.size();
+        return remaining_key.size() == rest_suffix_.size() && try_match(remaining_key) == rest_suffix_.size();
     }
 
 private:
@@ -54,4 +45,4 @@ private:
     std::uint64_t          terminal_handle_;
 };
 
-}  // namespace comdare::prt_art::nodes
+} // namespace comdare::prt_art::nodes

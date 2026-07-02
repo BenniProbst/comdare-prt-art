@@ -36,14 +36,13 @@ public:
     // Wrapper: liefert den Slot bei index, wo jeder Slot kSlotBytes gross ist
     // und alle Slots cache-line-aligned beginnen.
     template <std::size_t SlotBytes>
-    [[nodiscard]] static std::span<std::byte> slot_view(std::span<std::byte> buffer,
-                                                         std::size_t slot_index) noexcept {
+    [[nodiscard]] static std::span<std::byte> slot_view(std::span<std::byte> buffer, std::size_t slot_index) noexcept {
         static_assert(SlotBytes > 0, "SlotBytes muss > 0 sein");
-        std::size_t aligned_slot = aligned_offset(SlotBytes);    // pad pro Slot auf next 64
-        std::size_t offset = slot_index * aligned_slot;
+        std::size_t aligned_slot = aligned_offset(SlotBytes); // pad pro Slot auf next 64
+        std::size_t offset       = slot_index * aligned_slot;
         if (offset + SlotBytes > buffer.size()) return {};
         return buffer.subspan(offset, SlotBytes);
     }
 };
 
-}  // namespace comdare::prt_art::memory_layout
+} // namespace comdare::prt_art::memory_layout

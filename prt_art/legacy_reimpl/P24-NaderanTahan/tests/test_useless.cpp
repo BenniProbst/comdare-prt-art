@@ -38,8 +38,14 @@ TEST(UselessPrefetch, UseAfterEvictCountsAsLate) {
 
 TEST(UselessPrefetch, MixedRatios) {
     up::UselessPrefetchTracker t;
-    for (int i = 0; i < 10; ++i) { t.prefetch(0x1000 + i); t.use(0x1000 + i); }
-    for (int i = 0; i < 5; ++i)  { t.prefetch(0x2000 + i); t.evict(0x2000 + i); }
+    for (int i = 0; i < 10; ++i) {
+        t.prefetch(0x1000 + i);
+        t.use(0x1000 + i);
+    }
+    for (int i = 0; i < 5; ++i) {
+        t.prefetch(0x2000 + i);
+        t.evict(0x2000 + i);
+    }
     EXPECT_EQ(t.metrics().total_prefetches, 15u);
     EXPECT_DOUBLE_EQ(t.metrics().usefulness_ratio(), 10.0 / 15.0);
 }

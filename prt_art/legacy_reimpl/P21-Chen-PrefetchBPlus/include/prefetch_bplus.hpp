@@ -22,9 +22,9 @@ inline constexpr std::size_t kCacheLineBytes = 64;
 // PrefetchStrategy: tactical hints, die das BPlus-Searcher waehrend
 // Linear-Scan ausgibt. Kein direkter __builtin_prefetch — Strategy-Trace fuer Tests.
 struct PrefetchHint {
-    std::uint64_t address    = 0;
-    std::uint8_t  locality   = 3;   // 0..3
-    bool          is_write   = false;
+    std::uint64_t address  = 0;
+    std::uint8_t  locality = 3; // 0..3
+    bool          is_write = false;
 };
 
 class PrefetchTracker {
@@ -33,9 +33,9 @@ public:
         hints_.push_back({addr, locality, wr});
     }
 
-    [[nodiscard]] std::size_t hint_count() const noexcept { return hints_.size(); }
+    [[nodiscard]] std::size_t                      hint_count() const noexcept { return hints_.size(); }
     [[nodiscard]] std::vector<PrefetchHint> const& hints() const noexcept { return hints_; }
-    void reset() { hints_.clear(); }
+    void                                           reset() { hints_.clear(); }
 
 private:
     std::vector<PrefetchHint> hints_{};
@@ -60,7 +60,8 @@ public:
             keys[i]   = keys[i - 1];
             values[i] = values[i - 1];
         }
-        keys[pos] = k; values[pos] = v;
+        keys[pos]   = k;
+        values[pos] = v;
         ++key_count;
         return 0;
     }
@@ -72,10 +73,10 @@ public:
                 t.emit(reinterpret_cast<std::uint64_t>(&keys[i + kKeysPerLine]), 3, false);
             }
             if (keys[i] == k) return values[i];
-            if (keys[i] >  k) break;
+            if (keys[i] > k) break;
         }
         return 0;
     }
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::prefetch_bplus
+} // namespace comdare::prt_art::legacy_reimpl::prefetch_bplus

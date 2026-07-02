@@ -13,14 +13,14 @@ namespace pf = comdare::prt_art::prefetch;
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST(DistanceEstimator, MinAndMaxBoundsAreEnforced) {
-    EXPECT_EQ(pf::PrefetchDistanceEstimator::clamp(0),  pf::PrefetchDistanceEstimator::kMinDistance);
+    EXPECT_EQ(pf::PrefetchDistanceEstimator::clamp(0), pf::PrefetchDistanceEstimator::kMinDistance);
     EXPECT_EQ(pf::PrefetchDistanceEstimator::clamp(99), pf::PrefetchDistanceEstimator::kMaxDistance);
-    EXPECT_EQ(pf::PrefetchDistanceEstimator::clamp(5),  5);
+    EXPECT_EQ(pf::PrefetchDistanceEstimator::clamp(5), 5);
 }
 
 TEST(DistanceEstimator, SparseHighLatencyHasLargerDistance) {
-    auto sparse = pf::PrefetchDistanceEstimator::estimate(10.0, 100.0);   // sehr sparse, DRAM-Latenz
-    auto dense  = pf::PrefetchDistanceEstimator::estimate(95.0, 4.0);     // sehr dense, L1-Latenz
+    auto sparse = pf::PrefetchDistanceEstimator::estimate(10.0, 100.0); // sehr sparse, DRAM-Latenz
+    auto dense  = pf::PrefetchDistanceEstimator::estimate(95.0, 4.0);   // sehr dense, L1-Latenz
     EXPECT_GT(sparse, dense);
 }
 
@@ -58,7 +58,7 @@ TEST(PathOrientedPrefetch, SuggestExtrapolates) {
     pf::PathOrientedPrefetch p;
     p.enqueue(100);
     p.enqueue(200);
-    EXPECT_EQ(p.suggest_next(), 300u);   // step = 100, extrapoliert auf 300
+    EXPECT_EQ(p.suggest_next(), 300u); // step = 100, extrapoliert auf 300
 }
 
 TEST(PathOrientedPrefetch, QueueIsBoundedAt16) {
@@ -70,7 +70,8 @@ TEST(PathOrientedPrefetch, QueueIsBoundedAt16) {
 
 TEST(PathOrientedPrefetch, ResetClearsQueue) {
     pf::PathOrientedPrefetch p;
-    p.enqueue(1); p.enqueue(2);
+    p.enqueue(1);
+    p.enqueue(2);
     p.reset();
     EXPECT_EQ(p.queue_depth(), 0u);
     EXPECT_EQ(p.total_enqueued(), 0u);
@@ -97,7 +98,7 @@ TEST(RedirectPrefetch, FanOutSlotsRespectCacheLineSize) {
 
 TEST(RedirectPrefetch, NegativeOffsetIsClampedAtZero) {
     pf::RedirectPrefetch r;
-    r.schedule(32);   // weniger als kCacheLineSize=64
+    r.schedule(32); // weniger als kCacheLineSize=64
     EXPECT_EQ(r.slot(2), 0u);
 }
 

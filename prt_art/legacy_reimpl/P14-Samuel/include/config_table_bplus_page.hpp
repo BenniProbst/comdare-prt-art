@@ -17,21 +17,15 @@
 
 namespace comdare::prt_art::legacy_reimpl::samuel {
 
-enum class UpdateRatioBin : std::uint8_t {
-    ReadDominant   = 0,
-    Mixed          = 1,
-    WriteHeavy     = 2
-};
+enum class UpdateRatioBin : std::uint8_t { ReadDominant = 0, Mixed = 1, WriteHeavy = 2 };
 
 struct ConfigKey {
-    std::uint8_t   key_size_bin    = 0;
-    std::uint8_t   value_size_bin  = 0;
-    UpdateRatioBin update_bin      = UpdateRatioBin::ReadDominant;
+    std::uint8_t   key_size_bin   = 0;
+    std::uint8_t   value_size_bin = 0;
+    UpdateRatioBin update_bin     = UpdateRatioBin::ReadDominant;
 
     [[nodiscard]] bool operator==(ConfigKey const& o) const noexcept {
-        return key_size_bin == o.key_size_bin
-            && value_size_bin == o.value_size_bin
-            && update_bin == o.update_bin;
+        return key_size_bin == o.key_size_bin && value_size_bin == o.value_size_bin && update_bin == o.update_bin;
     }
 };
 
@@ -44,12 +38,9 @@ struct ConfigRecommendation {
 
 class ConfigurationTable {
 public:
-    void insert(ConfigKey k, ConfigRecommendation r) {
-        table_.push_back({k, r});
-    }
+    void insert(ConfigKey k, ConfigRecommendation r) { table_.push_back({k, r}); }
 
-    [[nodiscard]] std::optional<ConfigRecommendation>
-    lookup(ConfigKey k) const noexcept {
+    [[nodiscard]] std::optional<ConfigRecommendation> lookup(ConfigKey k) const noexcept {
         for (auto const& [key, rec] : table_) {
             if (key == k) return rec;
         }
@@ -62,4 +53,4 @@ private:
     std::vector<std::pair<ConfigKey, ConfigRecommendation>> table_{};
 };
 
-}  // namespace comdare::prt_art::legacy_reimpl::samuel
+} // namespace comdare::prt_art::legacy_reimpl::samuel
