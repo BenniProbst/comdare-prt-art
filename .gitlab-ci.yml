@@ -39,19 +39,13 @@ lint:secrets:
 lint:format:
   extends: .lint-format
   tags: [baremetal]
-  allow_failure: true
   variables:
     GIT_SUBMODULE_STRATEGY: none
-  rules:                          # B (User 2026-06-26): bis #179-Format-Pass MANUELL (harte Gates bleiben)
-    - when: manual
 lint:static:
   extends: .lint-static
   tags: [baremetal]
-  allow_failure: true
   variables:
     GIT_SUBMODULE_STRATEGY: none
-  rules:
-    - when: manual
 
 # ── Standalone-Build+Test (bare-metal prod-Toolchain; INTERFACE-Lib via Test-Consumer) ──
 build:standalone:
