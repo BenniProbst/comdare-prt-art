@@ -67,12 +67,12 @@ build:standalone:
     - ctest --test-dir build --output-on-failure
   # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
 
-# ── Stufe Sanitize (ASan+UBSan, 10-Stufen-Prinzip P1b; advisory bis #179, dann HART) ──
+# ── Stufe Sanitize (ASan+UBSan, 10-Stufen-Prinzip P1b) ──
+# #278 (2026-07-06): HART geschaltet — 6 Laeufe in Folge success auf main (Jobs 214612..214994).
 sanitize:asan-ubsan:
   extends: .bm
   stage: sanitize
   needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
-  allow_failure: true
   script:
     - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
     - cmake --build build-san
