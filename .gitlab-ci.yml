@@ -25,7 +25,14 @@ stages:
   - build
   - sanitize
 
+# #277/#21 (User 06.07.): ccache-Bestand auf dev-MinIO via runners.cache.
+cache:
+  key: "ccache-$CI_PROJECT_NAME"
+  paths: [".ccache"]
+
 variables:
+  CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+  CCACHE_MAXSIZE: "2G"
   GIT_SUBMODULE_STRATEGY: recursive
   CMAKE_BUILD_PARALLEL_LEVEL: "6"   # User 2026-07-06: 2x6 Kerne bei concurrent=2
   COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
