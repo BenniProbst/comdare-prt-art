@@ -27,7 +27,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  CMAKE_BUILD_PARALLEL_LEVEL: "6"   # User 2026-07-06: 2x6 Kerne bei concurrent=2
   COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
 
 # ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
