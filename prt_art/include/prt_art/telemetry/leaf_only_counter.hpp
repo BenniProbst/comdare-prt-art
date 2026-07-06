@@ -24,6 +24,8 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -68,6 +70,25 @@ struct alignas(64) NodeAccessCount {
 template <typename NodeId = void*>
 class LeafOnlyCounter {
 public:
+    LeafOnlyCounter()                                  = default;
+    LeafOnlyCounter(const LeafOnlyCounter&)            = delete;
+    LeafOnlyCounter& operator=(const LeafOnlyCounter&) = delete;
+
+    LeafOnlyCounter(LeafOnlyCounter&& other) {
+        std::unique_lock lock{other.counts_mutex_};
+        counts_ = std::move(other.counts_);
+    }
+
+    LeafOnlyCounter& operator=(LeafOnlyCounter&& other) {
+        if (this == &other) return *this;
+
+        std::unique_lock self_lock{counts_mutex_, std::defer_lock};
+        std::unique_lock other_lock{other.counts_mutex_, std::defer_lock};
+        std::lock(self_lock, other_lock);
+        counts_ = std::move(other.counts_);
+        return *this;
+    }
+
     /// Hauptmethode: pro Zugriff aufrufen. is_leaf entscheidet ob Counter inkrementiert wird.
     void record_access(NodeId node, bool is_leaf) {
         if (!is_leaf) {
@@ -80,17 +101,22 @@ public:
 
     /// Liest den Counter eines Blatt-Knotens (0 wenn nie zugegriffen)
     [[nodiscard]] std::uint64_t access_count(NodeId node) const {
-        auto it = counts_.find(node);
+        std::shared_lock guard{counts_mutex_};
+        auto             it = counts_.find(node);
         if (it == counts_.end()) return 0;
         return it->second->counter.load(std::memory_order_relaxed);
     }
 
     /// Anzahl tracked Blatt-Knoten
-    [[nodiscard]] std::size_t tracked_leaves() const noexcept { return counts_.size(); }
+    [[nodiscard]] std::size_t tracked_leaves() const noexcept {
+        std::shared_lock guard{counts_mutex_};
+        return counts_.size();
+    }
 
     /// Cache-Pressure-Estimate: normalisiertes Mass [0.0, 1.0]
     /// = (Anzahl Leaves mit count > 0) / (Anzahl tracked Leaves)
     [[nodiscard]] double cache_pressure_estimate() const {
+        std::shared_lock guard{counts_mutex_};
         if (counts_.empty()) return 0.0;
         std::size_t hot = 0;
         for (const auto& [_, slot] : counts_) {
@@ -101,27 +127,39 @@ public:
 
     /// Aggregate-Counter ueber alle tracked Leaves
     [[nodiscard]] std::uint64_t total_accesses() const {
-        std::uint64_t sum = 0;
+        std::shared_lock guard{counts_mutex_};
+        std::uint64_t    sum = 0;
         for (const auto& [_, slot] : counts_) { sum += slot->counter.load(std::memory_order_relaxed); }
         return sum;
     }
 
     /// Reset (vor naechster Mess-Phase)
-    void reset() { counts_.clear(); }
+    void reset() {
+        std::unique_lock lock{counts_mutex_};
+        counts_.clear();
+    }
 
 private:
     NodeAccessCount& ensure_slot(NodeId node) {
-        auto it = counts_.find(node);
-        if (it == counts_.end()) {
-            auto  slot = std::make_unique<NodeAccessCount>();
-            auto& ref  = *slot;
-            counts_.emplace(node, std::move(slot));
-            return ref;
+        {
+            std::shared_lock guard{counts_mutex_};
+            auto             it = counts_.find(node);
+            if (it != counts_.end()) return *(it->second);
         }
-        return *(it->second);
+
+        // Schuetzt die Map-Mutation: paralleles emplace ohne Lock korrumpiert den Heap (264-c2-Befund, tcache-Abort).
+        std::unique_lock lock{counts_mutex_};
+        auto             it = counts_.find(node);
+        if (it != counts_.end()) return *(it->second);
+
+        auto  slot = std::make_unique<NodeAccessCount>();
+        auto& ref  = *slot;
+        counts_.emplace(node, std::move(slot));
+        return ref;
     }
 
     // unique_ptr weil NodeAccessCount nicht-movable (atomic ist nicht-movable)
+    mutable std::shared_mutex                                    counts_mutex_;
     std::unordered_map<NodeId, std::unique_ptr<NodeAccessCount>> counts_;
 };
 

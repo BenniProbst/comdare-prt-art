@@ -55,12 +55,9 @@ build:standalone:
   script:
     - cmake -B build -G Ninja        # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
-    # Nur den Ziel-Test bauen (kompiliert die comdare_prt_art_core-Header als Consumer).
-    # KEIN build-ALL: test_internal_search.cpp referenziert einen fehlenden Header
-    # (prt_art/internal_search/array_256.hpp) = eigenstaendiger prt-art-Defekt -> #179-Cleanup.
-    - cmake --build build --target test_prt_art_identity
-    # Direkt-Ausfuehrung (plattform-uniform, umgeht MSB3073 unter MSVC)
-    - ./build/tests/unit/test_prt_art_identity
+    # 264-c: internal_search-Header sind real; build ALL kompiliert alle Test-Consumer.
+    - cmake --build build
+    - ctest --test-dir build --output-on-failure
   # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
 
 # ── Stufe Sanitize (ASan+UBSan, 10-Stufen-Prinzip P1b; advisory bis #179, dann HART) ──
@@ -71,8 +68,8 @@ sanitize:asan-ubsan:
   allow_failure: true
   script:
     - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
-    - cmake --build build-san --target test_prt_art_identity
-    - 'ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1 ./build-san/tests/unit/test_prt_art_identity'
+    - cmake --build build-san
+    - 'ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1 ctest --test-dir build-san --output-on-failure'
 
 .bm:
   tags: [baremetal]
