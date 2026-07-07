@@ -1,4 +1,9 @@
 #pragma once
+// ═══ QUARANTAENE (AP-2-neu/#236 W4, 2026-07-07) ═══ ALT-PFAD — NICHT Teil des Mess-Pfads!
+// Der EINZIGE PRT-ART-Mess-Pfad ist der cache-engine-KATALOG-PFAD (sota_catalog -> echte
+// PrtArtComposition als DLL; ce-Gegenbeweis: test_ap2_katalog_pfad_stubfrei). Diese Datei
+// gehoert zu einem der drei Alt-Pfade (V18-Template / EE-A-B-Vergleich / Registry-run) und
+// traegt bewusst Stub-/Surrogat-Code — sie darf NIE in den Mess-Pfad verdrahtet werden.
 // V41.E11 Phase B — prt-art als cache-engine-Plugin (Pruefling-Factory).
 //
 // Implementiert die cache-engine Plugin-Controller-Schnittstelle
