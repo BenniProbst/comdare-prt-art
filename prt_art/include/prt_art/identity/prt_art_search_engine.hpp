@@ -25,6 +25,7 @@
 #include <cache_engine/fingerprint/fixed_length_fingerprint.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -90,10 +91,26 @@ public:
     PrtArtSearchEngine() : components_{} {}
 
     // ─── Capacity (Lese-Ops) ─────────────────────────────────────────────────
-    [[nodiscard]] size_type size() const noexcept { return data_.size(); }
-    [[nodiscard]] bool      empty() const noexcept { return data_.empty(); }
-    [[nodiscard]] size_type capacity() const noexcept { return data_.capacity(); }
-    [[nodiscard]] size_type max_size() const noexcept { return data_.max_size(); }
+    // M-PA-02 (G3): Lese-Zugriffe auf data_ laufen unter DEMSELBEN shared_lock
+    // wie at()/front()/back(). Rueckgabe erfolgt by-value => kein Lifetime-
+    // Problem. noexcept entfaellt bewusst: shared_lock kann werfen — konsistent
+    // zu at()/front()/back(), die ebenfalls nicht noexcept sind.
+    [[nodiscard]] size_type size() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.size();
+    }
+    [[nodiscard]] bool empty() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.empty();
+    }
+    [[nodiscard]] size_type capacity() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.capacity();
+    }
+    [[nodiscard]] size_type max_size() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.max_size();
+    }
 
     // ─── Element-Zugriff (Read = T& bzw. optional) ─────────────────────────
     [[nodiscard]] std::optional<Value> at(size_type index) const {
@@ -111,13 +128,40 @@ public:
         if (data_.empty()) return std::nullopt;
         return data_.back();
     }
-    [[nodiscard]] const_pointer data() const noexcept { return data_.data(); }
+    // ── M-PA-02 HANDLE-CONTRACT ─────────────────────────────────────────────
+    // data()/begin()/end()/cbegin()/cend()/operator[]/rbegin()/rend()/crbegin()/
+    // crend() reichen Pointer/Iteratoren/Referenzen HERAUS, die nach dem Lock-
+    // Release genutzt werden. Der shared_lock hier macht nur die *Berechnung*
+    // des Handles datenrennfrei (das blosse Lesen von data_ waehrend ein Writer
+    // realloziert waere sonst UB — genau die M-PA-02-Race). Die *anschliessende*
+    // Nutzung durch den Aufrufer ist NICHT geschuetzt: ein konkurrierender
+    // Writer (push_back/resize/insert_at/...) invalidiert Pointer/Iteratoren.
+    // VERTRAG: diese Accessoren nur benutzen, wenn KEIN anderer Thread den
+    // Container mutiert (single-threaded Phase bzw. externe Synchronisation).
+    // Fuer datenrennfreien Element-Zugriff die by-value-Accessoren
+    // at()/front()/back() verwenden. (Selbes Lifetime-Muster wie #19-UAF.)
+    [[nodiscard]] const_pointer data() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.data();
+    }
 
-    // Iterator-Zugriff (read-only)
-    [[nodiscard]] const_iterator begin() const noexcept { return data_.cbegin(); }
-    [[nodiscard]] const_iterator end() const noexcept { return data_.cend(); }
-    [[nodiscard]] const_iterator cbegin() const noexcept { return data_.cbegin(); }
-    [[nodiscard]] const_iterator cend() const noexcept { return data_.cend(); }
+    // Iterator-Zugriff (read-only) — siehe HANDLE-CONTRACT oben
+    [[nodiscard]] const_iterator begin() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.cbegin();
+    }
+    [[nodiscard]] const_iterator end() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.cend();
+    }
+    [[nodiscard]] const_iterator cbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.cbegin();
+    }
+    [[nodiscard]] const_iterator cend() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.cend();
+    }
 
     // ─── Schreib-Ops (returnen int errno-style) ─────────────────────────────
     status_t push_back(Value const& v) {
@@ -235,16 +279,32 @@ public:
         } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
-    // REV 7.6 V12.1 — operator[] nicht-throwing Random-Access
-    // (Lese: undefined wenn out-of-range; Schreiben via set_at)
-    [[nodiscard]] const_reference operator[](size_type index) const noexcept { return data_[index]; }
+    // REV 7.6 V12.1 — operator[] Random-Access (Lese: undefined wenn out-of-range;
+    // Schreiben via set_at). M-PA-02: shared_lock macht den data_-Zugriff datenrenn-
+    // frei; die herausgereichte Referenz unterliegt dem HANDLE-CONTRACT (s.o.).
+    [[nodiscard]] const_reference operator[](size_type index) const {
+        std::shared_lock guard{rw_lock_};
+        return data_[index];
+    }
 
-    // REV 7.6 V12.1 — Reverse-Iteratoren (read-only)
+    // REV 7.6 V12.1 — Reverse-Iteratoren (read-only) — siehe HANDLE-CONTRACT oben
     using const_reverse_iterator = typename std::vector<Value>::const_reverse_iterator;
-    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return data_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator rend() const noexcept { return data_.crend(); }
-    [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return data_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator crend() const noexcept { return data_.crend(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.crbegin();
+    }
+    [[nodiscard]] const_reverse_iterator rend() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.crend();
+    }
+    [[nodiscard]] const_reverse_iterator crbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.crbegin();
+    }
+    [[nodiscard]] const_reverse_iterator crend() const {
+        std::shared_lock guard{rw_lock_};
+        return data_.crend();
+    }
 
     // REV 7.6 V12.1 — emplace_back via perfect forwarding (analog std::vector)
     template <typename... Args>
@@ -329,8 +389,17 @@ public:
     PrtArtSearchEngine() : components_{} {}
 
     // ─── Capacity (Lese-Ops) ─────────────────────────────────────────────────
-    [[nodiscard]] size_type size() const noexcept { return storage_.size(); }
-    [[nodiscard]] bool      empty() const noexcept { return storage_.empty(); }
+    // M-PA-02 (G3): Lese-Zugriffe auf storage_ laufen unter DEMSELBEN shared_lock
+    // wie count()/contains()/lookup(). Rueckgabe by-value => kein Lifetime-Problem.
+    // noexcept entfaellt (shared_lock kann werfen) — konsistent zu count().
+    [[nodiscard]] size_type size() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.size();
+    }
+    [[nodiscard]] bool empty() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.empty();
+    }
     [[nodiscard]] size_type count(Key const& k) const {
         std::shared_lock guard{rw_lock_};
         return storage_.count(::comdare::fingerprint::to_binary_string(k));
@@ -346,10 +415,10 @@ public:
         std::shared_lock guard{rw_lock_};
         auto             it = storage_.find(bk);
         if (it == storage_.end()) {
-            ++const_misses_;
+            const_misses_.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
-        ++const_hits_;
+        const_hits_.fetch_add(1, std::memory_order_relaxed);
         return it->second.second;
     }
 
@@ -358,10 +427,31 @@ public:
     [[nodiscard]] std::optional<mapped_type> at(Key const& k) const { return lookup(k); }
 
     // ─── Iterator-Zugriff (read-only) ────────────────────────────────────────
-    [[nodiscard]] const_iterator begin() const noexcept { return storage_.cbegin(); }
-    [[nodiscard]] const_iterator end() const noexcept { return storage_.cend(); }
-    [[nodiscard]] const_iterator cbegin() const noexcept { return storage_.cbegin(); }
-    [[nodiscard]] const_iterator cend() const noexcept { return storage_.cend(); }
+    // ── M-PA-02 HANDLE-CONTRACT ─────────────────────────────────────────────
+    // begin()/end()/cbegin()/cend()/rbegin()/rend()/crbegin()/crend() sowie
+    // lower_bound()/upper_bound()/equal_range() reichen Iteratoren HERAUS. Der
+    // shared_lock macht nur die *Berechnung*/den Baumdurchlauf datenrennfrei
+    // (Traversieren von storage_ waehrend ein Writer rebalanciert waere UB). Die
+    // *anschliessende* Nutzung/Dereferenzierung ist NICHT geschuetzt: ein Writer
+    // (insert/erase/clear/merge/extract) kann Iteratoren invalidieren. VERTRAG:
+    // nur benutzen, wenn kein anderer Thread mutiert; fuer datenrennfreie Werte
+    // die by-value-Accessoren lookup()/at()/find()/range_scan() verwenden.
+    [[nodiscard]] const_iterator begin() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.cbegin();
+    }
+    [[nodiscard]] const_iterator end() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.cend();
+    }
+    [[nodiscard]] const_iterator cbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.cbegin();
+    }
+    [[nodiscard]] const_iterator cend() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.cend();
+    }
     [[nodiscard]] const_iterator lower_bound(Key const& k) const {
         std::shared_lock guard{rw_lock_};
         return storage_.lower_bound(::comdare::fingerprint::to_binary_string(k));
@@ -462,15 +552,30 @@ public:
     // Schreib-API bewusst nicht als reference — Concurrency-Korrektheit (use set() / insert_or_assign)
     [[nodiscard]] std::optional<mapped_type> operator[](Key const& k) const { return lookup(k); }
 
-    // max_size — analog std::map
-    [[nodiscard]] size_type max_size() const noexcept { return storage_.max_size(); }
+    // max_size — analog std::map (M-PA-02: shared_lock, Rueckgabe by-value)
+    [[nodiscard]] size_type max_size() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.max_size();
+    }
 
-    // Reverse-Iteratoren (read-only, std::map-konform)
+    // Reverse-Iteratoren (read-only, std::map-konform) — siehe HANDLE-CONTRACT oben
     using const_reverse_iterator = typename storage_map_t::const_reverse_iterator;
-    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return storage_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator rend() const noexcept { return storage_.crend(); }
-    [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return storage_.crbegin(); }
-    [[nodiscard]] const_reverse_iterator crend() const noexcept { return storage_.crend(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.crbegin();
+    }
+    [[nodiscard]] const_reverse_iterator rend() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.crend();
+    }
+    [[nodiscard]] const_reverse_iterator crbegin() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.crbegin();
+    }
+    [[nodiscard]] const_reverse_iterator crend() const {
+        std::shared_lock guard{rw_lock_};
+        return storage_.crend();
+    }
 
     // Member-Swap (deadlock-vermeidend via std::scoped_lock)
     void swap(PrtArtSearchEngine& other) noexcept {
@@ -479,8 +584,14 @@ public:
         storage_.swap(other.storage_);
         std::swap(inserts_, other.inserts_);
         std::swap(erases_, other.erases_);
-        std::swap(const_hits_, other.const_hits_);
-        std::swap(const_misses_, other.const_misses_);
+        // std::atomic ist nicht std::swap-bar; unter dem exklusiven scoped_lock
+        // sind einfache load/store ausreichend und datenrennfrei.
+        std::uint64_t const h = const_hits_.load(std::memory_order_relaxed);
+        const_hits_.store(other.const_hits_.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        other.const_hits_.store(h, std::memory_order_relaxed);
+        std::uint64_t const m = const_misses_.load(std::memory_order_relaxed);
+        const_misses_.store(other.const_misses_.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        other.const_misses_.store(m, std::memory_order_relaxed);
     }
 
     // Comparators — analog std::map (key_compare ist die Default less-Order der binary_key)
@@ -527,10 +638,23 @@ public:
     }
 
     // ─── Counters / Stats (read-only) ────────────────────────────────────────
-    [[nodiscard]] std::uint64_t total_inserts() const noexcept { return inserts_; }
-    [[nodiscard]] std::uint64_t total_erases() const noexcept { return erases_; }
-    [[nodiscard]] std::uint64_t total_hits() const noexcept { return const_hits_; }
-    [[nodiscard]] std::uint64_t total_misses() const noexcept { return const_misses_; }
+    // M-PA-02: inserts_/erases_ werden AUSSCHLIESSLICH unter unique_lock
+    // geschrieben (insert_internal/set/erase/extract/merge) => shared_lock beim
+    // Lesen ist voll-synchronisierend (exklusiv vs. shared). noexcept entfaellt.
+    [[nodiscard]] std::uint64_t total_inserts() const {
+        std::shared_lock guard{rw_lock_};
+        return inserts_;
+    }
+    [[nodiscard]] std::uint64_t total_erases() const {
+        std::shared_lock guard{rw_lock_};
+        return erases_;
+    }
+    // const_hits_/const_misses_ werden in lookup() UNTER shared_lock inkrementiert
+    // (mehrere Reader gleichzeitig) => ein shared_lock beim Lesen wuerde die
+    // Reader-Reader-Race NICHT schliessen. Korrekt nur via std::atomic; der Load
+    // ist datenrennfrei und bleibt noexcept.
+    [[nodiscard]] std::uint64_t total_hits() const noexcept { return const_hits_.load(std::memory_order_relaxed); }
+    [[nodiscard]] std::uint64_t total_misses() const noexcept { return const_misses_.load(std::memory_order_relaxed); }
 
     // ─── Identity API ─────────────────────────────────────────────────────────
     [[nodiscard]] static ::comdare::cache_engine::PermutationFlags identity_flags() noexcept {
@@ -576,10 +700,12 @@ private:
     storage_map_t             storage_;
     PrtArtComponents          components_;
 
-    std::uint64_t         inserts_      = 0;
-    std::uint64_t         erases_       = 0;
-    mutable std::uint64_t const_hits_   = 0;
-    mutable std::uint64_t const_misses_ = 0;
+    std::uint64_t inserts_ = 0;
+    std::uint64_t erases_  = 0;
+    // M-PA-02: unter shared_lock (mehrere Reader) in lookup() inkrementiert =>
+    // atomar, sonst Reader-Reader-Data-Race. Reine Statistik: relaxed genuegt.
+    mutable std::atomic<std::uint64_t> const_hits_{0};
+    mutable std::atomic<std::uint64_t> const_misses_{0};
 };
 
 } // namespace comdare::prt_art::identity
