@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <cstdint>
 #include <thread>
 #include <vector>
 
@@ -78,6 +80,52 @@ TEST(LeafOnlyCounter, Reset) {
     counter.reset();
     EXPECT_EQ(counter.tracked_leaves(), 0u);
     EXPECT_EQ(counter.access_count(0x100), 0u);
+}
+
+// Regression (Goal-V4 G3 / 2-Tage-Sweep B1 / REV-CXX-01): Use-after-free.
+// Die fruehere Impl reichte aus ensure_slot() eine bare NodeAccessCount& heraus, NACHDEM der
+// Lock-Scope geschlossen war; record_access() inkrementierte dann ungeschuetzt, waehrend ein
+// paralleles reset() (unique_lock + counts_.clear()) exakt diesen unique_ptr-Slot zerstoerte
+// -> Heap-Use-after-free. Dieser Test uebt reset() || record_access() ueber viele Runden
+// parallel aus. Unter ASan/TSan aborted die alte Impl hier; die gefixte laeuft sauber durch,
+// weil Lookup+fetch_add nun vollstaendig unter dem gehaltenen Lock leben.
+TEST(LeafOnlyCounter, ConcurrentResetAndRecordNoUseAfterFree) {
+    tel::LeafOnlyCounter<std::uint64_t> counter;
+    std::atomic<bool>                   stop{false};
+
+    constexpr int kWriters   = 4;
+    constexpr int kNodeSpace = 64;
+
+    std::vector<std::thread> writers;
+    writers.reserve(kWriters);
+    for (int t = 0; t < kWriters; ++t) {
+        writers.emplace_back([&counter, &stop, t]() {
+            std::uint64_t n = 0;
+            while (!stop.load(std::memory_order_relaxed)) {
+                const auto node = static_cast<std::uint64_t>((n++ % kNodeSpace) + t * kNodeSpace);
+                counter.record_access(node, /*is_leaf=*/true);
+            }
+        });
+    }
+
+    // Zweiter Resetter-Thread erhoeht die Kollisionswahrscheinlichkeit von clear() mit
+    // einem laufenden fetch_add zusaetzlich zum Haupt-Thread.
+    std::thread resetter([&counter, &stop]() {
+        while (!stop.load(std::memory_order_relaxed)) { counter.reset(); }
+    });
+
+    // Feste Rundenzahl statt Wallclock -> deterministisch beschraenkte Beanspruchung.
+    constexpr int kResetRounds = 50000;
+    for (int i = 0; i < kResetRounds; ++i) { counter.reset(); }
+
+    stop.store(true, std::memory_order_relaxed);
+    resetter.join();
+    for (auto& w : writers) w.join();
+
+    // Hauptaussage ist "kein Crash/kein UAF". Zusaetzlich: der Counter bleibt danach konsistent.
+    counter.reset();
+    EXPECT_EQ(counter.tracked_leaves(), 0u);
+    EXPECT_EQ(counter.total_accesses(), 0u);
 }
 
 // ============================================================================

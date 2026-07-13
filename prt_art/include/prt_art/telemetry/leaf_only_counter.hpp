@@ -95,8 +95,32 @@ public:
             // KRITISCH: Inner-Nodes NIE schreiben (vermeidet Cache-Line-Ping-Pong, Kuehn 2023)
             return;
         }
-        auto& slot = ensure_slot(node);
-        slot.counter.fetch_add(1, std::memory_order_relaxed);
+        // 264-Folgebefund (Goal-V4 G3 / REV-CXX-01, Use-after-free): Der Increment MUSS unter
+        // demselben Lock erfolgen, unter dem der Slot gefunden wurde -- es wird NIE eine bare
+        // Referenz aus einem entsperrten Fenster herausgereicht. Nur so kann reset()/Move
+        // (unique_lock + counts_.clear()) den unique_ptr-Slot nicht zwischen Lookup und
+        // fetch_add unter uns zerstoeren.
+        //
+        // Fast-Path: shared_lock deckt Lookup UND fetch_add ab. Der Slot-Counter ist std::atomic,
+        // daher genuegt der geteilte Lock fuer korrekte Parallelitaet mehrerer record_access-Aufrufer
+        // (mehrere atomare Increments auf demselben Counter sind rennfrei); der shared_lock schliesst
+        // ausschliesslich den unique_lock von reset()/Move aus. Solange er ununterbrochen von find()
+        // bis fetch_add() gehalten wird, ist das UAF-Fenster geschlossen.
+        {
+            std::shared_lock guard{counts_mutex_};
+            auto             it = counts_.find(node);
+            if (it != counts_.end()) {
+                it->second->counter.fetch_add(1, std::memory_order_relaxed);
+                return;
+            }
+        }
+        // Slow-Path: Erst-Zugriff auf diesen Knoten -> Map-Mutation erfordert unique_lock
+        // (paralleles emplace ohne Lock korrumpiert den Heap, 264-c2-Befund/tcache-Abort).
+        // Der Increment erfolgt weiterhin UNTER dem gehaltenen unique_lock.
+        std::unique_lock lock{counts_mutex_};
+        auto             it = counts_.find(node);
+        if (it == counts_.end()) { it = counts_.emplace(node, std::make_unique<NodeAccessCount>()).first; }
+        it->second->counter.fetch_add(1, std::memory_order_relaxed);
     }
 
     /// Liest den Counter eines Blatt-Knotens (0 wenn nie zugegriffen)
@@ -140,23 +164,10 @@ public:
     }
 
 private:
-    NodeAccessCount& ensure_slot(NodeId node) {
-        {
-            std::shared_lock guard{counts_mutex_};
-            auto             it = counts_.find(node);
-            if (it != counts_.end()) return *(it->second);
-        }
-
-        // Schuetzt die Map-Mutation: paralleles emplace ohne Lock korrumpiert den Heap (264-c2-Befund, tcache-Abort).
-        std::unique_lock lock{counts_mutex_};
-        auto             it = counts_.find(node);
-        if (it != counts_.end()) return *(it->second);
-
-        auto  slot = std::make_unique<NodeAccessCount>();
-        auto& ref  = *slot;
-        counts_.emplace(node, std::move(slot));
-        return ref;
-    }
+    // Hinweis: Es gibt bewusst KEIN ensure_slot(), das eine bare NodeAccessCount& herausreicht.
+    // Ein solcher Rueckgabewert waere ausserhalb des Lock-Scopes gueltig und koennte von reset()
+    // (counts_.clear()) invalidiert werden (Use-after-free). Lookup + Increment leben deshalb
+    // vollstaendig innerhalb von record_access() unter gehaltenem Lock.
 
     // unique_ptr weil NodeAccessCount nicht-movable (atomic ist nicht-movable)
     mutable std::shared_mutex                                    counts_mutex_;
