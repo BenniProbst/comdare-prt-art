@@ -282,12 +282,16 @@ public:
     [[nodiscard]] auto& hypothesis_metrics() noexcept { return components_.hypothesis_metrics; }
 
 private:
+    // Anti-Phantom: die flache vector-Spezialisierung hat KEINE Knotenstruktur und damit
+    // keine echten Knoten-IDs. Statt einer aus Pointer-Bits fabrizierten ID wird die
+    // Container-Dichte ehrlich unter der stabilen Container-ID 0 gefuehrt (genau eine
+    // Dichte-Beobachtung pro Container statt eines vorgetaeuschten Pro-Knoten-Histogramms).
+    static constexpr std::uint64_t kFlatContainerNodeId = 0;
+
     void update_density() {
-        std::uint64_t const synthetic_node_id =
-            static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(data_.data()) & 0xFFFFu);
         double const density_pct =
             (data_.size() * 100.0) / static_cast<double>((std::max<std::size_t>)(1, data_.capacity()));
-        components_.density_tracker.record(synthetic_node_id, density_pct);
+        components_.density_tracker.record(kFlatContainerNodeId, density_pct);
     }
 
     mutable std::shared_mutex rw_lock_;
@@ -427,7 +431,7 @@ public:
         if (it == storage_.end()) {
             storage_.try_emplace(bk, storage_value_t{k, v});
             ++inserts_;
-            update_density(bk);
+            update_density();
         } else {
             it->second.second = v;
         }
@@ -551,17 +555,21 @@ private:
             auto [it, inserted] = storage_.try_emplace(bk, storage_value_t{k, mv});
             if (!inserted) { return status_key_already_exists; }
             ++inserts_;
-            update_density(bk);
+            update_density();
             return status_ok;
         } catch (std::bad_alloc const&) { return status_out_of_memory; }
     }
 
-    void update_density(binary_key_t const& bk) {
-        std::uint64_t const synthetic_node_id =
-            static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(bk.data()) & 0xFFFFu);
+    // Anti-Phantom: die flache map-Spezialisierung hat KEINE Knotenstruktur; die frueher aus
+    // den Pointer-Bits eines temporaeren binary_key fabrizierte "Node-ID" hatte keinen Realbezug
+    // (der temporaere Puffer wurde nach dem Insert zerstoert). Die Container-Dichte wird ehrlich
+    // unter der stabilen Container-ID 0 gefuehrt.
+    static constexpr std::uint64_t kFlatContainerNodeId = 0;
+
+    void update_density() {
         std::size_t const sz          = storage_.size();
         double const      density_pct = (sz * 100.0) / static_cast<double>((std::max<std::size_t>)(1, sz + 64));
-        components_.density_tracker.record(synthetic_node_id, density_pct);
+        components_.density_tracker.record(kFlatContainerNodeId, density_pct);
     }
 
     mutable std::shared_mutex rw_lock_;

@@ -130,7 +130,9 @@ foreach(_perm IN LISTS _all_perms)
     if(NOT _needs_rebuild)
         math(EXPR _count_skipped "${_count_skipped} + 1")
     else()
-        # V39.C - Per-Achsen Compile-Time-Defines fuer echte Code-Pfade
+        # V39.C - Per-Achsen Compile-Time-Defines. Realer Code-Pfad je Achse begrenzt
+        # (node compact/wide, lookup binary/linear; simd->linear, pc nur linear, telem nur
+        # binary) — die Degradierung wird ehrlich via (real=...)-Label ausgewiesen (V40.PA).
         string(TOUPPER "COMDARE_PA_NODE_IS_${_node}" _axis_macro_node)
         string(TOUPPER "COMDARE_PA_LOOKUP_IS_${_lookup}" _axis_macro_lookup)
         string(TOUPPER "COMDARE_PA_PC_IS_${_pc}" _axis_macro_pc)
@@ -170,6 +172,45 @@ foreach(_perm IN LISTS _all_perms)
 #define COMDARE_PA_LOOKUP \"${_lookup}\"
 #define COMDARE_PA_TELEMETRY \"${_telem}\"
 
+// V40.PA (2026-07-13, Anti-Phantom) — REALISIERTE Achsen-Werte.
+// Aufgeloest vom SELBEN #if, das weiter unten den Code-Pfad waehlt, damit das
+// ausgegebene Label NIE vom tatsaechlich kompilierten Verhalten abweichen kann
+// (identische (real=...)-Konvention wie cache-engine, z.B. alloc=std (real=mimalloc)).
+// Realisierungs-Umfang dieses Pruefling-Codegens:
+//   * node   : nur compact(uint32) vs. wide(uint64) — wide/leaf_only/internal -> uint64.
+//   * lookup : nur binary(std::map) vs. linear(std::vector) — simd degradiert zu linear.
+//   * pc     : wirkt NUR im linear-Zweig (lazy=sort; none/eager=kein sort) — binary: inaktiv.
+//   * telem  : wirkt NUR im binary-Zweig (leaf_only/sampling/offline) — linear: inaktiv.
+#if defined(COMDARE_PA_NODE_IS_COMPACT)
+  #define COMDARE_PA_NODE_REAL \"compact\"
+#else
+  #define COMDARE_PA_NODE_REAL \"wide\"
+#endif
+
+#if defined(COMDARE_PA_LOOKUP_IS_BINARY)
+  #define COMDARE_PA_LOOKUP_REAL \"binary\"
+#else
+  #define COMDARE_PA_LOOKUP_REAL \"linear\"
+#endif
+
+#if defined(COMDARE_PA_LOOKUP_IS_BINARY)
+  #define COMDARE_PA_PC_REAL \"inactive\"
+#elif defined(COMDARE_PA_PC_IS_LAZY)
+  #define COMDARE_PA_PC_REAL \"lazy\"
+#else
+  #define COMDARE_PA_PC_REAL \"none\"
+#endif
+
+#if !defined(COMDARE_PA_LOOKUP_IS_BINARY)
+  #define COMDARE_PA_TELEM_REAL \"inactive\"
+#elif defined(COMDARE_PA_TELEM_IS_LEAF_ONLY)
+  #define COMDARE_PA_TELEM_REAL \"leaf_only\"
+#elif defined(COMDARE_PA_TELEM_IS_SAMPLING)
+  #define COMDARE_PA_TELEM_REAL \"sampling\"
+#else
+  #define COMDARE_PA_TELEM_REAL \"offline\"
+#endif
+
 // V38.C - PermDescriptor: ausserhalb namespace fuer extern \"C\"-Export
 struct PermDescriptor {
     const char* id;
@@ -187,10 +228,15 @@ extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_version() {
 }
 
 extern \"C\" COMDARE_PA_EXPORT const char* perm_pa_${_perm_id}_axes() {
-    return \"node=${_node},pc=${_pc},lookup=${_lookup},telem=${_telem}\";
+    // Anti-Phantom: jede Achse traegt den ANGEFRAGTEN Wert + (real=<realisiert>),
+    // damit still degradierte Achsen (z.B. simd->linear) sichtbar bleiben.
+    return \"node=${_node} (real=\" COMDARE_PA_NODE_REAL \"),\"
+           \"pc=${_pc} (real=\" COMDARE_PA_PC_REAL \"),\"
+           \"lookup=${_lookup} (real=\" COMDARE_PA_LOOKUP_REAL \"),\"
+           \"telem=${_telem} (real=\" COMDARE_PA_TELEM_REAL \")\";
 }
 
-// V39.C (2026-05-24) - Echt achsen-spezifischer PRT-ART Algorithmus
+// V39.C (2026-05-24) - Achsen-spezifischer PRT-ART Algorithmus (Realisierung s.o.)
 
 #if defined(COMDARE_PA_NODE_IS_COMPACT)
   using pa_key_t = std::uint32_t;
@@ -258,7 +304,8 @@ extern \"C\" COMDARE_PA_EXPORT int perm_pa_${_perm_id}_run(unsigned long n_ops, 
 static constexpr PermDescriptor kDescriptor_pa_${_perm_id} {
     COMDARE_PA_PERM_ID,
     COMDARE_PA_PERM_VERSION,
-    \"node=${_node},pc=${_pc},lookup=${_lookup},telem=${_telem}\",
+    // Anti-Phantom: identisches (real=...)-Label wie perm_pa_${_perm_id}_axes().
+    \"node=${_node} (real=\" COMDARE_PA_NODE_REAL \"),pc=${_pc} (real=\" COMDARE_PA_PC_REAL \"),lookup=${_lookup} (real=\" COMDARE_PA_LOOKUP_REAL \"),telem=${_telem} (real=\" COMDARE_PA_TELEM_REAL \")\",
     &perm_pa_${_perm_id}_run
 };
 
