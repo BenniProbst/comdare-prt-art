@@ -12,9 +12,10 @@ namespace comdare::prt_art::internal_search {
 
 class Array65535 {
 public:
-    static constexpr std::size_t kCapacity          = 65535;
-    static constexpr double      kDensityMinPercent = 25.0;
-    static constexpr double      kDensityMaxPercent = 50.0;
+    static constexpr std::size_t kCapacity =
+        65536; // M-PA-02-Fix: uint16-Diskriminator hat 65536 Werte (0..65535); insert(65535) war OOB bei 65535.
+    static constexpr double kDensityMinPercent = 25.0;
+    static constexpr double kDensityMaxPercent = 50.0;
 
     Array65535() : slots_(kCapacity, kEmpty) {}
 

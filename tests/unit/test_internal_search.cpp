@@ -54,7 +54,8 @@ TEST(Array256, DensityCalculation) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST(Array65535, CapacityAndDensityThresholds) {
-    EXPECT_EQ(is::Array65535::kCapacity, 65535u);
+    EXPECT_EQ(is::Array65535::kCapacity,
+              65536u); // M-PA-02-Fix: uint16 hat 65536 Werte (0..65535); vorher OOB bei insert(65535)
     EXPECT_DOUBLE_EQ(is::Array65535::kDensityMinPercent, 25.0);
     EXPECT_DOUBLE_EQ(is::Array65535::kDensityMaxPercent, 50.0);
 }
@@ -65,6 +66,15 @@ TEST(Array65535, InsertAndLookup) {
     auto v = a.lookup(50000);
     ASSERT_TRUE(v.has_value());
     EXPECT_EQ(*v, 999u);
+}
+
+TEST(Array65535, MaxDiscriminator65535InBounds) {
+    // M-PA-02-Regression: der uint16-Maximalwert 65535 muss insertier-/lookup-bar sein (war OOB bei kCapacity=65535).
+    is::Array65535 a;
+    a.insert(65535, 4242u);
+    EXPECT_EQ(a.lookup(65535), std::optional<std::uint64_t>{4242u});
+    a.erase(65535);
+    EXPECT_EQ(a.lookup(65535), std::nullopt);
 }
 
 TEST(Array65535, EmptyLookupReturnsNullopt) {
