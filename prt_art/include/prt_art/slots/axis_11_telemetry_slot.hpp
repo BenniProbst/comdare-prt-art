@@ -15,6 +15,7 @@
 #include <topics/telemetry/axis_11_telemetry/concepts/axis_11_telemetry_cache_engine_permutation_concept.hpp>
 #include <topics/telemetry/concepts/topic_telemetry_concept.hpp>
 #include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/organ_location.hpp>  // INC-B/R-B: COMDARE_DEFINE_ORGAN_LOCATION (per-Organ-Registry-Lokation)
 
 #include <prt_art/telemetry/leaf_only_counter.hpp> // prt-art PerNodeCounter (Anti-Pattern)
 
@@ -52,6 +53,11 @@ public:
         return "PrtArtPerNodeCounter (F15 anti-pattern: per-node counter, cache-line ping-pong baseline)";
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_PER_NODE"; }
+
+    // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
+    // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
+    COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_11::PrtArtPerNodeCounter",
+                                  "prt_art/slots/axis_11_telemetry_slot.hpp");
 
     // prt-art-Algorithmus-Logik (PerNodeCounter) — forwarded.
     void record_access(std::uint64_t node, bool is_leaf) { counter_.record_access(node, is_leaf); }

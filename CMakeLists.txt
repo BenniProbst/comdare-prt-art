@@ -107,6 +107,12 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/prt_art/legacy_reimpl/CMakeLists.txt")
     add_subdirectory(prt_art/legacy_reimpl)
 endif()
 
+# INC-B (2026-07-14) — prt-art-Registry-Generator (erzeugt prt_art_axis_registry.xml per compile-time-
+# Reflektion der Slot-Wrapper; EXCLUDE_FROM_ALL, explizit per Target `prt_art_axis_registry_gen` gebaut).
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/prt_art/registry_gen/CMakeLists.txt")
+    add_subdirectory(prt_art/registry_gen)
+endif()
+
 message(STATUS "──────────────────────────────────────────────────────────")
 message(STATUS "comdare-prt-art ${PROJECT_VERSION}")
 message(STATUS "  C++ Standard            : ${CMAKE_CXX_STANDARD}")

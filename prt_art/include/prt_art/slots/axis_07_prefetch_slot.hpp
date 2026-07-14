@@ -17,6 +17,7 @@
 #include <topics/prefetch/axis_07_prefetch/concepts/axis_07_prefetch_concept.hpp>
 #include <topics/prefetch/axis_07_prefetch/concepts/axis_07_prefetch_cache_engine_permutation_concept.hpp>
 #include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus (via anatomy_base)
+#include <anatomy/organ_location.hpp>  // INC-B/R-B: COMDARE_DEFINE_ORGAN_LOCATION (per-Organ-Registry-Lokation)
 
 #include <prt_art/prefetch/redirect_prefetch.hpp> // prt-art-Algorithmus-Logik
 
@@ -52,6 +53,11 @@ public:
         return "PrtArtRedirectPrefetch (RedirectNode-subtree fan-out prefetch, prt-art REV6 §5.17)";
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_REDIRECT"; }
+
+    // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
+    // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
+    COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch",
+                                  "prt_art/slots/axis_07_prefetch_slot.hpp");
 
     static constexpr std::uint8_t kFanOut = ::comdare::prt_art::prefetch::RedirectPrefetch::kFanOut;
 

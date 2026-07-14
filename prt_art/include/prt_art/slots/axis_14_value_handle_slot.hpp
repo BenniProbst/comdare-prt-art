@@ -12,6 +12,7 @@
 #include <topics/value_handle/axis_14_value_handle/concepts/axis_14_value_handle_cache_engine_permutation_concept.hpp>
 #include <topics/value_handle/concepts/topic_value_handle_concept.hpp>
 #include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/organ_location.hpp>  // INC-B/R-B: COMDARE_DEFINE_ORGAN_LOCATION (per-Organ-Registry-Lokation)
 
 #include <prt_art/value_handle/chain_ref_handle.hpp> // prt-art-Algorithmus-Logik
 
@@ -47,6 +48,11 @@ public:
         return "PrtArtChainRefHandle (multi-value linked-list pool reference, prt-art REV6 §5.4)";
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_CHAIN_REF"; }
+
+    // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
+    // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
+    COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle",
+                                  "prt_art/slots/axis_14_value_handle_slot.hpp");
 
     // prt-art-Algorithmus-Logik (ChainRefHandle Linked-List-Verwaltung) — forwarded.
     [[nodiscard]] std::uint64_t chain_head_offset() const noexcept { return handle_.chain_head_offset(); }
