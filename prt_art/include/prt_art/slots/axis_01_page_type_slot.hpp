@@ -13,6 +13,7 @@
 #include <topics/nodes/axis_01_page_type/concepts/axis_01_page_type_cache_engine_permutation_concept.hpp>
 #include <topics/nodes/concepts/topic_nodes_concept.hpp>
 #include <anatomy/pruefling_merge.hpp> // PrueflingSlot-Pattern + AnatomyGenus
+#include <anatomy/organ_location.hpp>  // INC-B/R-B: COMDARE_DEFINE_ORGAN_LOCATION (per-Organ-Registry-Lokation)
 
 #include <prt_art/nodes/bplus_node.hpp> // prt-art-Algorithmus-Logik (Density-Dispatch)
 
@@ -53,6 +54,11 @@ public:
         return "PrtArtBPlusPageType (density-driven branch page, prt-art REV6 §5.17)";
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_BPLUS"; }
+
+    // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
+    // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
+    COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_01::PrtArtBPlusPageType",
+                                  "prt_art/slots/axis_01_page_type_slot.hpp");
 
     using InternalSearchKind = ::comdare::prt_art::nodes::InternalSearchKind;
 
