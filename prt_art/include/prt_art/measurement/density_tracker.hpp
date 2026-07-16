@@ -20,7 +20,13 @@ struct DensityBucket {
 
 class DensityTracker {
 public:
-    void record(std::uint64_t node_id, double density_percent) noexcept {
+    // (REV-CXX-05 / Muster B, WP-5 2026-07-16): record ist NICHT noexcept — unordered_map::operator[] kann
+    // beim Erst-Insert/Rehash allozieren und std::bad_alloc werfen; unter noexcept wurde daraus
+    // std::terminate, und die bad_alloc-Statuspfade der Aufrufer (prt_art_search_engine: catch(bad_alloc)
+    // => status_out_of_memory) konnten nie greifen. Die Exception propagiert jetzt bis zum vorhandenen
+    // errno-style-Statuspfad ([[allocation-failure-exception]]-Doktrin: Allokationsfehler werfen, nicht
+    // terminieren). note_observation()/reset()/density_for() bleiben noexcept (allokationsfrei).
+    void record(std::uint64_t node_id, double density_percent) {
         per_node_[node_id] = density_percent;
         ++total_observations_;
     }
