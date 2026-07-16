@@ -34,8 +34,27 @@ public:
         return current == captured && !is_write_in_progress(current);
     }
 
-    // Writer markiert Versions-Slot
-    void begin_write() noexcept { version_.fetch_add(kWriteMarker, std::memory_order_acq_rel); }
+    // Writer markiert Versions-Slot.
+    // (REV-CXX-02, WP-5 2026-07-16): CAS-Schleife von GERADER auf die naechste UNGERADE Version statt
+    // blindem fetch_add. Zwei gleichzeitige fetch_add-Writer kippten die Version von ungerade zurueck auf
+    // gerade — ein optimistischer Leser konnte waehrend aktiver Writer scheinbar "kein Write" sehen und
+    // inkonsistente Daten akzeptieren (Odd/Even-Vertrag verletzt). Jetzt gilt die Invariante: solange
+    // IRGENDEIN Writer aktiv ist, ist die Version ungerade; ein zweiter Writer wartet (spin + yield), bis
+    // end_write die naechste gerade Generation publiziert hat. Versionen bleiben monoton (+2 je Write);
+    // Wraparound bei 2^64 ist theoretisch (>10^19 Writes) und erhaelt die Odd/Even-Paritaet.
+    void begin_write() noexcept {
+        Version expected = version_.load(std::memory_order_relaxed);
+        for (;;) {
+            if (is_write_in_progress(expected)) {
+                std::this_thread::yield();
+                expected = version_.load(std::memory_order_relaxed);
+                continue;
+            }
+            if (version_.compare_exchange_weak(expected, expected + kWriteMarker, std::memory_order_acq_rel,
+                                               std::memory_order_relaxed))
+                return;
+        }
+    }
 
     void end_write() noexcept {
         // Increment um kIncrementStep + Loeschen des Write-Markers
