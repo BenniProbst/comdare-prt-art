@@ -35,6 +35,7 @@
 // PrtArtPathCompressionSlot::PrueflingVariants).
 #include <axes/path_compression/axis_02_path_compression_patricia.hpp>
 
+#include <anatomy/anatomy_base.hpp>   // AnatomyGenus + genus_name (F30: genus reflektiert statt Literal)
 #include <anatomy/organ_location.hpp> // HasOrganLocation (R-B)
 
 #include <boost/mp11.hpp>
@@ -64,6 +65,7 @@ struct AxisOut {
     std::string           slot;     // axis_NN (Slot-Nummer der CE-Achse)
     std::string           id;       // page_type / prefetch / telemetry / value_handle / path_compression
     std::string           category; // pruefling_slot | golden_merge_slot
+    std::string           genus;    // F30 (2026-07-16): aus Slot::genus reflektiert (genus_name), nicht Literal
     bool                  golden = false;
     std::vector<Baustein> bausteine;
 };
@@ -121,14 +123,20 @@ template <class Slot>
 
 template <class Slot>
 [[nodiscard]] AxisOut make_slot(char const* slot, char const* id, char const* category, bool golden) {
-    return AxisOut{slot, id, category, golden, reflect_slot<Slot>()};
+    // F30 (2026-07-16): genus aus dem Slot-Member reflektiert (Enum-Single-Source anatomy_base.hpp genus_name),
+    // nicht mehr als String-Literal emittiert — byte-identisches Ergebnis ("SearchAlgorithm"), aber Enum-Drift
+    // (neuer Genus am Slot) schluege jetzt ehrlich in der XML durch.
+    return AxisOut{slot, id, category, std::string{cea::genus_name(Slot::genus)}, golden, reflect_slot<Slot>()};
 }
 
 // Fuer das golden-verdrahtete ce-seitige Merge-Organ: der Wrapper wird direkt reflektiert (er IST der
-// einzige Baustein von PrtArtPathCompressionSlot::PrueflingVariants).
+// einzige Baustein von PrtArtPathCompressionSlot::PrueflingVariants). genus: der Wrapper selbst traegt kein
+// Slot-genus-Member; der zugehoerige PrtArtPathCompressionSlot lebt in merge_reference.hpp (dessen Include die
+// Kopf-Doku bewusst vermeidet — er zoege die 6 SOTA-Host-Kompositionen). Daher hier direkt aus der Enum-
+// Single-Source reflektiert (genus_name(SearchAlgorithm)) — derselbe Wert, kein freies String-Literal.
 template <class W>
 [[nodiscard]] AxisOut make_wrapper(char const* slot, char const* id, char const* category, bool golden) {
-    AxisOut a{slot, id, category, golden, {}};
+    AxisOut a{slot, id, category, std::string{cea::genus_name(cea::AnatomyGenus::SearchAlgorithm)}, golden, {}};
     a.bausteine.push_back(reflect_wrapper<W>());
     return a;
 }
@@ -204,8 +212,8 @@ int main(int argc, char** argv) {
          "-->\n";
     for (auto const& ax : axes) {
         f << "  <axis id=\"" << xml_escape(ax.id) << "\" slot=\"" << xml_escape(ax.slot) << "\" category=\""
-          << xml_escape(ax.category) << "\" genus=\"SearchAlgorithm\" baustein_count=\"" << ax.bausteine.size()
-          << "\">\n";
+          << xml_escape(ax.category) << "\" genus=\"" << xml_escape(ax.genus) << "\" baustein_count=\""
+          << ax.bausteine.size() << "\">\n";
         for (auto const& b : ax.bausteine) {
             f << "    <baustein name=\"" << xml_escape(b.name) << "\" wrapper=\"" << xml_escape(b.wrapper)
               << "\" type=\"" << xml_escape(b.type) << "\" header=\"" << xml_escape(b.header) << "\" enabled=\""
