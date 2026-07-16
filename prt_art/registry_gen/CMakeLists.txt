@@ -30,3 +30,25 @@ else()
         "Das golden-verdrahtete PathCompression-Organ zieht die CMake-generierte flags.hpp der cache-engine.\n"
         "Setze -DCOMDARE_CE_GENERATED_DIR=<cache-engine-build>/generated (Build zuvor konfigurieren).")
 endif()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WP-4/F29 (Voll-Audit 2026-07-16) — Registry-Round-Trip-Gate (Muster R-E/M-CE-27, analog ce
+# test_axis_registry_roundtrip): das VOR-gebaute Tool regeneriert die XML nach CMAKE_CURRENT_BINARY_DIR,
+# registry_roundtrip.cmake byte-difft gegen die committete prt_art/algorithm_profiles/prt_art_axis_registry.xml
+# (NUR GELESEN). Registrierung GEGATED auf COMDARE_CE_GENERATED_DIR: ohne konfigurierten ce-Geschwister-Build
+# ist das Tool nicht kompilierbar (s.o.) — der Default-Standalone-ctest-Lauf bleibt unveraendert (kein
+# Phantom-FAIL), das Gate laeuft ueberall dort, wo der Generator real baubar ist (CI-Heimat: der dedizierte
+# registry-roundtrip-Job der .gitlab-ci.yml, der die Geschwister-ce zuvor konfiguriert; 2-Pass wie ce).
+# Referenz-Konfiguration: s. registry_roundtrip.cmake-Kopf.
+# ─────────────────────────────────────────────────────────────────────────────
+if(COMDARE_CE_GENERATED_DIR AND COMDARE_PRT_ART_BUILD_TESTS)
+    add_test(
+        NAME test_prt_registry_roundtrip
+        COMMAND "${CMAKE_COMMAND}"
+            "-DGEN_TOOL=$<TARGET_FILE:prt_art_axis_registry_gen>"
+            "-DCOMMITTED=${CMAKE_CURRENT_SOURCE_DIR}/../algorithm_profiles/prt_art_axis_registry.xml"
+            "-DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/registry_roundtrip_prt"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/registry_roundtrip.cmake")
+    set_tests_properties(test_prt_registry_roundtrip
+        PROPERTIES LABELS "registry;roundtrip" TIMEOUT 120)
+endif()
