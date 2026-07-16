@@ -67,6 +67,26 @@ build:standalone:
     - ctest --test-dir build --output-on-failure
   # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
 
+# ── WP-4/F29 (Voll-Audit 2026-07-16): Registry-Round-Trip-Gate (Muster R-E/M-CE-27, analog ce
+# contract:profile_coverage/test_axis_registry_roundtrip). Der Generator prt_art_axis_registry_gen war
+# EXCLUDE_FROM_ALL ohne jeden ctest/CI-Bezug -> Slot-/Wrapper-Drift an der committeten
+# prt_art_axis_registry.xml vorbei waere stumm geblieben. Das Tool braucht das generated/-Verzeichnis
+# eines KONFIGURIERTEN cache-engine-Builds (CMake-generierte *_flags.hpp des Patricia-Merge-Organs):
+# Schritt (1) konfiguriert die Geschwister-ce NUR (kein Build; dieselbe Sibling-Abhaengigkeit, ueber die
+# build:standalone bereits die ce-Header bezieht), Schritt (2) registriert damit den ctest, (3) baut das
+# EXCLUDE_FROM_ALL-Tool explizit (2-Pass wie ce), (4) faehrt das Gate. Referenz-Konfiguration:
+# prt_art/registry_gen/registry_roundtrip.cmake-Kopf. ──
+build:registry-roundtrip:
+  extends: .bm
+  stage: build
+  needs: ["lint:secrets"]
+  script:
+    - 'test -d ../comdare-cache-engine || (echo "FEHLER: Geschwister-Checkout ../comdare-cache-engine fehlt (gleiche Voraussetzung wie build:standalone)"; exit 1)'
+    - cmake -B build-ce-conf -S ../comdare-cache-engine -G Ninja
+    - cmake -B build-reggen -G Ninja -DCOMDARE_CE_GENERATED_DIR=$CI_PROJECT_DIR/build-ce-conf/generated
+    - cmake --build build-reggen --target prt_art_axis_registry_gen
+    - ctest --test-dir build-reggen -R '^test_prt_registry_roundtrip$' --output-on-failure -V
+
 # ── #273-T3 (2026-07-07): build:clang-Rollout — prt-art baut die volle INTERFACE-Consumer-Fläche unter clang. ──
 # OPT-IN + advisory (COMDARE_CLANG_MATRIX=="1"): Hauptpipeline unberührt. clang-22.1.8 auf Runner; lokal EXIT 0 (07.07.).
 build:clang:
