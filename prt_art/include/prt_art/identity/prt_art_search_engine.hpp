@@ -519,9 +519,14 @@ public:
         std::unique_lock                            lock{rw_lock_};
         auto                                        it = storage_.find(bk);
         if (it == storage_.end()) {
-            storage_.try_emplace(bk, storage_value_t{k, v});
-            ++inserts_;
-            update_density();
+            // (REV-CXX-05 / Muster B, WP-5 2026-07-16): try_emplace UND update_density (DensityTracker::record,
+            // nicht mehr noexcept) koennen std::bad_alloc werfen — auf den vorhandenen errno-style-Statuspfad
+            // mappen, exakt wie in push_back/emplace_back/insert_internal (Aufrufer-Vertrag status_out_of_memory).
+            try {
+                storage_.try_emplace(bk, storage_value_t{k, v});
+                ++inserts_;
+                update_density();
+            } catch (std::bad_alloc const&) { return status_out_of_memory; }
         } else {
             it->second.second = v;
         }
