@@ -75,4 +75,4 @@ Pro Achse mit Status (default-lookup):
 
 ---
 
-**Ende docs/PRT_ART_AXES_REUSE_MATRIX.md (V32.FF.3 DONE).**
+**Ende docs/architektur/PRT_ART_AXES_REUSE_MATRIX.md (V32.FF.3 DONE).**
