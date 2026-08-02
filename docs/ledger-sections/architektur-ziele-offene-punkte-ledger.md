@@ -6,6 +6,7 @@
 **Angelegt:** 2026-08-02 | **Paket:** A16-P3 (E-02 Vier-Ledger-Struktur) | **Basis-Commit:** `bd7111d`
 **Freigabe:** Owner-Rueckfrage 7 vom 02.08. ("E-24, E-19, E-02, E-23, E-21 sind jetzt PFLICHT") +
 Owner-GO ~17:4x ("volles Go fuer ALLE geplante offene Arbeit wie vorgegeben").
+**AUDIT-PFLICHT:** Jeder Audit-/Inventur-/Goal-Lauf liest ALLE VIER Ledger (super docs/DIPLOMARBEIT-ZIELE-OFFENE-PUNKTE-LEDGER.md + ce docs/ledger-sections/*.md inkl. goal-v6-luecken-ledger.md + prt-art docs/ledger-sections/*.md + thesis docs/ledger-sections/*.md).
 **Vier-Ledger-Doktrin:** super | comdare-cache-engine | comdare-prt-art (diese Datei) | thesis/diplomarbeit.
 Das Cluster-Ledger (`Cluster/docs/sessions/20260531-00-37-003158-architektur-ziele-offene-punkte-ledger.md`)
 ist das **5.** Ledger und liegt in **Infra-Hoheit** - es steht ausserhalb der Vier-Ledger-Doktrin und darf von
@@ -63,7 +64,7 @@ die vier repo-eigenen Slots sind Slot-Demonstration.
   eine **Kopie** dieses Repos (Layering: ce darf prt-art nicht konsumieren); Byte-Gate =
   super-ctest `test_fixture_sync_prt_registry` (`Code/tests/CMakeLists.txt:151`,
   `Code/tests/fixture_sync_check.cmake`). **Jede Registry-Regeneration hier erzwingt den Sync dort.**
-- CI: `.gitlab-ci.yml` (REV 10) = ci-templates-Lint + EIN Standalone-Build-und-Test-Job auf bare-metal
+- CI: `.gitlab-ci.yml` -- Ist (nachgezaehlt 02.08., der REV-10-Kopfkommentar der Datei ist STALE): 3 Lint-Jobs (lint:secrets/format/static) + 2 unbedingte Build-Jobs (build:standalone:58, build:registry-roundtrip:79) + sanitize:asan-ubsan:104 (unbedingt) + build:clang:92 (opt-in COMDARE_CLANG_MATRIX); alles bare-metal
   (`comdare_prt_art_core` ist INTERFACE-Library, wird nur ueber die Test-Consumer kompiliert).
 
 ---
@@ -122,6 +123,8 @@ Bindend fuer **jeden** Achsen-Algorithmus dieses Repos:
 ---
 
 ## 3. Offene Punkte - MAJOR
+
+> Die 3 Review-Majors M-PA-01..03 des aelteren REVIEW-BERICHTs sind GEFIXT (super-LEDGER:512/513); die offenen Majors unten sind daher NEU erhoben, keine Fortschreibung.
 
 ### M1 - LICENSE-Historie schliessen (offen, mittel)
 
