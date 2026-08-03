@@ -4,6 +4,8 @@
 > dieses Ledger ist die repo-lokale Sicht.**
 
 **Angelegt:** 2026-08-02 | **Paket:** A16-P3 (E-02 Vier-Ledger-Struktur) | **Basis-Commit:** `bd7111d`
+**Fortgeschrieben:** 2026-08-03 (E-02-Nachzug: Ist-Anker, A13-Stand, E-24-Kante, Kanon-Ergaenzung,
+Watch-Punkte -> Abschnitt 6; Einschuebe als `[Stand 03.08. ...]`-Vermerke, Bestandstext unveraendert).
 **Freigabe:** Owner-Rueckfrage 7 vom 02.08. ("E-24, E-19, E-02, E-23, E-21 sind jetzt PFLICHT") +
 Owner-GO ~17:4x ("volles Go fuer ALLE geplante offene Arbeit wie vorgegeben").
 **AUDIT-PFLICHT:** Jeder Audit-/Inventur-/Goal-Lauf liest ALLE VIER Ledger (super docs/DIPLOMARBEIT-ZIELE-OFFENE-PUNKTE-LEDGER.md + ce docs/ledger-sections/*.md inkl. goal-v6-luecken-ledger.md + prt-art docs/ledger-sections/*.md + thesis docs/ledger-sections/*.md).
@@ -38,6 +40,11 @@ Original-Wortlaut steht im super-Session-Doc
 - **Taxonomie:** `comdare-prt-art` = Modul der ce-Familie **plus** Pruefling-Submodul (super-LEDGER:162).
 - **Nie hart verdrahtet:** die Einsetzung erfolgt compile-time ueber `PrueflingSlot` in genau EINE Achse
   (super-LEDGER:189; ce-Seite: `libs/cache_engine/anatomy/pruefling_merge.hpp` - `PrueflingSlotConcept`).
+
+> **[Stand 03.08. -> Abschnitt 6.4/K1]:** Kanon-Ergaenzung Gattungs-Doktrin: PRT-ART **konsumiert** die
+> cache-engine (Konsum-Richtung nie umkehren); jede Gattung traegt **eigenes Genus + eigenes ABI**,
+> die Gattungen sind **disjunkt (nicht-ueberschneidend) und gegenseitig nutzbar**. Bindend fuer den
+> E-24-Gattungs-Schnitt (M3).
 
 ### 1.1 Ist-Stand der Registry (Beleg)
 
@@ -111,6 +118,11 @@ Bindend fuer **jeden** Achsen-Algorithmus dieses Repos:
 **keinen Traeger** -> siehe offener Punkt **M2b**. Grammatik-Parser und CT-Wachen entstehen ce-seitig
 (A13-M1/M1b); dieses Repo zieht mit dem Registry-Generator nach, sobald das Schema steht.
 
+> **[Stand 03.08. -> Abschnitt 6.2]:** A13-M1+M1b+M2 sind ce-seitig FERTIG, M3 ist STARTKLAR
+> (ce-ABGLEICH 03.08., Zeile A13). Der hier angekuendigte Registry-Generator-Nachzug ist damit
+> ENTSPERRT und im A13-M2/M3-Fenster faellig; M2b bleibt offen, bis das Versions-Attribut real in
+> der Registry steht (Byte-Ereignis-Warnung aus M2b gilt unveraendert).
+
 ### D3 - Lizenz-Stand: Apache-2.0
 
 - `LICENSE` (Apache License 2.0) ist seit Commit `7f6c703` (02.08.2026, Owner-Entscheid "PRT-ART=Apache")
@@ -157,6 +169,10 @@ Bindend fuer **jeden** Achsen-Algorithmus dieses Repos:
 - **Kontext:** E-24 (Gattungs-Vollausbau `SearchAlgorithm` + `Container`) ist der **LETZTE ABI-Schritt des
   Projekts** und laeuft im EINEN koordinierten 4->5-ABI-Fenster; vor dem Voll-Bau-Trigger sind nur
   **Verankerung + Design-Dossier** Pflicht (super-LEDGER / Bauplan 02.08.).
+  > **[Stand 03.08. -> Abschnitt 6.3]:** Der Halbsatz "vor dem Voll-Bau-Trigger sind nur Verankerung +
+  > Design-Dossier Pflicht" ist SUPERSEDED. Harte Kante aus HY-D2 (super-KATALOG A16 / ce-ABGLEICH A16):
+  > **E-24 MUSS VOR dem Voll-Bau-4-Trigger liegen** - bumpt der ABI-Major erst NACH dem Voll-Bau, laedt
+  > die Hybrid-Stufe die eingelagerten Binaries nicht mehr (Major-Check im Loader) = Neubau ALLER Binaries.
 - **Repo-Bezug:** alle 5 Registry-Achsen dieses Repos stehen heute auf `genus="SearchAlgorithm"`. Ob und
   welche Pruefling-Slots einer **Container**-Gattung (Set/Sequence/Adapter/View) zugeordnet werden, ist
   **offen** und Teil des E-24-Dossiers.
@@ -186,3 +202,72 @@ Bindend fuer **jeden** Achsen-Algorithmus dieses Repos:
 - Owner-Entscheide 02.08. (Wortlaut):
   `.../docs/sessions/20260802-OWNER-entscheide-hybrid-tier-stempel-regression-os-unterachsen.md`
 - Bauplan 02.08.: `.../docs/sessions/20260802-BAUPLAN-owner-entscheide-synthese-kritischer-pfad.md`
+
+---
+
+## 6. Fortschreibung 2026-08-03 (E-02-Nachzug)
+
+> Quellen: super-KATALOG `docs/sessions/20260802-KATALOG-offene-strecke-gesamtplan.md` (A13/A16/G.5/H) +
+> ce-ABGLEICH `Code/external/comdare-cache-engine/docs/sessions/20260803-ABGLEICH-katalog-gesamtplan-ist-stand.md`.
+> Rein additiv; Bestandstext oben unveraendert, Einschuebe nur als `[Stand 03.08.]`-Vermerke.
+
+### 6.1 Ist-Anker (verifiziert 03.08., literal per `git rev-parse`)
+
+- Repo-Linie: `development == origin/development == origin/main == c4735d2` (enthaelt dieses Ledger
+  `456b511`+`c4735d2` und die Apache-LICENSE `7f6c703`). Der LOKALE `main`-Zeiger im Klon
+  `/home/comdare/Projekte/Research/comdare-prt-art` steht stale auf `01e8b7dd` - reiner
+  Zeiger-Nachzug (fetch+ff), kein Inhalts-Delta.
+- super-Einhaengung: der Gitlink `Code/external/comdare-prt-art` im super-Repo steht auf `32e8ffa8`
+  (Finale-Linie-Stand nach Giga-Scrub 26.07., Tag `pre-f6-destructive-20260529-46-g32e8ffa` - VOR diesem
+  Ledger). **Folge:** ueber den super-eingebetteten Klon ist dieses Ledger NICHT sichtbar; Audits muessen
+  bis zum Gitlink-Entscheid den Standalone-Klon bzw. `origin/development` lesen (Audit-Pfad-Vermerk).
+- **Owner-Vorlage V5 (BESTEHEND + OFFEN - nicht neu nummerieren):** prt-art-Gitlink `32e8ffa8` ->
+  `c4735d2` nachziehen oder bewusst alt lassen? E-21-VERBOSE-Fassung:
+  - **ID:** V5 (Owner-Vorlagen-Stapel 02.08. abends).
+  - **Kontext:** E-02 fordert vier auditier-bare Ledger; der super-Klon zeigt den Vor-E02-Stand von
+    prt-art. Ohne Nachzug liest jeder rein super-basierte Audit ein prt-art OHNE Ledger und OHNE LICENSE.
+  - **Ist-Beleg:** `git -C super ls-tree HEAD Code/external/` -> `32e8ffa8...` fuer comdare-prt-art;
+    `origin/main == c4735d2` im prt-art-Repo.
+  - **Optionen:** (a) Gitlink-Bump auf `c4735d2` - Ledger+LICENSE super-sichtbar; ein super-Commit,
+    byte-neutral fuer ce/golden/Messdaten. (b) Bewusst alt lassen - Finale-Linie `32e8ffa8` konserviert;
+    Audit-Pfad muss dauerhaft den Standalone-Klon nennen (4-Klone-Regel beachten, inkl. Overleaf-Klon).
+  - **Empfehlung:** (a), weil E-02 Audit-PFLICHT ist und der Bump golden-/mess-neutral bleibt.
+  - **Default bei Nicht-Antwort:** (b) nichts tun - jederzeit umkehrbar; bis dahin traegt jeder Audit
+    den Sonderpfad-Vermerk aus 6.1.
+
+### 6.2 A13-Stand (ce-seitig; betrifft D2/M2b)
+
+- A13 Stempel-REGRESSION: **M1+M1b+M2 FERTIG, M3 STARTKLAR** (Dossier v4 `8edda5eb`, audit-geprueft;
+  Gate: 2d-Landung + Q-M3-GATE; Owner-Defaults OF-M3-1/OF-M3-2/DV-3; M4 danach). Das Schema, auf das
+  D2/M2b warten, steht damit; der Registry-Generator-Nachzug (Versions-Attribut `vX.Y.Zc|ce`) faellt
+  ins A13-M2/M3-Fenster. Jede Regeneration ist ein **Byte-Ereignis** (`test_fixture_sync_prt_registry`).
+- Einordnung aus super-KATALOG G.5: die W12-Quelldaten-Migration war bisher nur KOSMETISCH
+  ("v1" -> "v1.0.0" 122x uniform, keine per-Algo-Differenzierung; XML-Registries ohne Versionsfelder) -
+  der G-E6-Bau muss die Versionierung real einloesen. **M2b bleibt bis dahin OFFEN.**
+
+### 6.3 E-24-Kante (schaerft M3)
+
+- Harte Kante aus HY-D2 (super-KATALOG A16, bestaetigt ce-ABGLEICH A16): **E-24 = LETZTER ABI-Schritt
+  und MUSS VOR dem Voll-Bau-4-Trigger liegen**; die Hybrid-Stufe selbst fordert KEINEN eigenen ABI-Schritt.
+- Fuer dieses Repo: der Gattungs-Entscheid (welche Pruefling-Slots einer Container-Gattung zugeordnet
+  werden, M3) faellt im E-24-Fenster VOR dem Trigger. Die Sperre "kein ABI-/Gattungs-Touch ausserhalb
+  des freigegebenen Fensters" gilt unveraendert.
+
+### 6.4 Kanon-Ergaenzung + neue Watch-Punkte
+
+- **K1 Gattungs-Doktrin (Kanon, nachgetragen):** jede Gattung traegt **eigenes Genus + eigenes ABI**;
+  Gattungen sind **disjunkt (nicht-ueberschneidend) und gegenseitig nutzbar**. PRT-ART **konsumiert**
+  die cache-engine; die Konsum-Richtung wird nie umgekehrt (ce darf prt-art nicht konsumieren -
+  Fixture-Kopie + Sync-Gate, s. 1.2).
+- **W1 Fehlerklassen-Framework #29 (Owner-E6):** ce-seitig FK-0/1/2 FERTIG, FK-5 faehrt im M3-Fenster
+  mit (ce-ABGLEICH A15). Fehlerklassen sind Pflicht fuer ALLE Achsen/Unter-Achsen/Algorithmen - sobald
+  das Framework den Pruefling-Rand erreicht, muessen die 5 Registry-Achsen dieses Repos Fehlerklassen
+  tragen. (beobachten; noch kein repo-lokales Bau-Paket)
+- **W2 Hybrid-Tier-Stufe (Owner-E1):** Design FERTIG (ce `docs/architecture/20260802-hybrid_tier_stufe_
+  soll_design.md` + CX-W7 `fc47c5d9`); BAU planmaessig in der Auswertungsphase. prt-art ist als Traeger
+  der Pruef-Dock-Vertraege betroffen, aber erst beim Bau. (beobachten)
+- **W3 Korrektur-Vermerk (Buchfuehrung):** ce-ABGLEICH 03.08., Zeile A16, fuehrt E-02 als "VERIFIZIERT
+  NICHT hergestellt (kein prtart-/thesis-Ledger)" - das ist fuer BEIDE Repos widerlegt: dieses Ledger
+  existiert committet seit `456b511`/`c4735d2` (02.08.), das thesis-Ledger seit `0e39e1d`/`13b1b5a`
+  (enthalten in thesis `b1ec8379`). Der offene E-02-Rest ist NUR: (i) Gitlink-Sichtbarkeit prt-art
+  (6.1/V5), (ii) Korrektur der ABGLEICH-Zeile im ce-Repo, (iii) Audit-Pfad-Klarstellung.
