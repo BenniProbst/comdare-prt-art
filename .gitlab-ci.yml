@@ -38,19 +38,28 @@ variables:
   COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
 
 # ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
+# CI-DUAL Lens-Fund 14.08. (Key-Hygiene, ce-04.08.-Muster): die Lint-Jobs kompilieren nicht --
+# kein ccache-Zip-Transfer (cache paths leer, wie super toolchain:probe). Damit bleibt
+# build:standalone der EINZIGE Writer des globalen gcc-Release-Keys.
 lint:secrets:
   extends: .lint-secrets
   tags: [baremetal]
+  cache:
+    paths: []
   variables:
     GIT_SUBMODULE_STRATEGY: none
 lint:format:
   extends: .lint-format
   tags: [baremetal]
+  cache:
+    paths: []
   variables:
     GIT_SUBMODULE_STRATEGY: none
 lint:static:
   extends: .lint-static
   tags: [baremetal]
+  cache:
+    paths: []
   variables:
     GIT_SUBMODULE_STRATEGY: none
 
@@ -96,6 +105,12 @@ build:registry-roundtrip:
   extends: .bm
   stage: build
   needs: ["lint:secrets"]
+  # CI-DUAL Lens-Fund 14.08.: Konsument, pull-only -- build:standalone bleibt der EINE Writer
+  # des globalen Keys (Debug-Objekte dieses Jobs treffen den Release-Key ohnehin nicht).
+  cache:
+    key: "ccache-$CI_PROJECT_NAME"
+    paths: [".ccache"]
+    policy: pull
   script:
     - 'test -d ../comdare-cache-engine || (echo "FEHLER: Geschwister-Checkout ../comdare-cache-engine fehlt (gleiche Voraussetzung wie build:standalone)"; exit 1)'
     # CI-DUAL Tranche 2 (F2-Default Debug): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse;
@@ -162,6 +177,11 @@ sanitize:asan-ubsan:
   extends: .bm
   stage: sanitize
   needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
+  # CI-DUAL Lens-Fund 14.08.: eigene Objektklasse (Sanitizer-Flags) = eigener Key, DIESER Job
+  # ist ihr Writer (exakt die ce-Regression 04.08.: EIN Misch-Key kostete restore 4s->150s).
+  cache:
+    key: "ccache-$CI_PROJECT_NAME-asan"
+    paths: [".ccache"]
   script:
     - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
     - cmake --build build-san
