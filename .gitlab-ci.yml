@@ -98,8 +98,12 @@ build:registry-roundtrip:
   needs: ["lint:secrets"]
   script:
     - 'test -d ../comdare-cache-engine || (echo "FEHLER: Geschwister-Checkout ../comdare-cache-engine fehlt (gleiche Voraussetzung wie build:standalone)"; exit 1)'
-    - cmake -B build-ce-conf -S ../comdare-cache-engine -G Ninja
-    - cmake -B build-reggen -G Ninja -DCOMDARE_CE_GENERATED_DIR=$CI_PROJECT_DIR/build-ce-conf/generated
+    # CI-DUAL Tranche 2 (F2-Default Debug): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse;
+    # Debug ist die verhaltensnahe Deklaration, Release waere eine Verhaltensaenderung).
+    - cmake -B build-ce-conf -S ../comdare-cache-engine -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    - >
+      cmake -B build-reggen -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      -DCOMDARE_CE_GENERATED_DIR=$CI_PROJECT_DIR/build-ce-conf/generated
     - cmake --build build-reggen --target prt_art_axis_registry_gen
     - ctest --test-dir build-reggen -R '^test_prt_registry_roundtrip$' --output-on-failure -V
 
