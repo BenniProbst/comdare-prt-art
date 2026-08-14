@@ -80,4 +80,24 @@ cmake --build build --config Debug
 
 ## Lizenz
 
-Apache-2.0 (analog comdare-cache-engine).
+**Comdare Research License 1.0** (analog comdare-cache-engine) -- siehe
+[LICENSE](LICENSE). SPDX: `LicenseRef-Comdare-Research-1.0`. Keine OSI-Lizenz,
+und keine Noncommercial-Lizenz im ueblichen Sinne: die uebliche
+Noncommercial-Lizenz gibt Privatpersonen freie Hand, diese ausdruecklich nicht.
+
+| Wer | Was |
+|---|---|
+| jede und jeder | Quelltext lesen, pruefen, zitieren, kritisieren -- dauerhaft, kostenlos |
+| Forschung an einer Einrichtung | zusaetzlich bauen, ausfuehren, messen, aendern -- kostenlos |
+| Pruefende der TU Dresden | eigener, unwiderruflicher Abschnitt fuer die Begutachtung |
+| Business-Nutzung | eigener schriftlicher Vertrag |
+| **Einzelnutzung (privat)** | **ebenfalls eigener schriftlicher Vertrag -- nicht kostenlos** |
+| ab **OF1-OFFEN** | alle, unter Apache License 2.0 (Change Date, LICENSE Abschnitt 9) |
+
+Frueher vergebene Rechte bleiben: Revisionen vor dem 2026-08-02 trugen keine
+Repository-Lizenzdatei (Quelldateien ab 2026-05-14 mit Apache-2.0-SPDX-Koepfen);
+Revisionen vom 2026-08-02 bis 2026-08-09 stehen unter Apache-2.0. Diese Zusage
+ist unwiderruflich und wird hier nicht zurueckgenommen.
+
+Build-/Test-Werkzeuge (GoogleTest) behalten ihre eigene Lizenz; siehe
+[NOTICE](NOTICE).

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Comdare-Research-1.0
 #include "layout_invariant.hpp"
 #include <gtest/gtest.h>
 
