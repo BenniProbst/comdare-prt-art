@@ -60,12 +60,28 @@ build:standalone:
   stage: build
   needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
   script:
-    - cmake -B build -G Ninja        # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
+    # CI-DUAL 14.08. (KON22-01/8): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse).
+    - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release   # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
     # 264-c: internal_search-Header sind real; build ALL kompiliert alle Test-Consumer.
     - cmake --build build
     - ctest --test-dir build --output-on-failure
   # KEIN Artefakt (Build+Test-Gate; Beleg im Log)
+
+# -- CI-DUAL 14.08. (Owner verbatim; KON22-01/8, KON55/KON55-01, Paragraf 61, T-11b): Zelle gcc x Debug.
+# Kette GCC: build:standalone -> build:standalone:debug (seriell via needs, OOM-Doktrin: nie 2 Vollbauten
+# parallel aus einer Kette). ccache: eigener Key je Compiler x BuildType, genau EIN Writer (dieser Job).
+build:standalone:debug:
+  extends: .bm
+  stage: build
+  needs: ["build:standalone"]
+  cache:
+    key: "ccache-$CI_PROJECT_NAME-gcc-dbg"
+    paths: [".ccache"]
+  script:
+    - cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build build-dbg
+    - ctest --test-dir build-dbg --output-on-failure
 
 # ── WP-4/F29 (Voll-Audit 2026-07-16): Registry-Round-Trip-Gate (Muster R-E/M-CE-27, analog ce
 # contract:profile_coverage/test_axis_registry_roundtrip). Der Generator prt_art_axis_registry_gen war
@@ -88,16 +104,53 @@ build:registry-roundtrip:
     - ctest --test-dir build-reggen -R '^test_prt_registry_roundtrip$' --output-on-failure -V
 
 # ── #273-T3 (2026-07-07): build:clang-Rollout — prt-art baut die volle INTERFACE-Consumer-Fläche unter clang. ──
-# OPT-IN + advisory (COMDARE_CLANG_MATRIX=="1"): Hauptpipeline unberührt. clang-22.1.8 auf Runner; lokal EXIT 0 (07.07.).
+# CI-DUAL 14.08. TOTES GATE GEHEILT: das fruehere extends .build-clang-latest erbte die Template-Rule
+# 'COMDARE_CLANG_MATRIX == "1"' -- die Variable war in prt-art NIRGENDS gesetzt (einziger Treffer war dieser
+# Kommentarblock) => der Job lief in KEINER Pipeline (exakt die Fehlerklasse ce :150-163 "Ein Gate, das nie
+# aufgeht, ist kein Gate"). Heilung: eigener Job-Body (das Template baut nur, testet nie) + ctest-Gate.
+# Zelle clang x Release (KON22-01/8: beide Compiler Pflicht, skip VERBOTEN; kein allow_failure).
 build:clang:
-  extends: .build-clang-latest
+  extends: .bm
   stage: build
-  tags: [baremetal]
-  variables:
-    COMDARE_CMAKE_SOURCE_DIR: "."
-    COMDARE_AUDIT_BUILD_TYPE: "Release"
-    COMDARE_CMAKE_CONFIGURE_FLAGS: "-G Ninja"
-    COMDARE_CMAKE_BUILD_TARGET: "all"
+  needs: ["lint:secrets"]
+  cache:
+    key: "ccache-$CI_PROJECT_NAME-clang"
+    paths: [".ccache"]
+  script:
+    - |
+      set -euo pipefail
+      _CXX=""; _CC=""
+      for v in 22 21 20 19 18 17 16; do
+        if command -v "clang++-$v" >/dev/null 2>&1; then _CXX="clang++-$v"; _CC="clang-$v"; break; fi
+      done
+      [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
+      echo "GNU-Bauweg (clang): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
+      cmake -B build-clang -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+      cmake --build build-clang
+      ctest --test-dir build-clang --output-on-failure
+
+# -- CI-DUAL 14.08.: Zelle clang x Debug. Kette CLANG: build:clang -> build:clang:debug (seriell via needs).
+build:clang:debug:
+  extends: .bm
+  stage: build
+  needs: ["build:clang"]
+  cache:
+    key: "ccache-$CI_PROJECT_NAME-clang-dbg"
+    paths: [".ccache"]
+  script:
+    - |
+      set -euo pipefail
+      _CXX=""; _CC=""
+      for v in 22 21 20 19 18 17 16; do
+        if command -v "clang++-$v" >/dev/null 2>&1; then _CXX="clang++-$v"; _CC="clang-$v"; break; fi
+      done
+      [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
+      echo "GNU-Bauweg (clang, Debug): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
+      cmake -B build-clang-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+      cmake --build build-clang-dbg
+      ctest --test-dir build-clang-dbg --output-on-failure
 
 # ── Stufe Sanitize (ASan+UBSan, 10-Stufen-Prinzip P1b) ──
 # #278 (2026-07-06): HART geschaltet — 6 Laeufe in Folge success auf main (Jobs 214612..214994).
