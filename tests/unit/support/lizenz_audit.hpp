@@ -42,14 +42,14 @@ namespace fs = std::filesystem;
 // Genau deshalb ist er hier eine einzige Konstante: drei Orte, eine Wahrheit.
 inline constexpr std::string_view kBezeichner = "LicenseRef-Comdare-Research-1.0";
 
-// OWNER-FRAGE OF-1 (14.08.2026, offen): Der Change Date ist owner-woertlich nur fuer
-// die cache engine entschieden (C-2, 10.08.2026: "Ja, cache engine nach 5 Jahren frei
-// verfuegbar ab heute" -> 2031-08-10). Das KON2-23-"dito" deckt die Dreiteilung
-// frei-Forschung/proprietaer-Business+Einzelnutzung, nicht ausdruecklich das Datum.
-// Bis zur Owner-Antwort traegt dieses Feld den Platzhalter OF1-OFFEN; der Fall
-// ChangeDateIstEinIsoDatumNachOf1 haelt den Baum solange LAUT ROT. Beim Einsetzen der
-// Owner-Antwort wird der Platzhalter in LICENSE, NOTICE, README.md und HIER ersetzt.
-inline constexpr std::string_view kChangeDate = "OF1-OFFEN";
+// OWNER-FRAGE OF-1 -- BEANTWORTET (OF-1-GO, 15.08.2026): Change Date 2031-08-10, wie
+// die cache engine (C-2, 10.08.2026: "Ja, cache engine nach 5 Jahren frei verfuegbar
+// ab heute" -> 2031-08-10). Historie der Frage: das KON2-23-"dito" deckte die
+// Dreiteilung frei-Forschung/proprietaer-Business+Einzelnutzung, nicht ausdruecklich
+// das Datum; bis zum GO trug dieses Feld den Platzhalter (kPlatzhalterOf1) und der
+// Fall ChangeDateIstEinIsoDatumNachOf1 hielt den Baum LAUT ROT. Mit dem GO ist der
+// Platzhalter in LICENSE, NOTICE, README.md und HIER ersetzt; L7c sperrt Reste.
+inline constexpr std::string_view kChangeDate = "2031-08-10";
 
 // Der OF-1-Platzhalter als EIGENE Konstante neben kChangeDate: solange OF-1 offen
 // ist, sind beide identisch; mit der Owner-Antwort trennt sich das Paar, und genau

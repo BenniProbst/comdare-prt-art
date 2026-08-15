@@ -92,7 +92,7 @@ Noncommercial-Lizenz gibt Privatpersonen freie Hand, diese ausdruecklich nicht.
 | Pruefende der TU Dresden | eigener, unwiderruflicher Abschnitt fuer die Begutachtung |
 | Business-Nutzung | eigener schriftlicher Vertrag |
 | **Einzelnutzung (privat)** | **ebenfalls eigener schriftlicher Vertrag -- nicht kostenlos** |
-| ab **OF1-OFFEN** | alle, unter Apache License 2.0 (Change Date, LICENSE Abschnitt 9) |
+| ab **2031-08-10** | alle, unter Apache License 2.0 (Change Date, LICENSE Abschnitt 9) |
 
 Frueher vergebene Rechte bleiben: Revisionen vor dem 2026-08-02 trugen keine
 Repository-Lizenzdatei (Quelldateien ab 2026-05-14 mit Apache-2.0-SPDX-Koepfen);
