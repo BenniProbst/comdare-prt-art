@@ -1,0 +1,70 @@
+comdare-prt-art
+===============
+PRT-ART: Probst Redirect Tree / ART hybrid (experimenteller Suchalgorithmus-Pruefling)
+TU Dresden Diplomarbeit - BEP Venture UG / Marke Comdare
+
+Copyright (c) 2026 BEP Venture UG (haftungsbeschraenkt), owner of the
+registered trademark "Comdare".
+
+SPDX-License-Identifier: LicenseRef-Comdare-Research-1.0
+Licensed under the Comdare Research License, Version 1.0; see the file
+LICENSE in the project root for the binding terms.
+
+  Source-available and free for research at an institution. Business use and
+  individual use each require a separate written license. On the Change Date
+  2031-08-10 the Software becomes available to everyone under the Apache
+  License, Version 2.0 (LICENSE, Section 9).
+
+  History, because it stays valid: revisions published before 2026-08-02
+  carried no repository license file (their source files carried per-file
+  Apache-2.0 SPDX tags from 2026-05-14 onward); revisions from 2026-08-02 to
+  2026-08-09 were licensed under the Apache License, Version 2.0. That grant
+  remains valid for the revisions it covered and cannot be withdrawn.
+
+  The components listed below are NOT covered by that license. Each keeps
+  its own license, before and after the Change Date.
+
+
+-------------------------------------------------------------------------------
+THIRD-PARTY / TOOLING DEPENDENCIES (build/test only, not bundled)
+-------------------------------------------------------------------------------
+
+This repository bundles no third-party software (no ext/ directory). The
+following build-/test-time dependencies are fetched or referenced at
+configure time and retain their own licenses:
+
+Project       : GoogleTest (with GoogleMock)
+Version       : v1.15.2
+Source URL    : https://github.com/google/googletest
+License       : BSD-3-Clause
+Copyright     : Google LLC and GoogleTest contributors
+Einbindung    : CMake FetchContent (CMakeLists.txt, Tests-Abschnitt); bevorzugt
+                aus dem lokalen Archiv cmake/third_party/googletest-1.15.2.tar.gz
+                des Geschwister-Checkouts comdare-cache-engine, sonst von GitHub.
+                Reines Test-Werkzeug; wird nicht mit ausgeliefert.
+
+Project       : comdare-cache-engine (Geschwister-Repository, KEIN Fremdcode)
+Source URL    : gleiche Organisation; Pfad via COMDARE_CACHE_ENGINE_DIR
+License       : Comdare Research License, Version 1.0 (eigene LICENSE dort)
+Copyright     : BEP Venture UG (haftungsbeschraenkt), Marke Comdare
+Einbindung    : Header-Konsum im Standalone-Build; optional add_subdirectory
+                via COMDARE_PRT_ART_USE_CACHE_ENGINE (Vorgabe OFF). Gehoert
+                demselben Lizenzgeber und ist deshalb kein Third-Party-
+                Component im Sinne von LICENSE Abschnitt 8.
+
+
+-------------------------------------------------------------------------------
+RE-IMPLEMENTATIONS (Eigencode, KEIN Fremdcode)
+-------------------------------------------------------------------------------
+
+Die Verzeichnisse prt_art/legacy_reimpl/P*-*/ enthalten C++23-Re-
+Implementationen nach wissenschaftlichen Papieren (P11-P27-Klassen). Nach der
+Architekt-Direktive II (2026-05-14, dokumentiert im NOTICE der comdare-cache-
+engine) sind diese Re-Implementationen neue Werke; sie tragen den SPDX-
+Bezeichner LicenseRef-Comdare-Research-1.0 und das Copyright der BEP Venture
+UG (Marke Comdare). Die Papier-Zitation steht im jeweiligen Dateikopf und in
+der Thesis-Bibliographie.
+
+
+-------------------------------------------------------------------------------
+END OF NOTICE

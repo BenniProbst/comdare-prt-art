@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Comdare-Research-1.0
 #include "adaptive_prefetch_distance.hpp"
 #include <gtest/gtest.h>
 

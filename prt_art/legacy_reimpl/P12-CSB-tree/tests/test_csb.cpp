@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Comdare-Research-1.0
 #include "csb_node_group_page.hpp"
 #include <gtest/gtest.h>
 

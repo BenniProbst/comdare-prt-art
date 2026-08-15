@@ -54,6 +54,15 @@ comdare_prt_art_add_test(test_serialization_and_buffer
     SOURCES test_serialization_and_buffer.cpp
     LIBRARIES comdare::prt_art_core)
 
+# Lizenz-Wache (2026-08-14) - Port der ce-Wache test_lizenz_konsistenz (P6-Form, ce f6d13dfb).
+# Prueft den Zustand DIESES Repos: ein Bezeichner (LICENSE/NOTICE/SPDX-Koepfe), Change-Date-
+# Feld + wahre prt-art-Historie, OF-1-ISO-Gate. Wurzel via PROJECT_SOURCE_DIR (Muster-D/#14:
+# CMAKE_SOURCE_DIR zeigte im super-Sub-Build auf die Superprojekt-Wurzel).
+comdare_prt_art_add_test(test_lizenz_konsistenz
+    SOURCES test_lizenz_konsistenz.cpp)
+target_compile_definitions(test_lizenz_konsistenz PRIVATE
+    "COMDARE_LIZENZ_REPO_WURZEL=\"${PROJECT_SOURCE_DIR}\"")
+
 # V33.B.1 (2026-05-21) - DefaultLookupRegistry-Tests
 add_executable(test_default_lookup_registry test_default_lookup_registry.cpp)
 target_link_libraries(test_default_lookup_registry PRIVATE gtest gtest_main)

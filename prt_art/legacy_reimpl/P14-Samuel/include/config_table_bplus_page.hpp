@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Comdare-Research-1.0
 // Copyright 2026 BEP Venture UG (Marke Comdare)
 //
 // P14-Samuel — Re-Implementation in PRT-ART
