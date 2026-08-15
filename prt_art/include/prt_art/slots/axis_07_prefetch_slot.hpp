@@ -54,6 +54,16 @@ public:
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_REDIRECT"; }
 
+    // W-B (2026-08-15): Pflicht-algo_version je Kompositions-Organ-Variante (ce Bauplan par. 2, CRTP-Ctor-Guard
+    // der PrefetchStrategyBase seit S-1/A1). Segment-Format "<achse>=<name()>@<X.Y.Z[flag]>"; Basis 'c' =
+    // Ziel-Hardware-Klasse CPU (ce flag_grammar_catalog.hpp: Top-Level-Basen NUR c/g/f/n; 'p' ist dort
+    // die Hardware-UNTERKLASSE performance-core und steht NUR unter 'c' -- ein Top-Level "1.0.0.p"
+    // verwirft ce compile-time, algo_semver.hpp Katalog-Wache; CPU-Enforce verlangt 'c'). Provenienz
+    // traegt name()/Registry-Identitaet ("prtart_*"), NICHT das Flag: die pruefling_merge-Kollisions-
+    // wache unterscheidet ueber das (name, algo_version)-PAAR. Startwert; Bump bei algorithmischer
+    // Aenderung dieser Variante (ce-Konvention, axis_14_value_handle_chain_ref.hpp: "1.0.0.c").
+    static constexpr std::string_view algo_version = "1.0.0.c";
+
     // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
     // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
     COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch",
