@@ -1,6 +1,8 @@
 // V41.E11 Phase B — prt-art Pruefling-Registrierung Integration-Test.
-// Wird NUR im Plugin-Controller-Build gebaut (cache-engine mit COMDARE_CE_PRUEFLINGE=<prt-art>),
-// via comdare_pruefling.cmake (das comdare_add_test aufruft). Verifiziert end-to-end, dass
+// Wird NUR im Plugin-Controller-Build gebaut (cache-engine mit COMDARE_CE_PRUEFLINGE=<prt-art>):
+// comdare_pruefling.cmake ruft comdare_pruefling_deklarieren (W0a-Kontrakt), und das Test-Target
+// entsteht in ce tests/unit ueber COMDARE_PRUEFLING_TEST_SOURCES (cmake/pruefling_kontrakt.cmake)
+// -- ein comdare_add_test gibt es hier NICHT. Verifiziert end-to-end, dass
 // die cache-engine prt-art als Plugin laedt + dessen Factory registriert + Prueflinge erzeugt.
 
 #include <gtest/gtest.h>
@@ -377,7 +379,7 @@ TEST(F5_DreigliedrigkeitPermutationSpace, StufeTwoEmptyAxesReuseAllCeAlgorithms)
 // =================================================================
 // V41.F.6.1 F.5-Schritt — prt-art-Slots komponieren in codegen-fähige volle Anatomie
 //
-// Brücke: die gemergten Slots bilden eine vollständige 17-Achsen-Composition, die das
+// Brücke: die gemergten Slots bilden eine vollständige 18-Achsen-Composition, die das
 // anatomy_codegen_tool in eine DLL materialisieren kann (IsComposition + HasCompositionLocation).
 // =================================================================
 

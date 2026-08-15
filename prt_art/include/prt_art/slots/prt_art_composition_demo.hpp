@@ -1,7 +1,7 @@
 #pragma once
 // V41.F.6.1 F.5-Schritt — prt-art-Slot-Composition (codegen-fähige volle Anatomie).
 //
-// Brücke Slot-Füllung → Codegen-Einheit: eine vollständige 17-Achsen-Composition, die prt-arts
+// Brücke Slot-Füllung → Codegen-Einheit: eine vollständige 18-Achsen-Composition, die prt-arts
 // Slot-Wrapper (prefetch + value_handle) in den CE-Default-Anatomie-Rahmen (ArtComposition als Basis)
 // einsetzt. Erfüllt IsComposition + HasCompositionLocation → ist damit eine vom anatomy_codegen_tool
 // MATERIALISIERBARE Komposition (die Einheit, die comdare_perms_pa pro gemergter Permutation codegen
@@ -10,8 +10,11 @@
 //
 // HINWEIS: Dies ist eine Slot-DEMONSTRATION (prt-art-Wrapper in CE-Rahmen), NICHT die literale
 // REV6-PRT-ART-Identität (deren prefetch=HotPath|AdaptiveDistance, telemetry=PathRead|Probability
-// hätten eigene Slot-Wrapper, hier noch nicht angelegt). Telemetry bleibt bewusst CE-Default
-// (LeafOnlyCounter) — der prt-art PerNodeCounter ist das F15-Anti-Pattern, nicht die Identität.
+// hätten eigene Slot-Wrapper, hier noch nicht angelegt). Telemetry ist seit ce Bau-INC-2c
+// System-Achse und KEIN Kompositions-Slot mehr (Alias ersatzlos entfallen, s. Vermerk unten bei
+// den using-Zeilen) -- ein telemetry-Slot ist auf Kompositions-Ebene gegenstandslos; der
+// LeafOnly/PerNode-Kontrast (prt-art PerNodeCounter = F15-Anti-Pattern) lebt auf der
+// Achsen-Merge-Ebene weiter.
 
 #include <compositions/art_reference.hpp>              // CE-Default-Achsen (Anatomie-Rahmen)
 #include <anatomy/composition_concept.hpp>             // IsComposition + COMDARE_DEFINE_COMPOSITION_LOCATION
