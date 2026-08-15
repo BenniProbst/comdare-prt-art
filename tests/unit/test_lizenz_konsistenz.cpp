@@ -101,8 +101,7 @@ void baue_sauberen_baum(WegwerfRepo const& repo, std::string const& marke) {
                                              "marke_" +
                                              marke + "\n"));
     ASSERT_TRUE(repo.schreibe("NOTICE", "SPDX-License-Identifier: " + std::string{kBezeichner} + "\n"));
-    ASSERT_TRUE(
-        repo.schreibe("prt_art/echt.hpp", "// SPDX-License-Identifier: " + std::string{kBezeichner} + "\n"));
+    ASSERT_TRUE(repo.schreibe("prt_art/echt.hpp", "// SPDX-License-Identifier: " + std::string{kBezeichner} + "\n"));
 }
 
 } // namespace
@@ -239,9 +238,7 @@ TEST(LizenzKonsistenz, ChangeDateStehtInNoticeUndReadmeOhnePlatzhalterRest) {
     bool const            of1_offen = (kChangeDate == kPlatzhalterOf1);
 
     std::string funde;
-    for (auto const& f : e.platzhalter) {
-        funde += "\n    " + f.datei + ":" + std::to_string(f.zeile) + "  " + f.text;
-    }
+    for (auto const& f : e.platzhalter) { funde += "\n    " + f.datei + ":" + std::to_string(f.zeile) + "  " + f.text; }
 
     std::cout << "NENNER L7c wurzel=" << wurzel().string() << "  of1_offen=" << (of1_offen ? "ja" : "nein") << "\n"
               << "  LICENSE   traegt kChangeDate: " << (e.license_traegt_datum ? "ja" : "NEIN") << "\n"
@@ -354,9 +351,7 @@ TEST(LizenzKonsistenzKoeder, VergessenerOf1PlatzhalterInNoticeWirdGefunden) {
 
     ChangeDateErnte const e = ernte_change_date(repo.pfad(), iso);
     std::string           funde;
-    for (auto const& f : e.platzhalter) {
-        funde += "\n    " + f.datei + ":" + std::to_string(f.zeile) + "  " + f.text;
-    }
+    for (auto const& f : e.platzhalter) { funde += "\n    " + f.datei + ":" + std::to_string(f.zeile) + "  " + f.text; }
     std::cout << "KOEDER C marke=" << marke << "  notice_traegt_datum=" << (e.notice_traegt_datum ? "ja" : "NEIN")
               << "  platzhalter=" << e.platzhalter.size() << funde << "\n";
 

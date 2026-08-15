@@ -203,9 +203,7 @@ struct ChangeDateErnte {
         std::size_t        nr = 0;
         while (std::getline(zeilen, zeile)) {
             nr++;
-            if (zeile.find(kPlatzhalterOf1) != std::string::npos) {
-                ernte.platzhalter.push_back({datei, nr, zeile});
-            }
+            if (zeile.find(kPlatzhalterOf1) != std::string::npos) { ernte.platzhalter.push_back({datei, nr, zeile}); }
         }
     };
     ernte_datei("LICENSE", ernte.license_traegt_datum);
