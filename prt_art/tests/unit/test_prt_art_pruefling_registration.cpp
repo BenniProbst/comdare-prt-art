@@ -385,10 +385,11 @@ namespace cea = ::comdare::cache_engine::anatomy;
 
 TEST(F5_PrtArtComposition, IsCodegenEligibleComposition) {
     using C = ::comdare::prt_art::slots::PrtArtCompositionDemo;
-    // 17-Achsen-Vollständigkeit (das prüft das Codegen-Tool via descriptor_from_composition).
+    // 18-Achsen-Vollstaendigkeit (W-B 2026-08-15: telemetry/isa raus per Bau-INC-2c/2d,
+    // persistence_target rein per STRUKT-R ORG-18; das prueft das Codegen-Tool).
     static_assert(cea::IsComposition<C>);
     static_assert(cea::HasCompositionLocation<C>);
-    static_assert(cea::composition_organ_count<C>::value == 19); // 17 SA-Achsen + queuing q1/q2 (Doc 30 §8.0)
+    static_assert(cea::composition_organ_count<C>::value == 18); // 3+2+10+2 queuing + persistence_target
     // Codegen-Lokalisierung korrekt gesetzt.
     EXPECT_EQ(C::name, std::string_view{"PrtArtCompositionDemo"});
     EXPECT_EQ(C::cpp_type_name, std::string_view{"::comdare::prt_art::slots::PrtArtCompositionDemo"});
@@ -400,8 +401,10 @@ TEST(F5_PrtArtComposition, PrtArtSlotsAreTheOverriddenAxes) {
     // prefetch + value_handle sind prt-art-Slot-Wrapper; der Rest CE-Default (ArtComposition).
     static_assert(std::is_same_v<C::prefetch, ::comdare::prt_art::slots::axis_07::PrtArtRedirectPrefetch>);
     static_assert(std::is_same_v<C::value_handle, ::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle>);
-    static_assert(std::is_same_v<C::search_algo, C::Base::search_algo>); // CE-Default unverändert
-    static_assert(std::is_same_v<C::telemetry, C::Base::telemetry>);     // CE LeafOnly (nicht PerNode-Anti-Pattern)
+    static_assert(std::is_same_v<C::search_algo, C::Base::search_algo>); // CE-Default unveraendert
+    // W-B (2026-08-15): telemetry ist keine Organ-Achse mehr (Bau-INC-2c, System-Achse) -- der fruehere
+    // telemetry-Gleichheits-Assert ist ersatzlos entfallen; persistence_target haelt den CE-Default.
+    static_assert(std::is_same_v<C::persistence_target, C::Base::persistence_target>);
     SUCCEED();
 }
 

@@ -49,6 +49,12 @@ public:
     }
     [[nodiscard]] static constexpr std::string_view flag_suffix() noexcept { return "PRTART_CHAIN_REF"; }
 
+    // W-B (2026-08-15): Pflicht-algo_version je Kompositions-Organ-Variante (ce Bauplan par. 2, CRTP-Ctor-Guard
+    // der ValueHandleStrategyBase seit S-1/A1). Segment-Format "<achse>=<name()>@<X.Y.Z[flag]>"; Flag 'p' =
+    // prt-art-Pruefling-Provenienz (distinkt zum ce-Flag 'c', pruefling_merge-Kollisionswache). Startwert;
+    // Bump bei algorithmischer Aenderung dieser Variante (ce-Konvention, axis_14_value_handle_chain_ref.hpp).
+    static constexpr std::string_view algo_version = "1.0.0.p";
+
     // INC-B/R-B (2026-07-14): Per-Organ-Registry-Lokation (FQ-Typ + Header). Befuellt die 'type'/'header'-
     // Attribute des prt-art-Registry-Generators (prt_art_axis_registry.xml, gleiches Schema wie die ce-Registry).
     COMDARE_DEFINE_ORGAN_LOCATION("::comdare::prt_art::slots::axis_14::PrtArtChainRefHandle",
