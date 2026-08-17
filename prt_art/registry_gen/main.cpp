@@ -32,8 +32,9 @@
 #include <prt_art/slots/axis_14_value_handle_slot.hpp> // slots::axis_14::{PrtArtChainRefHandle, Slot}
 
 // Das golden-verdrahtete ce-seitige Merge-Organ (bare Patricia; der einzige Baustein von
-// PrtArtPathCompressionSlot::PrueflingVariants).
-#include <axes/path_compression/axis_02_path_compression_patricia.hpp>
+// PrtArtPathCompressionSlot::PrueflingVariants). F5-Rename 17.08.: ce-Home axes/ -> organ_axes/
+// (golden-Fenster ce 04ac26fa); der reflektierte header_include-String zieht damit automatisch mit.
+#include <organ_axes/path_compression/axis_02_path_compression_patricia.hpp>
 
 #include <anatomy/anatomy_base.hpp>   // AnatomyGenus + genus_name (F30: genus reflektiert statt Literal)
 #include <anatomy/organ_location.hpp> // HasOrganLocation (R-B)
