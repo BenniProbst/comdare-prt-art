@@ -6,8 +6,9 @@
 # Braucht zusaetzlich zu comdare::prt_art_core (prt_art/include + cache-engine-Header):
 #   (1) Boost.MP11 (header-only, in der cache-engine vendored),
 #   (2) das generated/-Verzeichnis eines KONFIGURIERTEN cache-engine-Builds - das golden-verdrahtete
-#       PathCompression-Merge-Organ (PatriciaPathCompression) zieht <axes/.../axis_02_path_compression_flags.hpp>
-#       (CMake-generiert via configure_file). Pfad per -DCOMDARE_CE_GENERATED_DIR=<ce-build>/generated.
+#       PathCompression-Merge-Organ (PatriciaPathCompression) zieht <organ_axes/.../axis_02_path_compression_flags.hpp>
+#       (CMake-generiert via configure_file; F5-Rename 17.08.: axes/ -> organ_axes/).
+#       Pfad per -DCOMDARE_CE_GENERATED_DIR=<ce-build>/generated.
 
 add_executable(prt_art_axis_registry_gen EXCLUDE_FROM_ALL main.cpp)
 target_compile_features(prt_art_axis_registry_gen PRIVATE cxx_std_23)
@@ -21,7 +22,7 @@ endif()
 
 # (2) generated/ eines konfigurierten cache-engine-Builds (die CMake-generierten *_flags.hpp).
 set(COMDARE_CE_GENERATED_DIR "" CACHE PATH
-    "Pfad zum generated/-Verzeichnis eines konfigurierten cache-engine-Builds (fuer <axes/.../*_flags.hpp>)")
+    "Pfad zum generated/-Verzeichnis eines konfigurierten cache-engine-Builds (fuer <organ_axes/.../*_flags.hpp>)")
 if(COMDARE_CE_GENERATED_DIR)
     target_include_directories(prt_art_axis_registry_gen PRIVATE "${COMDARE_CE_GENERATED_DIR}")
 else()
