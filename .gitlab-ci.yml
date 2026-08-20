@@ -101,6 +101,9 @@ build:standalone:debug:
 # build:standalone bereits die ce-Header bezieht), Schritt (2) registriert damit den ctest, (3) baut das
 # EXCLUDE_FROM_ALL-Tool explizit (2-Pass wie ce), (4) faehrt das Gate. Referenz-Konfiguration:
 # prt_art/registry_gen/registry_roundtrip.cmake-Kopf. ──
+# K7b-3 (W2, 20.08.): Schritt (1) faehrt seither NICHT mehr gegen den ungepinnten Geschwister-
+# Checkout (Zufallsstand des Runner-Slots), sondern gegen einen job-lokalen ce-Klon auf der
+# GEPINNTEN vollen SHA (COMDARE_CE_PIN_SHA, s.u.) -- das Gate ist damit deterministisch.
 build:registry-roundtrip:
   extends: .bm
   stage: build
@@ -111,11 +114,39 @@ build:registry-roundtrip:
     key: "ccache-$CI_PROJECT_NAME"
     paths: [".ccache"]
     policy: pull
+  variables:
+    # K7b-3 (W2, 20.08.): Determinismus-Pin. Bis dato fuhr der Job gegen den UNGEPINNTEN
+    # Geschwister-Checkout ../comdare-cache-engine -- dessen Stand ist der Zufallsstand des
+    # Runner-Slots (welche ce-Pipeline dort zuletzt lief); der Gate-Ausgang war damit nicht
+    # reproduzierbar. prt-art traegt KEINEN eigenen ce-Anker (kein .gitmodules, kein
+    # Submodul-Gitlink; geprueft 20.08.), darum expliziter SHA-Pin als Variable.
+    # Wert = ce development (== origin/development), Stand 20.08.2026.
+    # UPDATE-WEG: setzt die committete prt_art_axis_registry.xml einen neueren ce-Stand
+    # voraus, neue VOLLE SHA eintragen (git -C <ce-klon> rev-parse origin/development) und
+    # ZUSAMMEN mit der XML committen. Fuer Probelaeufe ist der Wert als Pipeline-Variable
+    # uebersteuerbar; der committete Wert ist der geltende Pin.
+    COMDARE_CE_PIN_SHA: "196a621a8a1180dbd47163b75cbb8b102e66a08b"
   script:
-    - 'test -d ../comdare-cache-engine || (echo "FEHLER: Geschwister-Checkout ../comdare-cache-engine fehlt (gleiche Voraussetzung wie build:standalone)"; exit 1)'
+    # K7b-3: job-lokaler ce-Klon AUF DER GEPINNTEN SHA ersetzt den frueheren harten
+    # Geschwister-Guard (test -d ../comdare-cache-engine): der Geschwister-Checkout ist nur
+    # noch optionaler Objekt-Spender (--reference-if-able; fehlt er, klont der Job voll uebers
+    # Netz) und wird via --dissociate entkoppelt -- NICHTS im Spender wird veraendert, keine
+    # gc-Kopplung. URL-Rezept nach Bestand (super anhang-forward): CI_JOB_TOKEN +
+    # CI_SERVER_HOST + ${CI_PROJECT_PATH%/*} (= comdare/research).
+    - >
+      git clone --no-checkout --reference-if-able ../comdare-cache-engine --dissociate
+      "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH%/*}/comdare-cache-engine.git"
+      ce-pin
+    - git -C ce-pin checkout --detach "$COMDARE_CE_PIN_SHA"
+    # Beleg im Log (literaler Output statt Haekchen): tatsaechlich ausgecheckter ce-Stand.
+    - 'echo "ce-Pin ausgecheckt: $(git -C ce-pin rev-parse HEAD) (SOLL $COMDARE_CE_PIN_SHA)"'
+    # KEIN submodule-init: ce-CI faehrt selbst GIT_SUBMODULE_STRATEGY none (globale variables
+    # der ce .gitlab-ci.yml), ext/ toleriert das leere Q01-Submodul (add_subdirectory(ext)
+    # steht hinter if(EXISTS ext/CMakeLists.txt), einer ce-getrackten Datei) -- exakte
+    # Gleichheit mit dem ce-eigenen, gruen belegten CI-Weg.
     # CI-DUAL Tranche 2 (F2-Default Debug): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse;
     # Debug ist die verhaltensnahe Deklaration, Release waere eine Verhaltensaenderung).
-    - cmake -B build-ce-conf -S ../comdare-cache-engine -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    - cmake -B build-ce-conf -S ce-pin -G Ninja -DCMAKE_BUILD_TYPE=Debug
     - >
       cmake -B build-reggen -G Ninja -DCMAKE_BUILD_TYPE=Debug
       -DCOMDARE_CE_GENERATED_DIR=$CI_PROJECT_DIR/build-ce-conf/generated
