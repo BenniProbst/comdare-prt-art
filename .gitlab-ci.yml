@@ -147,8 +147,13 @@ build:registry-roundtrip:
     # CI-DUAL Tranche 2 (F2-Default Debug): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse;
     # Debug ist die verhaltensnahe Deklaration, Release waere eine Verhaltensaenderung).
     - cmake -B build-ce-conf -S ce-pin -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    # K7b-3 Lueckenschluss (Job 382653): OHNE expliziten CACHE_ENGINE_DIR fiel der Configure auf den
+    # CMake-Default ../comdare-cache-engine zurueck (CMakeLists.txt:23) -- die INCLUDE-Haelfte lief damit
+    # weiter gegen den ungepinnten Geschwister-Zufallsstand, nur generated/ war gepinnt. Beide Haelften
+    # zeigen jetzt auf ce-pin; erst damit ist der Job vollstaendig deterministisch.
     - >
       cmake -B build-reggen -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin
       -DCOMDARE_CE_GENERATED_DIR=$CI_PROJECT_DIR/build-ce-conf/generated
     - cmake --build build-reggen --target prt_art_axis_registry_gen
     - ctest --test-dir build-reggen -R '^test_prt_registry_roundtrip$' --output-on-failure -V
