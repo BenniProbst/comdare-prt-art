@@ -40,6 +40,9 @@ endif()
 # ist das Tool nicht kompilierbar (s.o.) — der Default-Standalone-ctest-Lauf bleibt unveraendert (kein
 # Phantom-FAIL), das Gate laeuft ueberall dort, wo der Generator real baubar ist (CI-Heimat: der dedizierte
 # registry-roundtrip-Job der .gitlab-ci.yml, der die Geschwister-ce zuvor konfiguriert; 2-Pass wie ce).
+# K7b-3/D-10a (W2, 20.08.2026): "Geschwister-ce" oben ist Historie -- der CI-Job konfiguriert
+# seither den job-lokalen, SHA-GEPINNTEN Klon ce-pin (COMDARE_CE_PIN_SHA, .gitlab-ci.yml);
+# lokal zaehlt weiterhin jeder konfigurierte ce-Build (COMDARE_CE_GENERATED_DIR zeigt darauf).
 # Referenz-Konfiguration: s. registry_roundtrip.cmake-Kopf.
 # ─────────────────────────────────────────────────────────────────────────────
 if(COMDARE_CE_GENERATED_DIR AND COMDARE_PRT_ART_BUILD_TESTS)
