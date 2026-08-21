@@ -36,6 +36,13 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CMAKE_BUILD_PARALLEL_LEVEL: "6"   # User 2026-07-06: 2x6 Kerne bei concurrent=2
   COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
+  # B14/O5 (2026-08-21): der EINE ce-Determinismus-Pin -- hochgezogen aus build:registry-roundtrip
+  # (#104/K7b-3, Landung 777fff7), weil seither VIER weitere Jobs dieselbe ce-Abhaengigkeit tragen
+  # (build:standalone/:debug, build:clang/:debug -- lokale Bau-Probe 2026-08-21: Configure gelingt
+  # ohne ce mit Warnung, der BUILD bricht [rc=1]; mit ce 60/60 Targets). Eine Quelle statt fuenf
+  # Kopien. UPDATE-WEG unveraendert (s. build:registry-roundtrip-Kommentar): neue VOLLE SHA
+  # zusammen mit der XML committen; als Pipeline-Variable uebersteuerbar.
+  COMDARE_CE_PIN_SHA: "196a621a8a1180dbd47163b75cbb8b102e66a08b"
 
 # ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
 # CI-DUAL Lens-Fund 14.08. (Key-Hygiene, ce-04.08.-Muster): die Lint-Jobs kompilieren nicht --
@@ -63,14 +70,35 @@ lint:static:
   variables:
     GIT_SUBMODULE_STRATEGY: none
 
+# B14/O5 (2026-08-21): der geteilte ce-Pin-Klon der Bau-Jobs -- EXAKT das #104-Rezept
+# (777fff7): job-lokaler Klon auf der gepinnten SHA, Geschwister nur optionaler
+# Objekt-Spender (--reference-if-able + --dissociate, nichts im Spender veraendert).
+# Konsumiert per !reference in build:standalone/:debug und build:clang/:debug.
+.ce-pin-klon:
+  script:
+    - >
+      git clone --no-checkout --reference-if-able ../comdare-cache-engine --dissociate
+      "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH%/*}/comdare-cache-engine.git"
+      ce-pin
+    - git -C ce-pin checkout --detach "$COMDARE_CE_PIN_SHA"
+    - 'echo "ce-Pin ausgecheckt: $(git -C ce-pin rev-parse HEAD) (SOLL $COMDARE_CE_PIN_SHA)"'
+
 # ── Standalone-Build+Test (bare-metal prod-Toolchain; INTERFACE-Lib via Test-Consumer) ──
+# B14/O5 (2026-08-21): dieser Job (und die drei Geschwister :debug/clang/clang:debug) baute bis
+# heute gegen den UNGEPINNTEN Geschwister-Checkout (CMakeLists.txt:23-Default ../comdare-cache-
+# engine = Zufallsstand des Runner-Slots) -- dieselbe Fehlerklasse, die #104 fuer
+# build:registry-roundtrip geschlossen hat. Jetzt: ce-Pin-Klon + expliziter
+# -DCOMDARE_CACHE_ENGINE_DIR. Lokale Bau-Probe im Bau-Bericht (ohne ce: Build rc=1).
 build:standalone:
   extends: .bm
   stage: build
   needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
   script:
+    - !reference [.ce-pin-klon, script]
     # CI-DUAL 14.08. (KON22-01/8): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse).
-    - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release   # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
+    - >
+      cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
     # 264-c: internal_search-Header sind real; build ALL kompiliert alle Test-Consumer.
     - cmake --build build
@@ -88,7 +116,11 @@ build:standalone:debug:
     key: "ccache-$CI_PROJECT_NAME-gcc-dbg"
     paths: [".ccache"]
   script:
-    - cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    - !reference [.ce-pin-klon, script]
+    # B14/O5: derselbe Pin wie build:standalone (eigener job-lokaler Klon; needs-seriell).
+    - >
+      cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin
     - cmake --build build-dbg
     - ctest --test-dir build-dbg --output-on-failure
 
@@ -114,18 +146,14 @@ build:registry-roundtrip:
     key: "ccache-$CI_PROJECT_NAME"
     paths: [".ccache"]
     policy: pull
-  variables:
-    # K7b-3 (W2, 20.08.): Determinismus-Pin. Bis dato fuhr der Job gegen den UNGEPINNTEN
-    # Geschwister-Checkout ../comdare-cache-engine -- dessen Stand ist der Zufallsstand des
-    # Runner-Slots (welche ce-Pipeline dort zuletzt lief); der Gate-Ausgang war damit nicht
-    # reproduzierbar. prt-art traegt KEINEN eigenen ce-Anker (kein .gitmodules, kein
-    # Submodul-Gitlink; geprueft 20.08.), darum expliziter SHA-Pin als Variable.
-    # Wert = ce development (== origin/development), Stand 20.08.2026.
-    # UPDATE-WEG: setzt die committete prt_art_axis_registry.xml einen neueren ce-Stand
-    # voraus, neue VOLLE SHA eintragen (git -C <ce-klon> rev-parse origin/development) und
-    # ZUSAMMEN mit der XML committen. Fuer Probelaeufe ist der Wert als Pipeline-Variable
-    # uebersteuerbar; der committete Wert ist der geltende Pin.
-    COMDARE_CE_PIN_SHA: "196a621a8a1180dbd47163b75cbb8b102e66a08b"
+  # K7b-3 (W2, 20.08.): Determinismus-Pin. Bis dato fuhr der Job gegen den UNGEPINNTEN
+  # Geschwister-Checkout ../comdare-cache-engine -- dessen Stand ist der Zufallsstand des
+  # Runner-Slots (welche ce-Pipeline dort zuletzt lief); der Gate-Ausgang war damit nicht
+  # reproduzierbar. prt-art traegt KEINEN eigenen ce-Anker (kein .gitmodules, kein
+  # Submodul-Gitlink; geprueft 20.08.), darum expliziter SHA-Pin als Variable.
+  # B14/O5 (2026-08-21): der Pin-WERT lebt jetzt EINMAL global (variables: COMDARE_CE_PIN_SHA,
+  # s. Kopf der Datei samt UPDATE-WEG) -- seit vier weitere Jobs ihn tragen, waere eine
+  # job-lokale Kopie die Drift-Quelle. Semantik dieses Jobs unveraendert (gleicher Wert).
   script:
     # K7b-3: job-lokaler ce-Klon AUF DER GEPINNTEN SHA ersetzt den frueheren harten
     # Geschwister-Guard (test -d ../comdare-cache-engine): der Geschwister-Checkout ist nur
@@ -172,6 +200,8 @@ build:clang:
     key: "ccache-$CI_PROJECT_NAME-clang"
     paths: [".ccache"]
   script:
+    - !reference [.ce-pin-klon, script]
+    # B14/O5: derselbe ce-Pin wie build:standalone (gleiche Fehlerklasse, gleicher Zug).
     - |
       set -euo pipefail
       _CXX=""; _CC=""
@@ -181,7 +211,8 @@ build:clang:
       [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
       echo "GNU-Bauweg (clang): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
       cmake -B build-clang -G Ninja -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX" \
+        -DCOMDARE_CACHE_ENGINE_DIR="$CI_PROJECT_DIR/ce-pin"
       cmake --build build-clang
       ctest --test-dir build-clang --output-on-failure
 
@@ -194,6 +225,8 @@ build:clang:debug:
     key: "ccache-$CI_PROJECT_NAME-clang-dbg"
     paths: [".ccache"]
   script:
+    - !reference [.ce-pin-klon, script]
+    # B14/O5: derselbe ce-Pin (vierter und letzter Job der Klasse).
     - |
       set -euo pipefail
       _CXX=""; _CC=""
@@ -203,7 +236,8 @@ build:clang:debug:
       [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
       echo "GNU-Bauweg (clang, Debug): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
       cmake -B build-clang-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX" \
+        -DCOMDARE_CACHE_ENGINE_DIR="$CI_PROJECT_DIR/ce-pin"
       cmake --build build-clang-dbg
       ctest --test-dir build-clang-dbg --output-on-failure
 
