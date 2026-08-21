@@ -36,6 +36,17 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CMAKE_BUILD_PARALLEL_LEVEL: "6"   # User 2026-07-06: 2x6 Kerne bei concurrent=2
   COMDARE_LINT_PATHS: "prt_art tests"     # prt-art-eigene Quelle
+  # D-10a (W2, 20.08.; FINDINGS#12/KON119-04): GLOBALER ce-Determinismus-Pin fuer die fuenf
+  # Include-konsumierenden Bau-Jobs (build:standalone, build:standalone:debug, build:clang,
+  # build:clang:debug, sanitize:asan-ubsan) -- #104-Muster aus build:registry-roundtrip
+  # (Pipeline 16048 SUCCESS): job-lokaler Klon ce-pin statt ungepinntem Geschwister-Checkout
+  # (CMake-Default CMakeLists.txt:23 = Zufallsstand des Runner-Slots; Schein-Gruen-Klasse
+  # K7b-3, Beleg 6a1041f). Wert = ce development == origin/development, Stand 20.08.2026
+  # abends (66de5c09 = Fixture-Spiegel; 19 Commits nach dem registry-roundtrip-Pin 196a621a).
+  # UPDATE-WEG: neue VOLLE SHA eintragen (git -C <ce-klon> rev-parse origin/development).
+  # build:registry-roundtrip traegt WEITER seine eigene Job-Variable (GitLab-Praezedenz
+  # Job > global); Bump dort NUR zusammen mit XML-Beleg -- s. Kommentar am Job.
+  COMDARE_CE_PIN_SHA: "66de5c0972290ec1ae3d219988ecc207d8f5de6b"
 
 # ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
 # CI-DUAL Lens-Fund 14.08. (Key-Hygiene, ce-04.08.-Muster): die Lint-Jobs kompilieren nicht --
@@ -63,14 +74,36 @@ lint:static:
   variables:
     GIT_SUBMODULE_STRATEGY: none
 
+# -- D-10a (W2, 20.08.): gemeinsamer ce-Pin-Klon-Baustein fuer die fuenf Include-konsumierenden
+# Bau-Jobs (#104-Muster, CI-bewiesen in build:registry-roundtrip / Pipeline 16048). Der
+# Geschwister-Checkout ../comdare-cache-engine ist nur noch optionaler Objekt-Spender
+# (--reference-if-able; fehlt er, klont der Job voll uebers Netz) und wird via --dissociate
+# entkoppelt -- NICHTS im Spender wird veraendert. Der Klon reicht OHNE Configure/Build: die
+# Bau-Jobs konsumieren ausschliesslich GETRACKTE ce-Dateien (Include-Haelften CMakeLists.txt:27
+# und :67, googletest-Tarball CMakeLists.txt:87, boost_mp11 registry_gen/CMakeLists.txt:18);
+# add_subdirectory(ce) haengt hinter COMDARE_PRT_ART_USE_CACHE_ENGINE=OFF (CMakeLists.txt:50).
+# KEIN submodule-init noetig (ce-CI faehrt selbst GIT_SUBMODULE_STRATEGY none; ext/ toleriert
+# das leere Q01-Submodul). Beleg im Log: literaler rev-parse-Output statt Haekchen. --
+.ce-pin-clone: &ce_pin_clone
+  - >
+    git clone --no-checkout --reference-if-able ../comdare-cache-engine --dissociate
+    "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH%/*}/comdare-cache-engine.git"
+    ce-pin
+  - git -C ce-pin checkout --detach "$COMDARE_CE_PIN_SHA"
+  - 'echo "ce-Pin ausgecheckt: $(git -C ce-pin rev-parse HEAD) (SOLL $COMDARE_CE_PIN_SHA)"'
+
 # ── Standalone-Build+Test (bare-metal prod-Toolchain; INTERFACE-Lib via Test-Consumer) ──
 build:standalone:
   extends: .bm
   stage: build
   needs: ["lint:secrets"]   # Codex-Review 06-27: hart auf den Secrets-Gate warten
   script:
+    # D-10a (W2, 20.08.; FINDINGS#12/KON119-04): ce-Header kamen bis dato UNGEPINNT vom
+    # Geschwister-Checkout (CMake-Default CMakeLists.txt:23) -- exakt die K7b-3-Schein-Gruen-
+    # Klasse (Beleg 6a1041f: Job 382653 deckte Alt-Include-Drift erst nach dem Pin auf).
+    - *ce_pin_clone
     # CI-DUAL 14.08. (KON22-01/8): BuildType EXPLIZIT -- vorher LEER (== keine -O-Flags, -O0-Klasse).
-    - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release   # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
+    - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin   # Build Tests ON (Default) -> Consumer der INTERFACE-Lib
     # Build-Parallelitaet via CMAKE_BUILD_PARALLEL_LEVEL, NICHT -j nproc
     # 264-c: internal_search-Header sind real; build ALL kompiliert alle Test-Consumer.
     - cmake --build build
@@ -88,7 +121,9 @@ build:standalone:debug:
     key: "ccache-$CI_PROJECT_NAME-gcc-dbg"
     paths: [".ccache"]
   script:
-    - cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    # D-10a (W2, 20.08.): ce-Pin statt Geschwister-Zufallsstand (s. Anker-Baustein oben).
+    - *ce_pin_clone
+    - cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin
     - cmake --build build-dbg
     - ctest --test-dir build-dbg --output-on-failure
 
@@ -104,6 +139,9 @@ build:standalone:debug:
 # K7b-3 (W2, 20.08.): Schritt (1) faehrt seither NICHT mehr gegen den ungepinnten Geschwister-
 # Checkout (Zufallsstand des Runner-Slots), sondern gegen einen job-lokalen ce-Klon auf der
 # GEPINNTEN vollen SHA (COMDARE_CE_PIN_SHA, s.u.) -- das Gate ist damit deterministisch.
+# D-10a (W2, 20.08. spaet): seither beziehen AUCH die fuenf Bau-Jobs die ce-Header via ce-Pin
+# (Anker-Baustein oben) -- der Sibling-Nebensatz oben ("ueber die build:standalone bereits die
+# ce-Header bezieht") ist Historie; der Geschwister-Checkout ist ueberall nur noch Objekt-Spender.
 build:registry-roundtrip:
   extends: .bm
   stage: build
@@ -125,6 +163,13 @@ build:registry-roundtrip:
     # voraus, neue VOLLE SHA eintragen (git -C <ce-klon> rev-parse origin/development) und
     # ZUSAMMEN mit der XML committen. Fuer Probelaeufe ist der Wert als Pipeline-Variable
     # uebersteuerbar; der committete Wert ist der geltende Pin.
+    # D-10a (W2, 20.08. spaet): global traegt .gitlab-ci.yml inzwischen COMDARE_CE_PIN_SHA=
+    # 66de5c09... fuer die fuenf Include-only-Bau-Jobs; DIESE Job-Variable uebersteuert die
+    # globale (GitLab-Praezedenz Job > global) und bleibt BEWUSST auf 196a621a stehen, bis
+    # ein XML-Beleg den Bump traegt (UPDATE-WEG oben). Die Range 196a621a..66de5c09 ist
+    # NICHT trivial (19 Commits, 28 Dateien, u.a. abi/stempel_basis.hpp und NEU
+    # abi/tier_hybrid_stempel.hpp; am ce-Objekt vermessen 21.08.); ob die regenerierte
+    # Registry-XML byte-stabil bleibt, entscheidet der Lande-/Harmonisierungs-Zug.
     COMDARE_CE_PIN_SHA: "196a621a8a1180dbd47163b75cbb8b102e66a08b"
   script:
     # K7b-3: job-lokaler ce-Klon AUF DER GEPINNTEN SHA ersetzt den frueheren harten
@@ -172,6 +217,8 @@ build:clang:
     key: "ccache-$CI_PROJECT_NAME-clang"
     paths: [".ccache"]
   script:
+    # D-10a (W2, 20.08.): ce-Pin statt Geschwister-Zufallsstand (s. Anker-Baustein oben).
+    - *ce_pin_clone
     - |
       set -euo pipefail
       _CXX=""; _CC=""
@@ -181,7 +228,8 @@ build:clang:
       [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
       echo "GNU-Bauweg (clang): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
       cmake -B build-clang -G Ninja -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX" \
+        -DCOMDARE_CACHE_ENGINE_DIR="$CI_PROJECT_DIR/ce-pin"
       cmake --build build-clang
       ctest --test-dir build-clang --output-on-failure
 
@@ -194,6 +242,8 @@ build:clang:debug:
     key: "ccache-$CI_PROJECT_NAME-clang-dbg"
     paths: [".ccache"]
   script:
+    # D-10a (W2, 20.08.): ce-Pin statt Geschwister-Zufallsstand (s. Anker-Baustein oben).
+    - *ce_pin_clone
     - |
       set -euo pipefail
       _CXX=""; _CC=""
@@ -203,7 +253,8 @@ build:clang:debug:
       [ -n "$_CXX" ] || { echo "FEHLER: kein clang auf Runner (Infra-HO)"; exit 5; }
       echo "GNU-Bauweg (clang, Debug): CC=$_CC CXX=$_CXX ($($_CXX --version | head -n1))"
       cmake -B build-clang-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX"
+        -DCMAKE_C_COMPILER="$_CC" -DCMAKE_CXX_COMPILER="$_CXX" \
+        -DCOMDARE_CACHE_ENGINE_DIR="$CI_PROJECT_DIR/ce-pin"
       cmake --build build-clang-dbg
       ctest --test-dir build-clang-dbg --output-on-failure
 
@@ -219,7 +270,9 @@ sanitize:asan-ubsan:
     key: "ccache-$CI_PROJECT_NAME-asan"
     paths: [".ccache"]
   script:
-    - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+    # D-10a (W2, 20.08.): ce-Pin statt Geschwister-Zufallsstand (s. Anker-Baustein oben).
+    - *ce_pin_clone
+    - cmake -B build-san -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCOMDARE_CACHE_ENGINE_DIR=$CI_PROJECT_DIR/ce-pin -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
     - cmake --build build-san
     - 'ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1 ctest --test-dir build-san --output-on-failure'
 
