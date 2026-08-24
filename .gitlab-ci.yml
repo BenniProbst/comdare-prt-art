@@ -46,6 +46,10 @@ variables:
   # UPDATE-WEG: neue VOLLE SHA eintragen (git -C <ce-klon> rev-parse origin/development).
   # build:registry-roundtrip traegt WEITER seine eigene Job-Variable (GitLab-Praezedenz
   # Job > global); Bump dort NUR zusammen mit XML-Beleg -- s. Kommentar am Job.
+  # B14-Bau-Proben-Notiz (bau/w1luecken-prtart 3710ac4c, uebernommen bei der #107-Landung als
+  # einziger B14-Mehrwert): lokale Bau-Probe 2026-08-21: Configure gelingt ohne ce mit Warnung,
+  # der BUILD bricht [rc=1]; mit ce 60/60 Targets -- empirischer Beleg neben dem CI-Beleg
+  # Pipeline 16048 / Job 382653, dass die Bau-Jobs ce BRAUCHEN.
   COMDARE_CE_PIN_SHA: "66de5c0972290ec1ae3d219988ecc207d8f5de6b"
 
 # ── Stufe 1: Lint (aus ci-templates) — nur prt-art-eigener Code (submodule-none) ──
