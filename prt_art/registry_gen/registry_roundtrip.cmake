@@ -10,6 +10,21 @@
 #   2. Byte-Diff gegen die committete Datei (COMMITTED) — jede Abweichung == FAIL.
 # Die committete Datei wird NUR GELESEN; geschrieben wird ausschliesslich unter WORKDIR.
 #
+# REFERENZ-KONFIGURATION (SEIT K7b-3/#104, W2 2026-08-20): prt-art-Standalone (Linux g++/Ninja)
+# + ein KONFIGURIERTER Build des JOB-LOKALEN, SHA-GEPINNTEN ce-Klons ce-pin (CI-Job
+# build:registry-roundtrip, Job-Variable COMDARE_CE_PIN_SHA in .gitlab-ci.yml). BEIDE ce-Haelften
+# zeigen auf den Pin: -DCOMDARE_CACHE_ENGINE_DIR=<ce-pin> (Include-Haelfte) und
+# -DCOMDARE_CE_GENERATED_DIR=<ce-pin-build>/generated (CMake-generierte *_flags.hpp des
+# golden-verdrahteten Patricia-Merge-Organs). Der committete Byte-Stand stammt aus INC-B
+# (2026-07-14), byte-verifiziert 2026-07-16. ce-Drift erreicht dieses Gate NUR noch als
+# bewusster Pin-Bump (neue SHA ZUSAMMEN mit regenerierter XML committen) -- ein roter Lauf ist
+# damit IMMER ein prt-art-Befund (Slot-/Wrapper-Drift bzw. fehlende Regeneration), nie mehr
+# Geschwister-Zufall. Der Geschwister-Checkout dient dem CI-Klon nur noch als optionaler
+# Objekt-Spender (--reference-if-able + --dissociate).
+#
+# HISTORIE (ueberholte Fassung, gueltig bis K7b-3/#104 am 20.08.2026 -- beschrieb den
+# UNGEPINNTEN Weg; der "gewollte Cross-Repo-Drift-Beweis" gegen den ZUFALLSSTAND des
+# Runner-Geschwister-Checkouts war exakt die K7b-3-Schein-Gruen-Klasse, Beleg Job 382653):
 # REFERENZ-KONFIGURATION: prt-art-Standalone (Linux g++/Ninja) + ein KONFIGURIERTER Default-
 # Standalone-Build der Geschwister-cache-engine (-DCOMDARE_CE_GENERATED_DIR=<ce-build>/generated,
 # liefert die CMake-generierten *_flags.hpp des golden-verdrahteten Patricia-Merge-Organs). Der

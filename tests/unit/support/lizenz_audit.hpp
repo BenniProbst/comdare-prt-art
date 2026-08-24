@@ -86,13 +86,18 @@ namespace detail {
 //   .git/      keine Quelle.
 //   build*/    Erzeugnisse; ihre Koepfe stammen aus den Vorlagen, die geprueft werden.
 //   .idea/     Werkzeugkonfiguration.
-// KEIN ext/-Skip (Abweichung (a) im Dateikopf): prt-art buendelt keinen Fremdcode.
+//   ce-pin/    job-lokaler ce-Klon der D-10a-CI-Jobs (.ce-pin-clone-Anker, .gitlab-ci.yml):
+//              der Klon traegt fremde ce-Lizenzkoepfe (u.a. ext/-Fremdcode der cache engine),
+//              die nicht Gegenstand des prt-art-Audits sind -- den ce-Baum prueft die
+//              ce-eigene Wache. EXAKTER Verzeichnisname, kein Praefix (T9, 22.08.2026).
+// KEIN ext/-Skip (Abweichung (a) im Dateikopf): prt-art buendelt keinen Fremdcode;
+// ce-pin/ ist kein gebuendelter Fremdcode, sondern ein CI-Arbeitsstand des Nachbar-Repos.
 //
 // DIE FALLE AUS DEM ce-ORIGINAL, HIER NICHT WIEDERHOLT: `beginnt_mit(name, "build")`
 // fraesse ein kuenftiges `builder/` mit (FALLEN-REGISTER: "`grep -v /build` frisst
 // `/builder/`"). Deshalb: EXAKTE Namen und ein Trenner, nie ein blosses Praefix.
 [[nodiscard]] inline bool ist_uebersprungenes_verzeichnis(std::string const& name) {
-    return name == ".git" || name == ".idea" || name == "node_modules" || name == "build" ||
+    return name == ".git" || name == ".idea" || name == "node_modules" || name == "ce-pin" || name == "build" ||
            beginnt_mit(name, "build-") || beginnt_mit(name, "build_") || beginnt_mit(name, "cmake-build");
 }
 
