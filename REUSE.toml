@@ -1,0 +1,38 @@
+# REUSE.toml -- comdare-prt-art                                            (2026-08-25)
+# =============================================================================
+# REUSE-Spezifikation 3.3 (https://reuse.software/spec-3.3/). Diese Datei ORDNET
+# ZU, sie lizenziert nichts um: massgeblich sind LICENSE (Comdare Research
+# License, Version 1.0) und NOTICE. prt-art buendelt keinen Fremdcode (NOTICE:
+# kein ext/; GoogleTest kommt zur Bauzeit per FetchContent und wird nicht
+# ausgeliefert).
+#
+# REGELN DIESER DATEI
+#   * Passen mehrere [[annotations]] auf eine Datei, gilt die LETZTE (Spec 3.3).
+#   * precedence "closest" (Vorgabe): traegt eine Datei selbst SPDX-Angaben,
+#     gelten diese; nur kopflose Dateien bekommen die Tabelle.
+#   * precedence "override" steht NUR an den zwei Dateien der Lizenz-Wache, die
+#     SPDX-Zeilen als Zeichenketten-Bruchstuecke tragen (ihre Koeder werden zur
+#     Laufzeit zusammengesetzt) -- die Lizenz ist dieselbe.
+#   * Rechtstraeger wie in LICENSE: BEP Venture UG (haftungsbeschraenkt), Marke
+#     Comdare; "BEP" allein bezeichnet niemanden.
+# PRUEFUNG: `reuse lint` an der Repo-Wurzel (z.B. `uvx --from reuse reuse lint`).
+# ASCII-only.
+version = 1
+SPDX-PackageName = "comdare-prt-art"
+SPDX-PackageSupplier = "Organization: BEP Venture UG (haftungsbeschraenkt)"
+SPDX-PackageDownloadLocation = "https://github.com/BenniProbst/comdare-prt-art"
+SPDX-PackageComment = "PRT-ART: Probst Redirect Tree / ART hybrid -- experimenteller Pruefling der Comdare Cache Engine. Eigencode unter der Comdare Research License 1.0 (LICENSE; Change Date 2031-08-10, danach Apache-2.0). Die Re-Implementationen unter prt_art/legacy_reimpl/ sind neue Werke (NOTICE)."
+
+# -- 1. EIGENCODE --------------------------------------------------------------
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 BEP Venture UG (haftungsbeschraenkt), Marke Comdare"
+SPDX-License-Identifier = "LicenseRef-Comdare-Research-1.0"
+
+# -- 2. DIE LIZENZ-WACHE: SPDX-Zeilen als Zeichenketten-Bruchstuecke ------------
+[[annotations]]
+path = ["tests/unit/support/lizenz_audit.hpp", "tests/unit/test_lizenz_konsistenz.cpp"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 BEP Venture UG (haftungsbeschraenkt), Marke Comdare"
+SPDX-License-Identifier = "LicenseRef-Comdare-Research-1.0"

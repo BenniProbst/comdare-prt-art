@@ -1,0 +1,37 @@
+# CITATION.cff -- Citation File Format 1.2.0 (https://citation-file-format.github.io/)
+# ASCII-only. The license is a custom one (not on the SPDX list): license-url instead of license.
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below; for the research, cite the thesis (preferred-citation)."
+type: software
+title: "comdare-prt-art"
+abstract: "PRT-ART (Probst Redirect Tree / ART hybrid): experimental hybrid search structure, evaluated as a candidate against the state of the art with the Comdare Cache Engine; candidate module of the diploma thesis of Benjamin-Elias Probst (Technische Universitaet Dresden, 2026)."
+authors:
+  - family-names: Probst
+    given-names: Benjamin-Elias
+    affiliation: "Technische Universitaet Dresden"
+  - name: "BEP Venture UG (haftungsbeschraenkt)"
+    alias: "Comdare"
+    country: DE
+license-url: "https://github.com/BenniProbst/comdare-prt-art/blob/development/LICENSE"
+repository-code: "https://github.com/BenniProbst/comdare-prt-art"
+keywords:
+  - adaptive radix tree
+  - redirect tree
+  - trie
+  - index structures
+  - cache-aware
+  - C++23
+preferred-citation:
+  type: thesis
+  title: "Active Cache-Aware Hardware Adaptation: Cache Engine for Trie-Based Index Structures"
+  authors:
+    - family-names: Probst
+      given-names: Benjamin-Elias
+      affiliation: "Technische Universitaet Dresden"
+  thesis-type: "Diplomarbeit"
+  institution:
+    name: "Technische Universitaet Dresden"
+    city: Dresden
+    country: DE
+  year: 2026
+notes: "Licensed under the Comdare Research License, Version 1.0 (SPDX: LicenseRef-Comdare-Research-1.0): source-available, free for research at an institution, separate written license for business and individual use, Apache-2.0 from the Change Date 2031-08-10. Rights holder: BEP Venture UG (haftungsbeschraenkt), owner of the registered trademark Comdare."
